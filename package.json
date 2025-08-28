@@ -1,0 +1,33 @@
+{
+  "name": "pc-management-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for PC Management System",
+  "scripts": {
+    "dev": "gulp watch",
+    "build": "gulp build",
+    "start": "gulp watch"
+  },
+  "devDependencies": {
+    "browser-sync": "^2.29.3",
+    "del": "^6.0.0",
+    "gulp": "^4.0.2",
+    "gulp-autoprefixer": "^7.0.1",
+    "gulp-clean-css": "^4.3.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-imagemin": "^7.1.0",
+    "gulp-notify": "^4.0.0",
+    "gulp-plumber": "^1.2.1",
+    "gulp-sass": "^5.1.0",
+    "gulp-sourcemaps": "^3.0.0",
+    "gulp-uglify": "^3.0.2",
+    "sass": "^1.69.5"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "> 1%",
+    "not dead"
+  ],
+  "dependencies": {
+    "lucide": "^0.541.0"
+  }
+}
