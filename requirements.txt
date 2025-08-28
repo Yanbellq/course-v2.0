@@ -5,3 +5,8 @@ djangorestframework==3.16.1
 django-cors-headers==4.7.0
 pymongo==4.14.1
 dnspython==2.7.0
+gunicorn
+dj-database-url
+dnspython
+uvicorn[standard]
+whitenoise
