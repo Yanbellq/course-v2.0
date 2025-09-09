@@ -7,5 +7,4 @@ export default function Button(text, link, styles, icon, icon_styles) {
         </a>
     `;
 }
-
 //# sourceMappingURL=button.js.map

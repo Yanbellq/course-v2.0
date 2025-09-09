@@ -3,7 +3,6 @@ const sass = require('gulp-sass')(require('sass'));
 const concat = require('gulp-concat');
 const uglify = require('gulp-uglify');
 const cleanCSS = require('gulp-clean-css');
-const sourcemaps = require('gulp-sourcemaps');
 const autoprefixer = require('gulp-autoprefixer');
 const imagemin = require('gulp-imagemin');
 const plumber = require('gulp-plumber');
@@ -14,8 +13,8 @@ const del = require('del');
 // Шляхи
 const paths = {
   scss: {
-    src: 'static/src/scss/main.scss', // Змінено: тільки головний файл
-    watch: 'static/src/scss/**/*.scss', // Додано: для відстеження всіх SCSS файлів
+    src: 'static/src/scss/main.scss', 
+    watch: 'static/src/scss/**/*.scss',
     dest: 'static/dist/css/'
   },
   js: {
@@ -37,57 +36,46 @@ function clean() {
   return del(['static/dist/**', '!static/dist']);
 }
 
-// Компіляція SCSS
+// Компіляція SCSS (dev з sourcemaps)
 function styles() {
   return gulp
-    .src(paths.scss.src) // Тепер бере тільки main.scss
+    .src(paths.scss.src, { sourcemaps: true })
     .pipe(plumber({
       errorHandler: notify.onError("Error: <%= error.message %>")
     }))
-    .pipe(sourcemaps.init())
     .pipe(sass({
       outputStyle: 'expanded',
-      includePaths: ['node_modules', 'static/src/scss'] // Додано шлях до SCSS папки
+      includePaths: ['node_modules', 'static/src/scss']
     }).on('error', sass.logError))
-    .pipe(autoprefixer({
-      cascade: false
-    }))
-    // Видалено concat, оскільки у нас один вхідний файл
-    .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest(paths.scss.dest))
+    .pipe(autoprefixer({ cascade: false }))
+    .pipe(gulp.dest(paths.scss.dest, { sourcemaps: '.' }))
     .pipe(browserSync.stream());
 }
 
 // Компіляція SCSS для продакшну
 function stylesProd() {
   return gulp
-    .src(paths.scss.src) // Тепер бере тільки main.scss
+    .src(paths.scss.src)
     .pipe(plumber({
       errorHandler: notify.onError("Error: <%= error.message %>")
     }))
     .pipe(sass({
       outputStyle: 'compressed',
-      includePaths: ['node_modules', 'static/src/scss'] // Додано шлях до SCSS папки
+      includePaths: ['node_modules', 'static/src/scss']
     }).on('error', sass.logError))
-    .pipe(autoprefixer({
-      cascade: false
-    }))
-    .pipe(cleanCSS({
-      level: 2
-    }))
+    .pipe(autoprefixer({ cascade: false }))
+    .pipe(cleanCSS({ level: 2 }))
     .pipe(gulp.dest(paths.scss.dest));
 }
 
-// Обробка JavaScript
+// Обробка JavaScript (dev з sourcemaps)
 function scripts() {
   return gulp
-    .src(paths.js.src)
+    .src(paths.js.src, { sourcemaps: true })
     .pipe(plumber({
       errorHandler: notify.onError("Error: <%= error.message %>")
     }))
-    .pipe(sourcemaps.init())
-    .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest(paths.js.dest))
+    .pipe(gulp.dest(paths.js.dest, { sourcemaps: '.' }))
     .pipe(browserSync.stream());
 }
 
@@ -130,11 +118,10 @@ function fonts() {
 // BrowserSync
 function serve() {
   browserSync.init({
-    proxy: "localhost:8000", // Для Django dev сервера
+    proxy: "localhost:8000", // Django dev server
     port: 3000,
     open: false,
     notify: false,
-    // Додано для кращої роботи з Django
     files: ["static/dist/**/*"],
     watchEvents: ['change', 'add', 'unlink']
   });
@@ -142,11 +129,11 @@ function serve() {
 
 // Відстеження змін
 function watchFiles() {
-  gulp.watch(paths.scss.watch, styles); // Змінено: відстеження всіх SCSS файлів
+  gulp.watch(paths.scss.watch, styles);
   gulp.watch(paths.js.src, scripts);
   gulp.watch(paths.images.src, images);
   gulp.watch("templates/**/*.html").on('change', browserSync.reload);
-  gulp.watch("static/dist/css/*.css").on('change', browserSync.reload); // Додано для перезавантаження при зміні CSS
+  gulp.watch("static/dist/css/*.css").on('change', browserSync.reload);
 }
 
 // Задачі
