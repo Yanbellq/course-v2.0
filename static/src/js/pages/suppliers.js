@@ -90,4 +90,34 @@ function renderSuppliers(suppliers, tableBody) {
             </td>
         </tr>
     `).join('');
+
+
+    function initDropdowns() {
+        document.querySelectorAll('.dropdown-data').forEach(dropdown => {
+            const dropdownToggle = dropdown.querySelector('.dropdown-toggle');
+            const dropdownMenu = dropdown.querySelector('.dropdown-menu');
+
+            dropdownToggle.addEventListener('click', (e) => {
+                // Close all dropdowns first
+                document.querySelectorAll('.dropdown-menu.active').forEach(menu => {
+                    if (menu !== dropdownMenu) {
+                        menu.classList.remove('active');
+                    }
+                });
+                // Toggle only the clicked dropdown
+                dropdownMenu.classList.toggle('active');
+            });
+        });
+
+        // Optional: close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown-data')) {
+                document.querySelectorAll('.dropdown-menu.active').forEach(menu => {
+                    menu.classList.remove('active');
+                });
+            }
+        });
+    }
+
+    initDropdowns();
 }
