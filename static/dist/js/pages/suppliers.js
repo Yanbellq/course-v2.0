@@ -1,4 +1,28 @@
-import Button from"../components/button.js";document.addEventListener("DOMContentLoaded",function(){document.querySelector("#supplier-list-table")&&(console.log("Initializing supplier list page..."),loadSuppliers().then(e=>console.log(e)))});let pageHeaderActions=document.querySelector("#page-header-actions");async function loadSuppliers(){var t=document.querySelector("#supplier-list-body");if(t){t.innerHTML=`
+// static/src/js/pages/suppliers.js
+
+import Button from '../components/button.js';
+
+document.addEventListener('DOMContentLoaded', function() {
+    const supplierTable = document.querySelector('#supplier-list-table');
+    if (supplierTable) {
+        console.log('Initializing supplier list page...');
+        loadSuppliers().then(r => console.log(r));
+    }
+});
+
+const pageHeaderActions = document.querySelector('#page-header-actions');
+if (pageHeaderActions) {
+    pageHeaderActions.insertAdjacentHTML('beforeend',
+        Button('Додати постачальника', "add", 'shadow-glow', 'plus', '')
+    );
+    // if (window.lucide?.createIcons) window.lucide.createIcons();
+}
+
+async function loadSuppliers() {
+    const tableBody = document.querySelector('#supplier-list-body');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = `
         <tr>
             <td colspan="5" class="text-center">
                 <div class="loading-spinner" style="display: inline-block; vertical-align: middle;">
@@ -7,25 +31,44 @@ import Button from"../components/button.js";document.addEventListener("DOMConten
                 <span style="vertical-align: middle; margin-left: 10px;">Завантаження постачальників...</span>
             </td>
         </tr>
-    `;try{renderSuppliers((await PCManagement.apiRequest("/suppliers/")).suppliers,t)}catch(e){console.error("Failed to load suppliers:",e),t.innerHTML=`
+    `;
+
+    try {
+        const response = await PCManagement.apiRequest('/suppliers/');
+        renderSuppliers(response.suppliers, tableBody);
+    } catch (error) {
+        console.error('Failed to load suppliers:', error);
+        tableBody.innerHTML = `
             <tr>
                 <td colspan="5" class="text-center text-error">
                     Не вдалося завантажити список постачальників.
                 </td>
             </tr>
-        `}}}function renderSuppliers(e,t){e&&0!==e.length?t.innerHTML=e.map(e=>`
-        <tr data-supplier-id="${e.id}">
-            <td><a href="/suppliers/${e.id}/" class="font-semibold underline">${e.name}</a></td>
-            <td>${e.contact_person||"—"}</td>
-            <td>${e.email}</td>
-            <td>${e.phone}</td>
-            <td>
-                <a href="/suppliers/${e.id}/edit/" class="btn btn--sm btn--secondary">Редагувати</a>
-                <button class="btn btn--sm btn--error" data-action="delete" data-url="/suppliers/${e.id}/" data-confirm="Ви впевнені, що хочете видалити постачальника ${e.name}?">Видалити</button>
-            </td>
-        </tr>
-    `).join(""):t.innerHTML=`
+        `;
+    }
+}
+
+function renderSuppliers(suppliers, tableBody) {
+    if (!suppliers || suppliers.length === 0) {
+        tableBody.innerHTML = `
             <tr>
                 <td colspan="5" class="text-center">Постачальників не знайдено. <a href="/suppliers/add/" class="text-primary underline">Додайте першого</a>.</td>
             </tr>
-        `}pageHeaderActions&&pageHeaderActions.insertAdjacentHTML("beforeend",Button("Додати постачальника","add","shadow-glow","plus",""));
+        `;
+        return;
+    }
+
+    tableBody.innerHTML = suppliers.map(supplier => `
+        <tr data-supplier-id="${supplier.id}">
+            <td><a href="/suppliers/${supplier.id}/" class="font-semibold underline">${supplier.name}</a></td>
+            <td>${supplier.contact_person || '—'}</td>
+            <td>${supplier.email}</td>
+            <td>${supplier.phone}</td>
+            <td>
+                <a href="/suppliers/${supplier.id}/edit/" class="btn btn--sm btn--secondary">Редагувати</a>
+                <button class="btn btn--sm btn--error" data-action="delete" data-url="/suppliers/${supplier.id}/" data-confirm="Ви впевнені, що хочете видалити постачальника ${supplier.name}?">Видалити</button>
+            </td>
+        </tr>
+    `).join('');
+}
+//# sourceMappingURL=suppliers.js.map

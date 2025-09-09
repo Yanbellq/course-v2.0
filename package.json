@@ -4,8 +4,8 @@
   "description": "Frontend for PC Management System",
   "scripts": {
     "dev": "gulp watch",
-    "build": "gulp build",
-    "start": "gulp watch"
+    "dev:all": "concurrently \"gulp\" \"tsc --watch\"",
+    "build": "gulp build"
   },
   "devDependencies": {
     "browser-sync": "^2.29.3",
@@ -28,6 +28,8 @@
     "not dead"
   ],
   "dependencies": {
-    "lucide": "^0.541.0"
+    "concurrently": "^9.2.1",
+    "lucide": "^0.541.0",
+    "typescript": "^5.9.2"
   }
 }

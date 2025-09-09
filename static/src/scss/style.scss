@@ -348,6 +348,16 @@
     }
 }
 
+.dropdown {
+    position: relative;
+    
+    .dropdown-menu.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+}
+
 // === SEARCH ===
 .search-form {
     display: flex;

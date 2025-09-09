@@ -14,7 +14,8 @@ const del = require('del');
 // Шляхи
 const paths = {
   scss: {
-    src: 'static/src/scss/**/*.scss',
+    src: 'static/src/scss/main.scss', // Змінено: тільки головний файл
+    watch: 'static/src/scss/**/*.scss', // Додано: для відстеження всіх SCSS файлів
     dest: 'static/dist/css/'
   },
   js: {
@@ -22,8 +23,8 @@ const paths = {
     dest: 'static/dist/js/'
   },
   images: {
-    src: 'static/src/images/**/*',
-    dest: 'static/dist/images/'
+    src: 'static/src/img/**/*',
+    dest: 'static/dist/img/'
   },
   fonts: {
     src: 'static/src/fonts/**/*',
@@ -39,19 +40,19 @@ function clean() {
 // Компіляція SCSS
 function styles() {
   return gulp
-    .src(paths.scss.src)
+    .src(paths.scss.src) // Тепер бере тільки main.scss
     .pipe(plumber({
       errorHandler: notify.onError("Error: <%= error.message %>")
     }))
     .pipe(sourcemaps.init())
     .pipe(sass({
       outputStyle: 'expanded',
-      includePaths: ['node_modules']
+      includePaths: ['node_modules', 'static/src/scss'] // Додано шлях до SCSS папки
     }).on('error', sass.logError))
     .pipe(autoprefixer({
       cascade: false
     }))
-    .pipe(concat('main.css'))
+    // Видалено concat, оскільки у нас один вхідний файл
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(paths.scss.dest))
     .pipe(browserSync.stream());
@@ -60,13 +61,13 @@ function styles() {
 // Компіляція SCSS для продакшну
 function stylesProd() {
   return gulp
-    .src(paths.scss.src)
+    .src(paths.scss.src) // Тепер бере тільки main.scss
     .pipe(plumber({
       errorHandler: notify.onError("Error: <%= error.message %>")
     }))
     .pipe(sass({
       outputStyle: 'compressed',
-      includePaths: ['node_modules']
+      includePaths: ['node_modules', 'static/src/scss'] // Додано шлях до SCSS папки
     }).on('error', sass.logError))
     .pipe(autoprefixer({
       cascade: false
@@ -129,19 +130,23 @@ function fonts() {
 // BrowserSync
 function serve() {
   browserSync.init({
-    proxy: "localhost:8000",
+    proxy: "localhost:8000", // Для Django dev сервера
     port: 3000,
     open: false,
-    notify: false
+    notify: false,
+    // Додано для кращої роботи з Django
+    files: ["static/dist/**/*"],
+    watchEvents: ['change', 'add', 'unlink']
   });
 }
 
 // Відстеження змін
 function watchFiles() {
-  gulp.watch(paths.scss.src, styles);
+  gulp.watch(paths.scss.watch, styles); // Змінено: відстеження всіх SCSS файлів
   gulp.watch(paths.js.src, scripts);
   gulp.watch(paths.images.src, images);
   gulp.watch("templates/**/*.html").on('change', browserSync.reload);
+  gulp.watch("static/dist/css/*.css").on('change', browserSync.reload); // Додано для перезавантаження при зміні CSS
 }
 
 // Задачі

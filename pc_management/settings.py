@@ -23,7 +23,12 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-default-key')
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = [config('RENDER_EXTERNAL_HOSTNAME', default=''), 'localhost', '127.0.0.1', 'course-v2-0.onrender.com']
-CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in ALLOWED_HOSTS if h]
+
+CSRF_ARRAY = [f"https://{h}" for h in ALLOWED_HOSTS if h]
+
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'http://localhost:8000'] + CSRF_ARRAY
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 INSTALLED_APPS = [
     'django.contrib.admin',

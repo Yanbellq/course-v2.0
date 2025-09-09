@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{% static 'dist/images/favicon.png' %}">
+    <link rel="icon" type="image/png" href="{% static 'dist/img/logo-icon.png' %}">
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -162,11 +162,15 @@
     <!-- JavaScript -->
     <script type="module" src="{% static 'dist/js/main.js' %}"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    
+    {% block extra_js %}{% endblock %}
+    
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             lucide.createIcons();
         });
     </script>
-    {% block extra_js %}{% endblock %}
 </body>
 </html>
