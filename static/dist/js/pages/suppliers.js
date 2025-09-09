@@ -70,5 +70,4 @@ function renderSuppliers(suppliers, tableBody) {
             </td>
         </tr>
     `).join('');
-}
-//# sourceMappingURL=suppliers.js.map
+}//# sourceMappingURL=suppliers.js.map

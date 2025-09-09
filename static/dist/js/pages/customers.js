@@ -80,5 +80,4 @@ function renderCustomers(customers, tableBody) {
     }).join('');
 
     tableBody.innerHTML = rowsHtml;
-}
-//# sourceMappingURL=customers.js.map
+}//# sourceMappingURL=customers.js.map

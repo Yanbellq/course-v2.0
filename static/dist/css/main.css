@@ -413,7 +413,7 @@ body {
   margin: 0;
 }
 .dropdown-data .dropdown-toggle {
-  border: 2px solid red;
+  margin: 0;
   width: 100%;
   height: 100%;
   cursor: pointer;
@@ -1187,5 +1187,4 @@ body {
 
 .shadow-glow:hover::before {
   left: 100%;
-}
-/*# sourceMappingURL=main.css.map */
+}/*# sourceMappingURL=main.css.map */

@@ -163,5 +163,4 @@ function renderProducts(products, tableBody) {
 
 
 // <a href="/products/${product.id}/edit/" class="btn btn--sm btn--secondary">Редагувати</a>
-// <button class="btn btn--sm btn--error" data-action="delete" data-url="/products/${product.id}/" data-confirm="Ви впевнені, що хочете видалити товар ${product.name}?">Видалити</button>
-//# sourceMappingURL=products.js.map
+// <button class="btn btn--sm btn--error" data-action="delete" data-url="/products/${product.id}/" data-confirm="Ви впевнені, що хочете видалити товар ${product.name}?">Видалити</button>//# sourceMappingURL=products.js.map

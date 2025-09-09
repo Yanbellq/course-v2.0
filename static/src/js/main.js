@@ -1,3 +1,5 @@
+'use strict';
+
 // static/src/js/main.js
 
 // === GLOBAL VARIABLES ===
@@ -288,16 +290,17 @@ function initDataTable(tableSelector, options = {}) {
 }
 
 function addTableSorting(table) {
-    const headers = table.querySelectorAll('th[data-sortable="true"]');
+    // const headers = table.querySelectorAll('th[data-sortable="true"]');
 
-    headers.forEach((header, index) => {
-        header.style.cursor = 'pointer';
-        header.innerHTML += ' <span class="sort-indicator">↕️</span>';
+    // headers.forEach((header, index) => {
+    //     header.style.cursor = 'pointer';
+    //     header.innerHTML += ' <span class="sort-indicator">↕️</span>';
 
-        header.addEventListener('click', () => {
-            sortTable(table, index, header);
-        });
-    });
+    //     header.addEventListener('click', () => {
+    //         sortTable(table, index, header);
+    //     });
+    // });
+    return table;
 }
 
 function sortTable(table, columnIndex, header) {

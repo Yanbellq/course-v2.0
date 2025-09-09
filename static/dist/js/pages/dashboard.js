@@ -164,5 +164,4 @@ function initCharts() {
             options: { responsive: true, maintainAspectRatio: false }
         });
     }
-}
-//# sourceMappingURL=dashboard.js.map
+}//# sourceMappingURL=dashboard.js.map

@@ -1,154 +1,181 @@
-const gulp = require('gulp');
-const sass = require('gulp-sass')(require('sass'));
-const concat = require('gulp-concat');
-const uglify = require('gulp-uglify');
-const cleanCSS = require('gulp-clean-css');
-const autoprefixer = require('gulp-autoprefixer');
-const imagemin = require('gulp-imagemin');
-const plumber = require('gulp-plumber');
-const notify = require('gulp-notify');
-const browserSync = require('browser-sync').create();
-const del = require('del');
+// gulpfile.js
+import gulp from "gulp";
+import gulpSass from "gulp-sass";
+import * as dartSass from "sass";
+import concat from "gulp-concat";
+import uglify from "gulp-uglify";
+import cleanCSS from "gulp-clean-css";
+import autoprefixer from "gulp-autoprefixer";
+import plumber from "gulp-plumber";
+import notify from "gulp-notify";
+import browserSyncLib from "browser-sync";
+import { deleteAsync } from "del";
+
+const sass = gulpSass(dartSass);
+const browserSync = browserSyncLib.create();
 
 // Шляхи
 const paths = {
   scss: {
-    src: 'static/src/scss/main.scss', 
-    watch: 'static/src/scss/**/*.scss',
-    dest: 'static/dist/css/'
+    src: "static/src/scss/main.scss",
+    watch: "static/src/scss/**/*.scss",
+    dest: "static/dist/css/",
   },
   js: {
-    src: 'static/src/js/**/*.js',
-    dest: 'static/dist/js/'
+    src: "static/src/js/**/*.js",
+    dest: "static/dist/js/",
   },
   images: {
-    src: 'static/src/img/**/*',
-    dest: 'static/dist/img/'
+    src: "static/src/img/**/*",
+    dest: "static/dist/img/",
   },
   fonts: {
-    src: 'static/src/fonts/**/*',
-    dest: 'static/dist/fonts/'
-  }
+    src: "static/src/fonts/**/*",
+    dest: "static/dist/fonts/",
+  },
 };
 
-// Очистка папки dist
-function clean() {
-  return del(['static/dist/**', '!static/dist']);
+// Очистка
+export function clean() {
+  return deleteAsync(["static/dist/**", "!static/dist"]);
 }
 
-// Компіляція SCSS (dev з sourcemaps)
-function styles() {
+// SCSS (dev з sourcemaps)
+export function styles() {
   return gulp
     .src(paths.scss.src, { sourcemaps: true })
-    .pipe(plumber({
-      errorHandler: notify.onError("Error: <%= error.message %>")
-    }))
-    .pipe(sass({
-      outputStyle: 'expanded',
-      includePaths: ['node_modules', 'static/src/scss']
-    }).on('error', sass.logError))
+    .pipe(
+      plumber({
+        errorHandler: notify.onError("Error: <%= error.message %>"),
+      })
+    )
+    .pipe(
+      sass({
+        outputStyle: "expanded",
+        includePaths: ["node_modules", "static/src/scss"],
+      }).on("error", sass.logError)
+    )
     .pipe(autoprefixer({ cascade: false }))
-    .pipe(gulp.dest(paths.scss.dest, { sourcemaps: '.' }))
+    .pipe(gulp.dest(paths.scss.dest, { sourcemaps: "." }))
     .pipe(browserSync.stream());
 }
 
-// Компіляція SCSS для продакшну
-function stylesProd() {
+// SCSS (prod)
+export function stylesProd() {
   return gulp
     .src(paths.scss.src)
-    .pipe(plumber({
-      errorHandler: notify.onError("Error: <%= error.message %>")
-    }))
-    .pipe(sass({
-      outputStyle: 'compressed',
-      includePaths: ['node_modules', 'static/src/scss']
-    }).on('error', sass.logError))
+    .pipe(
+      plumber({
+        errorHandler: notify.onError("Error: <%= error.message %>"),
+      })
+    )
+    .pipe(
+      sass({
+        outputStyle: "compressed",
+        includePaths: ["node_modules", "static/src/scss"],
+      }).on("error", sass.logError)
+    )
     .pipe(autoprefixer({ cascade: false }))
     .pipe(cleanCSS({ level: 2 }))
     .pipe(gulp.dest(paths.scss.dest));
 }
 
-// Обробка JavaScript (dev з sourcemaps)
-function scripts() {
+// JS (dev)
+export function scripts() {
   return gulp
     .src(paths.js.src, { sourcemaps: true })
-    .pipe(plumber({
-      errorHandler: notify.onError("Error: <%= error.message %>")
-    }))
-    .pipe(gulp.dest(paths.js.dest, { sourcemaps: '.' }))
+    .pipe(
+      plumber({
+        errorHandler: notify.onError("Error: <%= error.message %>"),
+      })
+    )
+    .pipe(gulp.dest(paths.js.dest, { sourcemaps: "." }))
     .pipe(browserSync.stream());
 }
 
-// Обробка JavaScript для продакшну
-function scriptsProd() {
+// JS (prod)
+export function scriptsProd() {
   return gulp
     .src(paths.js.src)
-    .pipe(plumber({
-      errorHandler: notify.onError("Error: <%= error.message %>")
-    }))
+    .pipe(
+      plumber({
+        errorHandler: notify.onError("Error: <%= error.message %>"),
+      })
+    )
     .pipe(uglify())
     .pipe(gulp.dest(paths.js.dest));
 }
 
-// Оптимізація зображень
-function images() {
-  return gulp
-    .src(paths.images.src)
-    .pipe(imagemin([
-      imagemin.gifsicle({ interlaced: true }),
-      imagemin.mozjpeg({ quality: 80, progressive: true }),
-      imagemin.optipng({ optimizationLevel: 5 }),
-      imagemin.svgo({
-        plugins: [
-          { removeViewBox: true },
-          { cleanupIDs: false }
-        ]
-      })
-    ]))
-    .pipe(gulp.dest(paths.images.dest));
+// Images з оптимізацією
+export async function images() {
+  try {
+    const imagemin = (await import("gulp-imagemin")).default;
+    const imageminGifsicle = (await import("imagemin-gifsicle")).default;
+    const imageminMozjpeg = (await import("imagemin-mozjpeg")).default;
+    const imageminOptipng = (await import("imagemin-optipng")).default;
+    const imageminSvgo = (await import("imagemin-svgo")).default;
+    
+    return gulp
+      .src(paths.images.src)
+      .pipe(
+        imagemin([
+          imageminGifsicle({ interlaced: true }),
+          imageminMozjpeg({ quality: 80, progressive: true }),
+          imageminOptipng({ optimizationLevel: 5 }),
+          imageminSvgo({
+            plugins: [
+              { 
+                name: 'preset-default',
+                params: {
+                  overrides: {
+                    removeViewBox: false,
+                    cleanupIds: false
+                  }
+                }
+              }
+            ],
+          }),
+        ])
+      )
+      .pipe(gulp.dest(paths.images.dest));
+  } catch (error) {
+    console.log("ImageMin plugins not found. Installing imagemin plugins...");
+    console.log("Run: npm install --save-dev imagemin-gifsicle imagemin-mozjpeg imagemin-optipng imagemin-svgo");
+    // Fallback - просто копіюємо зображення без оптимізації
+    return gulp.src(paths.images.src).pipe(gulp.dest(paths.images.dest));
+  }
 }
 
-// Копіювання шрифтів
-function fonts() {
-  return gulp
-    .src(paths.fonts.src)
-    .pipe(gulp.dest(paths.fonts.dest));
+// Fonts
+export function fonts() {
+  return gulp.src(paths.fonts.src).pipe(gulp.dest(paths.fonts.dest));
 }
 
 // BrowserSync
-function serve() {
+export function serve() {
   browserSync.init({
     proxy: "localhost:8000", // Django dev server
     port: 3000,
     open: false,
     notify: false,
     files: ["static/dist/**/*"],
-    watchEvents: ['change', 'add', 'unlink']
+    watchEvents: ["change", "add", "unlink"],
   });
 }
 
-// Відстеження змін
-function watchFiles() {
+// Watch
+export function watchFiles() {
   gulp.watch(paths.scss.watch, styles);
   gulp.watch(paths.js.src, scripts);
   gulp.watch(paths.images.src, images);
-  gulp.watch("templates/**/*.html").on('change', browserSync.reload);
-  gulp.watch("static/dist/css/*.css").on('change', browserSync.reload);
+  gulp.watch("templates/**/*.html").on("change", browserSync.reload);
+  gulp.watch("static/dist/css/*.css").on("change", browserSync.reload);
 }
 
-// Задачі
-gulp.task('clean', clean);
-gulp.task('styles', styles);
-gulp.task('styles:prod', stylesProd);
-gulp.task('scripts', scripts);
-gulp.task('scripts:prod', scriptsProd);
-gulp.task('images', images);
-gulp.task('fonts', fonts);
+// Груповані задачі
+export const dev = gulp.series(clean, gulp.parallel(styles, scripts, images, fonts));
+export const build = gulp.series(clean, gulp.parallel(stylesProd, scriptsProd, images, fonts));
+export const watch = gulp.parallel(watchFiles, serve);
 
-// Основні команди
-gulp.task('dev', gulp.series(clean, gulp.parallel(styles, scripts, images, fonts)));
-gulp.task('build', gulp.series(clean, gulp.parallel(stylesProd, scriptsProd, images, fonts)));
-gulp.task('watch', gulp.parallel(watchFiles, serve));
-
-// Дефолтна задача
-gulp.task('default', gulp.series('dev', 'watch'));
+// За замовчуванням
+export default gulp.series(dev, watch);
