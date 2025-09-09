@@ -1001,7 +1001,7 @@ body {
   padding: var(--spacing-3) var(--spacing-4);
 }
 
-.table-container {
+.table-wrapper {
   background-color: var(--color-white);
   border: 1px solid var(--color-gray-200);
   border-radius: var(--border-radius-xl);
@@ -1022,12 +1022,12 @@ body {
   background-color: var(--color-gray-50);
   font-weight: 600;
   color: var(--color-gray-900);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 .table td {
-  color: var(--color-gray-700);
+  color: var(--color-gray-600);
 }
 .table tr:last-child th,
 .table tr:last-child td {

@@ -21,27 +21,30 @@
 
 {% block content %}
 <div class="table-container full-screen mt-5">
-    <table class="table" id="product-list-table">
-        <thead>
-            <tr>
-                <th data-sortable="true">Назва товару</th>
-                <th data-sortable="true">Категорія</th>
-                <th data-sortable="true">Виробник</th>
-                <th data-sortable="true">Ціна</th>
-                <th data-sortable="true">К-сть на складі</th>
-                <th>Дії</th>
-            </tr>
-        </thead>
-        <tbody id="product-list-body">
-            {# Дані будуть завантажені асинхронно за допомогою JavaScript #}
-            <tr>
-                <td colspan="6" class="text-center">Завантаження...</td>
-            </tr>
-        </tbody>
-    </table>
+
+    <div class="table-wrapper">
+        <table class="table" id="product-list-table">
+            <thead>
+                <tr>
+                    <th data-sortable="true">Назва товару</th>
+                    <th data-sortable="true">Категорія</th>
+                    <th data-sortable="true">Виробник</th>
+                    <th data-sortable="true">Ціна</th>
+                    <th data-sortable="true">К-сть на складі</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody id="product-list-body">
+                {# Дані будуть завантажені асинхронно за допомогою JavaScript #}
+                <tr>
+                    <td colspan="6" class="text-center">Завантаження...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script type="module" src="{% static 'src/js/pages/products.js' %}"></script>
+<script type="module" src="{% static 'dist/js/pages/products.js' %}"></script>
 {% endblock %}

@@ -357,7 +357,8 @@ function addTableFiltering(table) {
     filterInput.placeholder = 'Фільтрувати...';
     filterInput.className = 'table-filter form-input';
     filterInput.style.marginBottom = 'var(--spacing-4)';
-    filterInput.style.maxWidth = '300px';
+    // filterInput.style.maxWidth = '300px';
+    filterInput.id = 'table-filter';
 
     tableContainer.insertBefore(filterInput, table);
 
@@ -709,9 +710,9 @@ document.addEventListener('DOMContentLoaded', function() {
     initModals();
 
     // Ініціалізація таблиць
-    const tables = document.querySelectorAll('.table-container .table');
+    const tables = document.querySelectorAll('.table-container .table-wrapper');
     if (tables.length > 0) {
-        initDataTable('.table-container .table');
+        initDataTable('.table-container .table-wrapper');
     }
 
     // Глобальні обробники подій

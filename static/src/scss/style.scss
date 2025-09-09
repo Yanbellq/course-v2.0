@@ -1022,7 +1022,11 @@
 
 
 // === TABLES ===
-.table-container {
+// .table-filter {
+//     width: 100%;
+// }
+
+.table-wrapper {
     background-color: var(--color-white);
     border: 1px solid var(--color-gray-200);
     border-radius: var(--border-radius-xl);
@@ -1047,13 +1051,13 @@
         background-color: var(--color-gray-50);
         font-weight: 600;
         color: var(--color-gray-900);
-        font-size: var(--font-size-sm);
+        font-size: var(--font-size-base);
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
 
     td {
-        color: var(--color-gray-700);
+        color: var(--color-gray-600);
     }
 
     tr:last-child {

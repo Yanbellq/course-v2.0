@@ -91,7 +91,7 @@ function renderProducts(products, tableBody) {
 
     const rowsHtml = products.map(product => {
         const price = PCManagement.formatCurrency(product.price);
-        const stockClass = product.quantity_in_stock <= product.min_stock_level ? 'text-error font-bold' : '';
+        const stockClass = product.quantity_in_stock <= product.min_stock_level ? 'text-error' : '';
 
         return `
             <tr data-product-id="${product.id}">

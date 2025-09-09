@@ -21,23 +21,27 @@
 
 {% block content %}
 <div class="table-container full-screen mt-5">
-    <table class="table" id="supplier-list-table">
-        <thead>
-            <tr>
-                <th data-sortable="true">Назва компанії</th>
-                <th data-sortable="true">Контактна особа</th>
-                <th>Email</th>
-                <th>Телефон</th>
-                <th>Дії</th>
-            </tr>
-        </thead>
-        <tbody id="supplier-list-body">
-            {# Дані будуть завантажені асинхронно за допомогою JavaScript #}
-            <tr>
-                <td colspan="5" class="text-center">Завантаження...</td>
-            </tr>
-        </tbody>
-    </table>
+
+    <div class="table-wrapper">
+        <table class="table" id="supplier-list-table">
+            <thead>
+                <tr>
+                    <th data-sortable="true">Назва компанії</th>
+                    <th data-sortable="true">Контактна особа</th>
+                    <th>Email</th>
+                    <th>Телефон</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody id="supplier-list-body">
+                {# Дані будуть завантажені асинхронно за допомогою JavaScript #}
+                <tr>
+                    <td colspan="5" class="text-center">Завантаження...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
 </div>
 {% endblock %}
 
