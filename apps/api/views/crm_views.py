@@ -1,8 +1,14 @@
-# apps/api/views.py
+# apps/api/crm_views.py
+import secrets
+
 from bson import ObjectId
+from django.contrib.auth.hashers import make_password
 from django.http import JsonResponse
 from datetime import datetime, timedelta
 import json
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 
 from apps.customers.models import Customer
 from apps.suppliers.models import Supplier
