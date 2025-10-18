@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electronic - Магазин електроніки</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a class="logo cursor-pointer" id="logoScrollToTop">Electronic</a>
+
+                <ul class="nav-menu" id="navMenu">
+                    <li><a class="active cursor-pointer" id="scrollToTopBtn">Home</a></li>
+                    <li><a href="#categories">Categories</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li class="nav-menu-divider">|</li>
+                    <li class="nav-menu-mobile-divider"><hr /></li>
+                    <li><a href="categories.html">Shop</a></li>
+                </ul>
+
+                <div class="nav-icons" id="navIcons">
+                    <button class="icon-btn search-toggle" id="searchToggle" aria-label="Search">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2" />
+                            <path d="M13 13L17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </button>
+                    <button class="icon-btn cart-toggle" id="cartToggle" aria-label="Cart">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="8" cy="18" r="1.5" fill="currentColor" />
+                            <circle cx="16" cy="18" r="1.5" fill="currentColor" />
+                            <path d="M1 1H4L6 13H17L19 5H5" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span class="cart-count" id="cartCount">0</span>
+                    </button>
+                    <button class="icon-btn user-btn" id="userBtn" aria-label="User">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="2" />
+                            <path d="M3 19C3 15 6 13 10 13C14 13 17 15 17 19" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </div>
+
+                <button class="mobile-toggle" id="mobileToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </nav>
+
+            <!-- Виїжджаючий пошук -->
+            <div class="search-overlay" id="searchOverlay">
+                <div class="search-container">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search...">
+                    <button class="search-close" id="searchClose">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="search-results" id="searchResults"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section with Slider -->
+    <section class="hero" id="home">
+        <div class="container">
+            <h1 class="hero-title">Electronic</h1>
+
+            <div class="hero-slider-wrapper">
+                <div class="hero-slider" id="heroSlider">
+                    <div class="hero-slide active">
+                        <div class="hero-content">
+                            <div class="hero-image">
+                                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800"
+                                    alt="Headphones">
+                            </div>
+                            <div class="hero-text">
+                                <h2>Premium Headphones</h2>
+                                <p>Welcome to Electronic Store, where we offer the latest and greatest in electronics.
+                                    Whether you're looking for a new phone, laptop, or home entertainment system, we
+                                    have you covered.</p>
+                                <a href="categories.html" class="btn-secondary">Shop Now</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hero-slide">
+                        <div class="hero-content">
+                            <div class="hero-image">
+                                <img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800"
+                                    alt="Laptop">
+                            </div>
+                            <div class="hero-text">
+                                <h2>Powerful Laptops</h2>
+                                <p>Discover our collection of high-performance laptops for work and gaming. Experience
+                                    cutting-edge technology and superior design.</p>
+                                <a href="categories.html" class="btn-secondary">Explore</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hero-slide">
+                        <div class="hero-content">
+                            <div class="hero-image">
+                                <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800"
+                                    alt="Smartphone">
+                            </div>
+                            <div class="hero-text">
+                                <h2>Latest Smartphones</h2>
+                                <p>Get connected with the newest smartphones featuring advanced cameras, powerful
+                                    processors, and stunning displays.</p>
+                                <a href="categories.html" class="btn-secondary">Buy Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slider-dots" id="sliderDots"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upgrade Section -->
+    <section class="upgrade-section">
+        <div class="container">
+            <div class="upgrade-content">
+                <div class="upgrade-text">
+                    <h2>Upgrade your life with the latest in electronics!</h2>
+                    <p>Welcome to our electronics shop! We offer a wide variety of high-quality electronic products,
+                        including smartphones, laptops, tablets, cameras, and more. Our mission is to provide our
+                        customers with the latest and greatest technology at affordable prices.</p>
+                    <button class="btn-white">Shop Now</button>
+                </div>
+                <div class="upgrade-image">
+                    <img src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=800"
+                        alt="Camera Equipment">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our Another Collections with Slider -->
+    <section class="collections" id="categories">
+        <!-- <div class="container"> -->
+        <div class="collections-header">
+            <h2 class="section-title">Our Different Categories</h2>
+            <p>Welcome to our latest collection of electronics! We are thrilled to showcase our newest products that
+                are sure to impress.</p>
+
+            <div class="collections-nav-wrapper">
+                <button class="collections-nav prev" id="collectionsPrev">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+                <button class="collections-nav next" id="collectionsNext">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="collections-slider-wrapper">
+            <div class="collections-slider" id="collectionsSlider">
+                <div class="collection-slide">
+                    <img src="https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=700" alt="Gaming Setup">
+                    <div class="collection-info">
+                        <h3>Gaming Collection</h3>
+                        <a href="categories.html" class="collection-link">View Collection →</a>
+                    </div>
+                </div>
+                <div class="collection-slide">
+                    <img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=700" alt="Office Setup">
+                    <div class="collection-info">
+                        <h3>Office Essentials</h3>
+                        <a href="categories.html" class="collection-link">View Collection →</a>
+                    </div>
+                </div>
+                <div class="collection-slide">
+                    <img src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=700"
+                        alt="Audio Collection">
+                    <div class="collection-info">
+                        <h3>Audio Collection</h3>
+                        <a href="categories.html" class="collection-link">View Collection →</a>
+                    </div>
+                </div>
+                <div class="collection-slide">
+                    <img src="https://images.unsplash.com/photo-1484704849700-f032a568e944?w=700" alt="Photography">
+                    <div class="collection-info">
+                        <h3>Photography Gear</h3>
+                        <a href="categories.html" class="collection-link">View Collection →</a>
+                    </div>
+                </div>
+                <div class="collection-slide">
+                    <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=700" alt="Workspace">
+                    <div class="collection-info">
+                        <h3>Smart Workspace</h3>
+                        <a href="categories.html" class="collection-link">View Collection →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- </div> -->
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories">
+        <div class="container">
+            <a href="categories.html?category=smart-home" class="category-item">
+                <div class="category-number">01</div>
+                <div class="category-content">
+                    <h3>Smart Home Devices</h3>
+                    <p>Discover a wide range of smart home devices that will make your life easier and more convenient.
+                        From smart thermostats to security cameras, we have everything you need to create a connected
+                        home.</p>
+                </div>
+                <div class="category-arrow">→</div>
+            </a>
+
+            <a href="categories.html?category=portable" class="category-item">
+                <div class="category-number">02</div>
+                <div class="category-content">
+                    <h3>Portable Gadgets</h3>
+                    <p>Explore our collection of portable gadgets designed for people on the go. Whether you need a
+                        power bank, wireless earbuds, or a portable speaker, we have the perfect solution for your
+                        mobile lifestyle.</p>
+                </div>
+                <div class="category-arrow">→</div>
+            </a>
+
+            <a href="categories.html?category=entertainment" class="category-item">
+                <div class="category-number">03</div>
+                <div class="category-content">
+                    <h3>Home Entertainment</h3>
+                    <p>Transform your living room into an entertainment hub with our selection of TVs, sound systems,
+                        and streaming devices. Experience movies, shows, and games like never before.</p>
+                </div>
+                <div class="category-arrow">→</div>
+            </a>
+
+            <a href="categories.html?category=accessories" class="category-item">
+                <div class="category-number">04</div>
+                <div class="category-content">
+                    <h3>Tech Accessories</h3>
+                    <p>Find all the accessories you need to enhance your devices. From protective cases to charging
+                        cables, we offer quality accessories that complement your electronics perfectly.</p>
+                </div>
+                <div class="category-arrow">→</div>
+            </a>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="products-section">
+        <div class="container">
+            <div class="products-header">
+                <h2 class="section-title">Stay Updated<br>with the Latest</h2>
+                <p>Welcome to our online store, where you can browse and purchase a wide variety of products from the
+                    comfort of your own home.</p>
+            </div>
+
+            <div class="products-grid" id="productsGrid">
+                <!-- Products will be generated by JavaScript -->
+            </div>
+
+            <div class="products-footer">
+                <h3>Another products</h3>
+                <p>We believe that everyone should have access to high-quality electronics without breaking the bank.
+                    That's why we strive to offer competitive prices and regular promotions to help you save money on
+                    your purchases.</p>
+                <a href="categories.html" class="btn-secondary">Shop product</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Choose Us -->
+    <section class="why-choose" id="about">
+        <div class="container">
+            <div class="why-grid">
+                <div class="why-text">
+                    <h2 class="section-title">Why<br>Choose Us</h2>
+                    <div class="accordion" id="whyAccordion">
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Quick And Effortlessly</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Online shopping has become increasingly popular in recent years, offering convenience
+                                    and ease for consumers. At our electronic shop, we understand that time is valuable,
+                                    so we've streamlined our ordering process to make it as quick and effortless as
+                                    possible.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Diverse & Alike! Clear</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Electronic devices have become an integral part of our daily lives. From smartphones
+                                    to laptops, from gaming consoles to smart home devices, our diverse selection
+                                    ensures you'll find exactly what you need. We categorize products clearly to help
+                                    you make informed decisions.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Lighting Equipment</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Transform your space with our professional lighting equipment. Whether you're setting
+                                    up a home studio, upgrading your workspace, or creating the perfect ambiance, we
+                                    offer a comprehensive range of lighting solutions including LED panels, ring lights,
+                                    smart bulbs, and decorative fixtures.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Catching & Mesmerize</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Our products are designed to catch your eye and mesmerize with their cutting-edge
+                                    features. We carefully curate items that combine stunning aesthetics with powerful
+                                    functionality, ensuring that every purchase not only meets but exceeds your
+                                    expectations.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Premium Quality Assurance</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Every product in our inventory undergoes rigorous quality checks before reaching your
+                                    hands. We partner with renowned brands and manufacturers who share our commitment to
+                                    excellence, ensuring that you receive only authentic, high-quality electronics.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Expert Customer Support</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Our knowledgeable support team is available 24/7 to assist you with product
+                                    selection, technical queries, and after-sales service. We believe in building
+                                    lasting relationships with our customers through exceptional service and support.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Competitive Pricing</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>We constantly monitor market trends to offer you the most competitive prices without
+                                    compromising on quality. Our price match guarantee and regular promotional offers
+                                    ensure you always get the best value for your money.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Fast & Secure Delivery</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Experience swift and secure delivery with our trusted logistics partners. We offer
+                                    multiple shipping options including express delivery, and all packages are fully
+                                    insured and tracked from our warehouse to your doorstep.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="why-description">
+                    <p>In today's world, electronics play a crucial role in our daily lives. From smartphones to
+                        laptops, tablets to smartwatches, we rely on these devices to stay connected and productive. Our
+                        commitment is to provide you with the best technology at unbeatable prices.</p>
+                </div>
+
+                <div class="why-images">
+                    <div class="why-image-card large">
+                        <img src="https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=600" alt="Setup">
+                    </div>
+                    <div class="why-image-group">
+                        <div class="why-image-card small">
+                            <img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400" alt="Workspace">
+                        </div>
+                        <div class="why-image-card small">
+                            <img src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=400" alt="Camera">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="newsletter">
+        <div class="container">
+            <div class="newsletter-content">
+                <h3>Stay in the Loop Head With</h3>
+                <form class="newsletter-form" id="newsletterForm">
+                    <input type="email" placeholder="Enter your email" required>
+                    <button type="submit" class="btn-subscribe">Subscribe Now</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col">
+                    <h4>Categories</h4>
+                    <ul>
+                        <li><a href="categories.html">Headphones</a></li>
+                        <li><a href="categories.html">Mobile Phones</a></li>
+                        <li><a href="categories.html">Laptops</a></li>
+                        <li><a href="categories.html">Smart Watches</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Shipping Info</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Press</a></li>
+                        <li><a href="#">Blog</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Follow us</h4>
+                    <ul>
+                        <li><a href="#">Facebook</a></li>
+                        <li><a href="#">Instagram</a></li>
+                        <li><a href="#">Twitter</a></li>
+                        <li><a href="#">LinkedIn</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>© 2025 Electronic. All rights reserved</p>
+                <div class="footer-logo">Electronic</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Виїжджаюча корзина -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>Shopping Cart</h3>
+            <button class="cart-close" id="cartClose">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty">
+                <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                    <circle cx="40" cy="40" r="38" stroke="#e0e0e0" stroke-width="4" />
+                    <path d="M20 20L30 35L50 50L60 60" stroke="#e0e0e0" stroke-width="4" stroke-linecap="round" />
+                </svg>
+                <p>Your cart is empty</p>
+            </div>
+        </div>
+
+        <div class="cart-footer">
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="cartSubtotal">$0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping:</span>
+                    <span>Free</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total:</span>
+                    <span id="cartTotal">$0.00</span>
+                </div>
+            </div>
+            <button class="btn-checkout">Proceed to Checkout</button>
+            <button class="btn-continue-shopping" id="continueShopping">Continue Shopping</button>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/slider.js"></script>
+    <script type="module" src="js/cart.js"></script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+
+    <script>
+        // Active Navigation Highlight
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            let current = '';
+
+            // Find current section in view
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (scrollY >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                // Highlight "Home" if at top of page or before first section
+                if ((current === '' || current === 'home') && link.getAttribute('id') === 'scrollToTopBtn') {
+                    link.classList.add('active');
+                } else if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+    </script>
+</body>
+
+</html>

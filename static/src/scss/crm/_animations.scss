@@ -1,0 +1,12 @@
+@use "colors";
+
+@keyframes blinking {
+    0% { border-color: transparent; }
+    50% { border-color: var(--black); }
+    100% { border-color: transparent; }
+}
+
+@keyframes typing {
+    0% { width: 0; }
+    100% { width: 100%; }
+}
