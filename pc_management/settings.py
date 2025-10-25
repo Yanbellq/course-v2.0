@@ -41,12 +41,13 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
+# ✅ ВИПРАВЛЕНИЙ ПОРЯДОК MIDDLEWARE
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',      # ← ОБОВ'ЯЗКОВО ТУТ!
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -119,15 +120,23 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# Статичні файли
+# ✅ СТАТИЧНІ ФАЙЛИ
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# ✅ Тільки скомпільовані файли
+# Варіант 1: Файли доступні БЕЗ /dist/ у URL
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'static', 'dist'),
+# ]
+
+# Варіант 2: Файли доступні З /dist/ у URL (якщо так у шаблонах)
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static', 'dist'),
+    os.path.join(BASE_DIR, 'static'),
 ]
 
-# ✅ Використовуйте простішу версію без Manifest (якщо проблеми продовжуються)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-# Або залишіть ManifestStaticFilesStorage, якщо виправили STATICFILES_DIRS
+
+# Додаткові налаштування WhiteNoise для production
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = DEBUG
+WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['map', 'json']

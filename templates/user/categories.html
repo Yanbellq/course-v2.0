@@ -47,13 +47,13 @@
                         </svg>
                         <span class="cart-count" id="cartCount">0</span>
                     </button>
-                    <button class="icon-btn user-btn" id="userBtn" aria-label="User">
+                    <a href="{% url 'main:urls:auth' %}" class="icon-btn user-btn" id="userBtn" aria-label="User">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                             <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="2" />
                             <path d="M3 19C3 15 6 13 10 13C14 13 17 15 17 19" stroke="currentColor" stroke-width="2"
                                 stroke-linecap="round" />
                         </svg>
-                    </button>
+                    </a>
                 </div>
 
                 <button class="mobile-toggle" id="mobileToggle">
