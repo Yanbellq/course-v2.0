@@ -5,9 +5,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('crm/', include('apps.crm.urls')),
-    path('api/', include('apps.api.urls')),
-    # path('', include('apps.main.urls')),
+    path('crm/', include('apps.crm.urls', namespace='crm')),
+    path('api/', include('apps.api.urls', namespace='api')),
+    path('', include('apps.main.urls', namespace='main')),
 ]
 
 if settings.DEBUG:

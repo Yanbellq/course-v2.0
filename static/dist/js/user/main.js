@@ -339,4 +339,4 @@ document.addEventListener('DOMContentLoaded', () => {
         // </button>
         console.log('User is logged in. Add logout button to UI.');
     }
-});
+});//# sourceMappingURL=main.js.map

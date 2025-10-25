@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="uk">
 
@@ -5,9 +7,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Electronic - Магазин електроніки</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+{#    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>#}
 
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="{% static 'dist/css/user/style.css' %}">
+    <link rel="stylesheet" href="{% static 'dist/css/libs/tailwind.css' %}">
 </head>
 
 <body>
@@ -23,7 +26,7 @@
                     <li><a href="#about">About</a></li>
                     <li class="nav-menu-divider">|</li>
                     <li class="nav-menu-mobile-divider"><hr /></li>
-                    <li><a href="categories.html">Shop</a></li>
+                    <li><a href="{% url 'main:urls:categories' %}">Shop</a></li>
                 </ul>
 
                 <div class="nav-icons" id="navIcons">
@@ -42,13 +45,13 @@
                         </svg>
                         <span class="cart-count" id="cartCount">0</span>
                     </button>
-                    <button class="icon-btn user-btn" id="userBtn" aria-label="User">
+                    <a href="{% url 'main:urls:auth' %}" class="icon-btn user-btn" id="userBtn" aria-label="User">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                             <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="2" />
                             <path d="M3 19C3 15 6 13 10 13C14 13 17 15 17 19" stroke="currentColor" stroke-width="2"
                                 stroke-linecap="round" />
                         </svg>
-                    </button>
+                    </a>
                 </div>
 
                 <button class="mobile-toggle" id="mobileToggle">
@@ -92,7 +95,7 @@
                                 <p>Welcome to Electronic Store, where we offer the latest and greatest in electronics.
                                     Whether you're looking for a new phone, laptop, or home entertainment system, we
                                     have you covered.</p>
-                                <a href="categories.html" class="btn-secondary">Shop Now</a>
+                                <a href="{% url 'main:urls:categories' %}" class="btn-secondary">Shop Now</a>
                             </div>
                         </div>
                     </div>
@@ -107,7 +110,7 @@
                                 <h2>Powerful Laptops</h2>
                                 <p>Discover our collection of high-performance laptops for work and gaming. Experience
                                     cutting-edge technology and superior design.</p>
-                                <a href="categories.html" class="btn-secondary">Explore</a>
+                                <a href="{% url 'main:urls:categories' %}" class="btn-secondary">Explore</a>
                             </div>
                         </div>
                     </div>
@@ -122,7 +125,7 @@
                                 <h2>Latest Smartphones</h2>
                                 <p>Get connected with the newest smartphones featuring advanced cameras, powerful
                                     processors, and stunning displays.</p>
-                                <a href="categories.html" class="btn-secondary">Buy Now</a>
+                                <a href="{% url 'main:urls:categories' %}" class="btn-secondary">Buy Now</a>
                             </div>
                         </div>
                     </div>
@@ -182,14 +185,14 @@
                     <img src="https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=700" alt="Gaming Setup">
                     <div class="collection-info">
                         <h3>Gaming Collection</h3>
-                        <a href="categories.html" class="collection-link">View Collection →</a>
+                        <a href="{% url 'main:urls:categories' %}" class="collection-link">View Collection →</a>
                     </div>
                 </div>
                 <div class="collection-slide">
                     <img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=700" alt="Office Setup">
                     <div class="collection-info">
                         <h3>Office Essentials</h3>
-                        <a href="categories.html" class="collection-link">View Collection →</a>
+                        <a href="{% url 'main:urls:categories' %}" class="collection-link">View Collection →</a>
                     </div>
                 </div>
                 <div class="collection-slide">
@@ -197,21 +200,21 @@
                         alt="Audio Collection">
                     <div class="collection-info">
                         <h3>Audio Collection</h3>
-                        <a href="categories.html" class="collection-link">View Collection →</a>
+                        <a href="{% url 'main:urls:categories' %}" class="collection-link">View Collection →</a>
                     </div>
                 </div>
                 <div class="collection-slide">
                     <img src="https://images.unsplash.com/photo-1484704849700-f032a568e944?w=700" alt="Photography">
                     <div class="collection-info">
                         <h3>Photography Gear</h3>
-                        <a href="categories.html" class="collection-link">View Collection →</a>
+                        <a href="{% url 'main:urls:categories' %}" class="collection-link">View Collection →</a>
                     </div>
                 </div>
                 <div class="collection-slide">
                     <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=700" alt="Workspace">
                     <div class="collection-info">
                         <h3>Smart Workspace</h3>
-                        <a href="categories.html" class="collection-link">View Collection →</a>
+                        <a href="{% url 'main:urls:categories' %}" class="collection-link">View Collection →</a>
                     </div>
                 </div>
             </div>
@@ -222,7 +225,7 @@
     <!-- Categories Section -->
     <section class="categories">
         <div class="container">
-            <a href="categories.html?category=smart-home" class="category-item">
+            <a href="{% url 'main:urls:categories' category='smart-home' %}" class="category-item">
                 <div class="category-number">01</div>
                 <div class="category-content">
                     <h3>Smart Home Devices</h3>
@@ -233,7 +236,7 @@
                 <div class="category-arrow">→</div>
             </a>
 
-            <a href="categories.html?category=portable" class="category-item">
+            <a href="{% url 'main:urls:categories' category='portable' %}" class="category-item">
                 <div class="category-number">02</div>
                 <div class="category-content">
                     <h3>Portable Gadgets</h3>
@@ -244,7 +247,7 @@
                 <div class="category-arrow">→</div>
             </a>
 
-            <a href="categories.html?category=entertainment" class="category-item">
+            <a href="{% url 'main:urls:categories' category='entertainment' %}" class="category-item">
                 <div class="category-number">03</div>
                 <div class="category-content">
                     <h3>Home Entertainment</h3>
@@ -254,7 +257,7 @@
                 <div class="category-arrow">→</div>
             </a>
 
-            <a href="categories.html?category=accessories" class="category-item">
+            <a href="{% url 'main:urls:categories' category='accessories' %}" class="category-item">
                 <div class="category-number">04</div>
                 <div class="category-content">
                     <h3>Tech Accessories</h3>
@@ -284,7 +287,7 @@
                 <p>We believe that everyone should have access to high-quality electronics without breaking the bank.
                     That's why we strive to offer competitive prices and regular promotions to help you save money on
                     your purchases.</p>
-                <a href="categories.html" class="btn-secondary">Shop product</a>
+                <a href="{% url 'main:urls:categories' %}" class="btn-secondary">Shop product</a>
             </div>
         </div>
     </section>
@@ -442,10 +445,10 @@
                 <div class="footer-col">
                     <h4>Categories</h4>
                     <ul>
-                        <li><a href="categories.html">Headphones</a></li>
-                        <li><a href="categories.html">Mobile Phones</a></li>
-                        <li><a href="categories.html">Laptops</a></li>
-                        <li><a href="categories.html">Smart Watches</a></li>
+                        <li><a href="{% url 'main:urls:categories' %}">Headphones</a></li>
+                        <li><a href="{% url 'main:urls:categories' %}">Mobile Phones</a></li>
+                        <li><a href="{% url 'main:urls:categories' %}">Laptops</a></li>
+                        <li><a href="{% url 'main:urls:categories' %}">Smart Watches</a></li>
                     </ul>
                 </div>
 
@@ -531,9 +534,9 @@
     <!-- Overlay -->
     <div class="overlay" id="overlay"></div>
 
-    <script type="module" src="js/main.js"></script>
-    <script type="module" src="js/slider.js"></script>
-    <script type="module" src="js/cart.js"></script>
+    <script type="module" src="{% static 'dist/js/user/main.js' %}"></script>
+    <script type="module" src="{% static 'dist/js/user/slider.js' %}"></script>
+    <script type="module" src="{% static 'dist/js/user/cart.js' %}"></script>
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>

@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="uk">
 
@@ -5,9 +7,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Electronic</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+{#    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>#}
 
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="{% static 'dist/css/user/style.css' %}">
+    <link rel="stylesheet" href="{% static 'dist/css/libs/tailwind.css' %}">
 </head>
 
 <body>
@@ -18,12 +21,12 @@
                 <a href="/" class="logo">Electronic</a>
 
                 <ul class="nav-menu" id="navMenu">
-                    <li><a href="index.html">Home</a></li>
+                    <li><a href="/">Home</a></li>
                     <li class="nav-menu-divider">|</li>
                     <li class="nav-menu-mobile-divider">
                         <hr />
                     </li>
-                    <li><a href="categories.html">Shop</a></li>
+                    <li><a href="/categories/">Shop</a></li>
                 </ul>
 
                 <div class="nav-icons" id="navIcons">
