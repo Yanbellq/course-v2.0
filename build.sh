@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
-set -e
+set -o errexit
+
+echo "📦 Installing Python dependencies..."
 pip install -r requirements.txt
-# Збираємо статику ДО старту
-python manage.py collectstatic --noinput
-# Мінімальні міграції для Django службових таблиць (SQLite-файл, не in-memory)
-python manage.py migrate --noinput
+
+echo "📦 Installing Node.js dependencies..."
+npm install
+
+echo "🔨 Building frontend assets with Gulp..."
+npm run build
+
+echo "📁 Collecting static files..."
+python manage.py collectstatic --no-input --clear
+
+echo "✅ Build completed successfully!"

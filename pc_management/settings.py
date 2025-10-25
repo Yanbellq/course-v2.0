@@ -116,17 +116,18 @@ TIME_ZONE = 'Europe/Kiev'
 USE_I18N = True
 USE_TZ = True
 
-# Статичні файли
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STORAGES = {
-    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"}
-}
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+# Статичні файли
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# ✅ Тільки скомпільовані файли
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static', 'dist'),
+]
+
+# ✅ Використовуйте простішу версію без Manifest (якщо проблеми продовжуються)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Або залишіть ManifestStaticFilesStorage, якщо виправили STATICFILES_DIRS
