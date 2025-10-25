@@ -127,13 +127,13 @@ body {
 }
 @font-face {
   font-family: "Disket Mono";
-  src: url("../fonts/Disket-Rostype/Disket-Mono-Regular.ttf") format("truetype");
+  src: url("/static/dist/fonts/Disket-Rostype/Disket-Mono-Regular.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
   font-family: "Disket Mono Bold";
-  src: url("../fonts/Disket-Rostype/Disket-Mono-Bold.ttf") format("truetype");
+  src: url("/static/dist/fonts/Disket-Rostype/Disket-Mono-Bold.ttf") format("truetype");
   font-weight: bold;
   font-style: normal;
 }
