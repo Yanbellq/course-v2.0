@@ -1,0 +1,32 @@
+
+.breadcrumb-section {
+    background: #f8f9fa;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    margin-bottom: 15px;
+
+    a {
+        color: #666;
+        text-decoration: none;
+        transition:
+            color 0.3s,
+            text-decoration 0.3s;
+
+        &:hover {
+            color: var(--black);
+            text-decoration: underline;
+        }
+    }
+
+    span.current {
+        color: #333;
+        font-weight: 500;
+    }
+}

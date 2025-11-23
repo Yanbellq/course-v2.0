@@ -1,0 +1,48 @@
+
+@use "style";
+@use "colors";
+@use "vars";
+@use "fonts";
+@use "animations";
+@use "mixins";
+
+
+@use "blocks/button";
+@use "blocks/container";
+@use "blocks/header";
+@use "blocks/logo";
+@use "blocks/navbar";
+@use "blocks/cart";
+@use "blocks/search";
+@use "blocks/mobile-toggle";
+@use "blocks/hero";
+@use "blocks/slider";
+@use "blocks/upgrade";
+@use "blocks/collection";
+@use "blocks/category";
+@use "blocks/selection";
+@use "blocks/product";
+@use "blocks/why-choose-us";
+@use "blocks/newsletter";
+@use "blocks/footer";
+
+
+@use "blocks/overlay";
+@use "blocks/page-hero";
+@use "blocks/catalog-section";
+@use "blocks/filter";
+@use "blocks/products-catalog";
+@use "blocks/pagination";
+@use "blocks/auth";
+@use "blocks/illustration";
+@use "blocks/form";
+@use "blocks/social";
+@use "blocks/profile";
+@use "blocks/breadcrumb";
+
+
+@use "blocks/media-responsive";
+
+
+// CRM
+@use "blocks/crm";

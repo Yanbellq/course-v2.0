@@ -1,0 +1,55 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Employees List</h1>
+
+    <div>
+        <a href="{% url 'crm:employees_create' %}" class="btn btn--secondary">Add employee</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    <table class="crm-table">
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Position</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Hire Date</th>
+                <th>Salary</th>
+                <th>Status</th>
+                <th colspan="2">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in employees %}
+            <tr>
+                <td>{{ e.full_name }}</td>
+                <td>{{ e.position }}</td>
+                <td>{{ e.email|default:"—" }}</td>
+                <td>{{ e.phone|default:"—" }}</td>
+                <td>{{ e.hire_date|date:"Y-m-d"|default:"—" }}</td>
+                <td>{% if e.salary %}${{ e.salary|floatformat:2 }}{% else %}—{% endif %}</td>
+                <td>
+                    <span class="badge {% if e.is_active %}badge--success{% else %}badge--danger{% endif %}">
+                        {% if e.is_active %}active{% else %}inactive{% endif %}
+                    </span>
+                </td>
+                <td>
+                    <a href="{% url 'crm:employees_edit' e.id %}" class="btn btn--actions-primary">Edit</a>
+                </td>
+                <td>
+                    <form method="POST" class="delete-item" action="{% url 'crm:employees_delete' e.id %}" onsubmit="return confirm('Delete employee?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn--actions-secondary">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="empty">No employees found</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

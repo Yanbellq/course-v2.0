@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% comment %} {% block header %}{% endblock header %} {% endcomment %}
+
+{% block content %}
+<div class="product-page">
+    <div class="container">
+        <div class="product-wrapper">
+            <!-- Breadcrumbs з типом продукту -->
+            <nav class="breadcrumb">
+                <a href="{% url 'main:categories' %}">Shop</a>
+                <span>/</span>
+                <a href="{% url 'main:categories' %}?category={{ product.category }}">{{ product.category_name_en }}</a>
+                <span>/</span>
+                {% if product.product_type != product.category %}
+                    <a href="{% url 'main:categories' %}?product_type={{ product.product_type }}">{{ product.product_type_en }}</a>
+                    <span>/</span>
+                {% endif %}
+                <span class='current'>{{ product.name }}</span>
+            </nav>
+
+            <!-- Main Product Section -->
+            <div class="product-main">
+                <!-- Product Gallery - ОДНЕ ФОТО -->
+                <div class="product-gallery">
+                    <div class="main-image">
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                    </div>
+                </div>
+
+                <!-- Product Info -->
+                <div class="product-info">
+                    <h1 class="product-title">{{ product.name }}</h1>
+                    
+                    <div class="product-meta">
+                        <a class="manufacturer" href="{% url 'main:categories' %}?brand={{ product.manufacturer }}">{{ product.manufacturer }}</a>
+                        
+                        <div class="stock-status {% if product.quantity_in_stock == 0 %}out-of-stock{% elif product.quantity_in_stock < 10 %}low-stock{% elif not product.quantity_in_stock %}unavailable{% else %}in-stock{% endif %}">
+                            {% if product.quantity_in_stock == 0 %}
+                                {% comment %} <img src="https://cdn-icons-png.flaticon.com/512/4947/4947390.png" alt="out-of-stock-icon" class='h-6 w-6'> {% endcomment %}
+                                <span>Out of Stock</span>
+                            {% elif product.quantity_in_stock < 10 %}
+                                {% comment %} <i class="fas fa-exclamation-circle"></i> {% endcomment %}
+                                <span>Only {{ product.quantity_in_stock }} left in stock!</span>
+                            {% elif not product.quantity_in_stock %}
+                                {% comment %} <i class="fas fa-exclamation-circle"></i> {% endcomment %}
+                                <span>Unavailable</span>
+                            {% else %}
+                                {% comment %} <i class="fas fa-check-circle"></i> {% endcomment %}
+                                <span>In Stock</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="product-price">
+                        <span class="current-price">${{ product.price }}</span>
+                    </div>
+
+
+                    <div class="product-ad-short">
+                        {% comment %} <p>{{ product.description|default:"Premium quality product from a trusted manufacturer. Experience exceptional performance and reliability with this carefully crafted device." }}</p> {% endcomment %}
+                        <p>Choose quality, choose us! Only the best products beyond compare. Fast shipping, prices that are fair, 100% satisfaction guaranteed anywhere!</p>
+                    </div>
+
+                    <!-- Product Actions -->
+                    <div class="product-actions">
+                        <div class="cart-item-quantity flex items-center gap-2">
+                            <button type="button" class="qty-btn" onclick="changeQty(-1)"
+                                {% if product.quantity_in_stock == 0 %}disabled{% endif %}
+                            >
+                                −
+                            </button>
+
+                            <!-- “Видимий” лічильник -->
+                            <label class="qty-display w-12 text-center font-semibold text-xl select-none" for="quantity">
+                                <span id="quantity-display">1</span>
+                                <input type="hidden" id="quantity" name="quantity" value="1" min="1" max="{{ product.quantity_in_stock }}">
+                            </label>
+
+                            <button type="button" class="qty-btn" onclick="changeQty(1)"
+                                {% if product.quantity_in_stock == 0 %}disabled{% endif %}
+                            >
+                                +
+                            </button>
+                        </div>
+
+                        <button class="btn btn--add-cart" data-id="{{ product.id }}" data-name="{{ product.name }}" data-price="{{ product.price }}" data-image="{{ product.image_url }}"
+                            {% if product.quantity_in_stock == 0 %}disabled{% endif %} type='button'
+                        >
+                            Add to Cart
+                        </button>
+                    </div>
+
+                    <!-- Product Features -->
+                    <div class="product-features">
+                        <div class="feature-item">
+                            <i data-lucide="shield-check"></i>
+                            <div>
+                                <strong>{{ product.warranty_months }} Months Warranty</strong>
+                                <span>Official manufacturer warranty</span>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="truck"></i>
+                            <div>
+                                <strong>Free Shipping</strong>
+                                <span>On orders over $100</span>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="undo-dot"></i>
+                            <div>
+                                <strong>14-Day Returns</strong>
+                                <span>Money-back guarantee</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Tabs -->
+            <div class="product-tabs">
+                <div class="tabs-header">
+                    <button class="tab-btn active" onclick="openTab(event, 'description')">
+                        {% comment %} <i class="fas fa-info-circle"></i>  {% endcomment %}
+                        Description
+                    </button>
+                    <button class="tab-btn" onclick="openTab(event, 'specifications')">
+                        {% comment %} <i class="fas fa-cog"></i>  {% endcomment %}
+                        Specifications
+                    </button>
+                    {% comment %} <button class="tab-btn" onclick="openTab(event, 'reviews')">
+                        <i class="fas fa-star"></i> Reviews (128)
+                    </button> {% endcomment %}
+                    <button class="tab-btn" onclick="openTab(event, 'shipping')">
+                        {% comment %} <i class="fas fa-shipping-fast"></i>  {% endcomment %}
+                        Shipping & Returns
+                    </button>
+                </div>
+
+                <div class="tabs-content">
+                    <!-- Description Tab -->
+                    <div id="description" class="tab-content active">
+                        <h2>Product Description</h2>
+                        <p>{{ product.description|default:"Experience cutting-edge technology with this premium product. Designed with precision and attention to detail, it delivers exceptional performance for both professional and personal use." }}</p>
+                        
+                        <h3>Key Features</h3>
+                        <ul class="feature-list">
+                            <li><i data-lucide="circle-check-big"></i> Premium build quality with durable materials</li>
+                            <li><i data-lucide="circle-check-big"></i> Advanced technology for superior performance</li>
+                            <li><i data-lucide="circle-check-big"></i> Ergonomic design for maximum comfort</li>
+                            <li><i data-lucide="circle-check-big"></i> Energy-efficient operation</li>
+                            <li><i data-lucide="circle-check-big"></i> Compatible with multiple devices and platforms</li>
+                        </ul>
+
+                        <h3>What's in the Box</h3>
+                        <ul class="box-contents">
+                            <li>1x {{ product.name }}</li>
+                            <li>1x User Manual</li>
+                            <li>1x Warranty Card</li>
+                            <li>Charging Cable (if applicable)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Specifications Tab -->
+                    <div id="specifications" class="tab-content">
+                        <h2>Technical Specifications</h2>
+                        <div class="specs-grid">
+                            <div class="spec-group">
+                                <h3>General Information</h3>
+                                <table class="specs-table">
+                                    <tr>
+                                        <td>Manufacturer</td>
+                                        <td><strong>{{ product.manufacturer }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Category</td>
+                                        <td><strong>{{ product.category_name_en }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Product Type</td>
+                                        <td><strong>{{ product.product_type_en|default:"N/A" }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Model</td>
+                                        <td><strong>{{ product.name }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>SKU</td>
+                                        <td><strong>{{ product.id }}</strong></td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            {% if product.specifications %}
+                            <div class="spec-group">
+                                <h3>Additional Specifications</h3>
+                                <table class="specs-table">
+                                    {% for spec in product.specifications %}
+                                    <tr>
+                                        <td>{{ spec.name }}</td>
+                                        <td><strong>{{ spec.value }}</strong></td>
+                                    </tr>
+                                    {% endfor %}
+                                </table>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Shipping Tab -->
+                    <div id="shipping" class="tab-content">
+                        <h2>Shipping & Returns</h2>
+
+                        <div class="warranty-section flex items-center justify-between">
+                            <div>
+                                <h3><i data-lucide="shield-check"></i> Warranty Information</h3>
+                                <p>This product comes with a <strong>{{ product.warranty_months }}-month manufacturer warranty</strong> covering defects in materials and workmanship.</p>
+                            </div>
+                            <button class="btn btn--secondary">Download Warranty Details</button>
+                        </div>
+
+                        <div class="shipping-section">
+                            <h3><i data-lucide="truck"></i> Shipping Information</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <strong>Standard Shipping</strong>
+                                    <p>5-7 business days - $9.99</p>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Express Shipping</strong>
+                                    <p>2-3 business days - $19.99</p>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Overnight Shipping</strong>
+                                    <p>Next business day - $29.99</p>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Free Shipping</strong>
+                                    <p>On all orders over $100</p>
+                                </div>
+                            </div>
+                            <p class="note"><i data-lucide="info"></i> Orders placed before 2 PM EST ship the same day!</p>
+                        </div>
+
+                        <div class="returns-section">
+                            <h3><i data-lucide="undo-dot"></i> Returns & Refunds</h3>
+                            <p>We want you to be completely satisfied with your purchase. If you're not happy, we offer a hassle-free 14-day return policy.</p>
+                            
+                            <h4>Return Eligibility</h4>
+                            <ul class="policy-list">
+                                <li><i data-lucide="circle-check-big"></i> Items must be returned within 14 days of delivery</li>
+                                <li><i data-lucide="circle-check-big"></i> Products must be in original packaging</li>
+                                <li><i data-lucide="circle-check-big"></i> Items must be unused and in resalable condition</li>
+                                <li><i data-lucide="circle-check-big"></i> Original receipt or proof of purchase required</li>
+                            </ul>
+
+                            <h4>Return Process</h4>
+                            <ol class="process-list">
+                                <li>Contact our customer service team</li>
+                                <li>Receive your return authorization number</li>
+                                <li>Pack the item securely in original packaging</li>
+                                <li>Ship the item back using provided label</li>
+                                <li>Receive refund within 5-10 business days</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block extra_js %}
+    <script src="{% static 'js/user/product.js' %}" defer></script>
+{% endblock extra_js %}

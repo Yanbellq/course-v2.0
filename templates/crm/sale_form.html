@@ -1,0 +1,320 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Sale — {% if sale %}Edit{% else %}Add{% endif %}</h1>
+
+    <div>
+        <a class="btn btn--secondary" href="{% url 'crm:sales_list' %}">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    <section class="panel">
+        <form method="POST" id="saleForm">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <label for="user_id">Customer *</label>
+                <select name="user_id" id="user_id" required>
+                    <option value="">Select customer</option>
+                    {% for user in users %}
+                    <option value="{{ user.id }}" {% if sale and sale.user_id == user.id %}selected{% endif %}>{{ user.username }} ({{ user.email }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label for="employee_id">Employee *</label>
+                <select name="employee_id" id="employee_id" required>
+                    <option value="">Select employee</option>
+                    {% for employee in employees %}
+                    <option value="{{ employee.id }}" {% if sale and sale.employee_id == employee.id %}selected{% endif %}>{{ employee.full_name }} ({{ employee.position }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label for="sale_date">Sale Date *</label>
+                <input type="datetime-local" name="sale_date" id="sale_date" value="{% if sale %}{{ sale.sale_date|date:'Y-m-d\TH:i' }}{% else %}{{ now|date:'Y-m-d\TH:i' }}{% endif %}" 
+                    {% if sale %}style="background-color: #f5f5f5;" disabled{% endif %} required
+                >
+            </div>
+
+            <!-- PRODUCTS BLOCK -->
+            <div class="form-row">
+                <label>Products</label>
+            </div>
+
+            <div class="products-container">
+                <table class="products-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th style="width:100px;">Quantity</th>
+                            <th style="width:140px;">Unit Price</th>
+                            <th style="width:120px;">Subtotal</th>
+                            <th style="width:60px;"></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="productsTableBody">
+                        {% if sale and sale.products %}
+                            {% for item in sale.products %}
+                            <tr class="product-row">
+                                <td>
+                                    <select name="product_id[]" required style="width: 100%; padding: 4px 8px;">
+                                        <option value="">Select product</option>
+                                        {% for p in products %}
+                                            <option value="{{ p.id }}"
+                                                {% if item.product_id|stringformat:"s" == p.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ p.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+
+                                <td>
+                                    <input type="number" name="quantity[]" min="1" class="quantity-input"
+                                        value="{{ item.quantity }}" required style="width: 100%; padding: 4px 8px;">
+                                </td>
+
+                                <td>
+                                    <input type="number" name="unit_price[]" step="0.01" min="0" class="unit-price-input"
+                                        value="{{ item.unit_price }}" required style="width: 100%; padding: 4px 8px;">
+                                </td>
+
+                                <td>
+                                    <span class="subtotal-display" data-quantity="{{ item.quantity }}" data-price="{{ item.unit_price }}">$0.00</span>
+                                </td>
+
+                                <td style="text-align: center;">
+                                    <button type="button" class="btn btn--danger remove-product" style="padding: 4px 8px;">×</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr class="specification-row empty-specifications">
+                                <td colspan="5">
+                                    No products added yet
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                    
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="text-align: right; font-weight: bold; padding-top: 15px;">Total Amount:</td>
+                            <td style="font-weight: bold; font-size: 16px; padding-top: 15px;">
+                                <span id="totalAmountDisplayFooter">{% if sale and sale.total_amount %}${{ sale.total_amount|floatformat:2 }}{% else %}$0.00{% endif %}</span>
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                
+                <div style="margin-top: 15px;">
+                    <button type="button" class="btn btn--primary" id="addProductBtn">+ Add Product</button>
+                </div>
+            </div>
+
+            <hr /  style="margin-top: 30px;">
+
+
+            <!-- Custom Build Section -->
+            <div class="form-section">
+                <div class="form-section-header">
+                    <h3>Custom PC Build</h3>
+                    <label>
+                        <input type="checkbox" name="has_custom_build" id="has_custom_build" {% if sale and sale.custom_build_service and sale.custom_build_service.purchased %}checked{% endif %} onchange="toggleCustomBuild()">
+                        Include custom PC build
+                    </label>
+                </div>
+                
+                <div id="custom_build_section" style="display: {% if sale and sale.custom_build_service and sale.custom_build_service.purchased %}block{% else %}none{% endif %}; margin-top: 15px;">
+                    <div class="form-row">
+                        <label for="custom_build_name">Build Name</label>
+                        <input type="text" name="custom_build_name" id="custom_build_name" placeholder="e.g., Gaming PC Build" value="{% if sale and sale.custom_build_service and sale.custom_build_service.data %}{{ sale.custom_build_service.data.name }}{% endif %}">
+                    </div>
+                    
+                    <div class="products-container">
+                        <table class="products-table">
+                            <thead>
+                                <tr>
+                                    <th>Component</th>
+                                    <th style="width:100px;">Quantity</th>
+                                    <th style="width:140px;">Unit Price</th>
+                                    <th style="width:120px;">Subtotal</th>
+                                    <th style="width:60px;"></th>
+                                </tr>
+                            </thead>
+                            
+                            <tbody id="customBuildProductsTableBody">
+                                {% if sale and sale.custom_build_service and sale.custom_build_service.data and sale.custom_build_service.data.products %}
+                                    {% for item in sale.custom_build_service.data.products %}
+                                    <tr class="product-row">
+                                        <td>
+                                            <select name="cb_product_id[]" class="product-select" required style="width: 100%; padding: 4px 8px;">
+                                                <option value="">Select component</option>
+                                                {% for product in components %}
+                                                <option value="{{ product.id }}" {% if item.product_id|stringformat:"s" == product.id|stringformat:"s" %}selected{% endif %}>{{ product.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="cb_quantity[]" class="quantity-input" value="{{ item.quantity }}" min="1" required style="width: 100%; padding: 4px 8px;">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="cb_unit_price[]" class="unit-price-input" value="{{ item.unit_price }}" step="0.01" min="0" required style="width: 100%; padding: 4px 8px;">
+                                        </td>
+                                        <td>
+                                            <span class="subtotal-display" data-quantity="{{ item.quantity }}" data-price="{{ item.unit_price }}">$0.00</span>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <button type="button" class="btn btn--danger remove-product" style="padding: 4px 8px;">×</button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr class="specification-row empty-specifications">
+                                        <td colspan="5">
+                                            No components added yet
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                            
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" style="text-align: right; font-weight: bold; padding-top: 15px;">Total Cost:</td>
+                                    <td style="font-weight: bold; font-size: 16px; padding-top: 15px;">
+                                        <span id="customBuildTotalDisplayFooter">$0.00</span>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        
+                        <div style="margin-top: 15px;">
+                            <button type="button" class="btn btn--primary" id="addCustomBuildProductBtn">+ Add Component</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <label for="custom_build_notes">Build Notes</label>
+                        <textarea name="custom_build_notes" id="custom_build_notes" rows="3">{% if sale and sale.custom_build_service and sale.custom_build_service.data %}{{ sale.custom_build_service.data.notes }}{% endif %}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+
+            <!-- Software Service Section -->
+            <div class="form-section">
+                <div class="form-section-header">
+                    <h3>OS Setup / Software Service</h3>
+                    <label>
+                        <input type="checkbox" name="has_software_service" id="has_software_service" {% if sale and sale.software_service and sale.software_service.purchased %}checked{% endif %} onchange="toggleSoftwareService()">
+                        Include OS setup / software service
+                    </label>
+                </div>
+                
+                <div id="software_service_section" style="display: {% if sale and sale.software_service and sale.software_service.purchased %}block{% else %}none{% endif %}; margin-top: 15px;">
+                    <div class="form-row">
+                        <label for="software_list">Software List (comma-separated)</label>
+                        <input type="text" name="software_list" id="software_list" placeholder="Windows 11, Office 365, Antivirus" value="{% if sale and sale.software_service and sale.software_service.data %}{{ sale.software_service.data.software_list|join:', ' }}{% endif %}">
+                    </div>
+                    
+                    <div class="form-row">
+                        <label for="software_date">Scheduled Date</label>
+                        <input type="datetime-local" name="software_date" id="software_date" value="{% if sale and sale.software_service and sale.software_service.data and sale.software_service.data.date_scheduled %}{{ sale.software_service.data.date_scheduled|date:'Y-m-d\TH:i' }}{% else %}{{ now|date:'Y-m-d\TH:i' }}{% endif %}">
+                    </div>
+                    
+                    <div class="form-row">
+                        <label for="software_cost">Service Cost</label>
+                        <input type="number" name="software_cost" id="software_cost" step="0.01" min="0" placeholder="0.00" value="{% if sale and sale.software_service and sale.software_service.data %}{{ sale.software_service.data.cost }}{% endif %}">
+                    </div>
+
+                    <div class="form-row">
+                        <label for="software_description">Service Description</label>
+                        <textarea name="software_description" id="software_description" rows="2" placeholder="e.g., Windows 11 installation and configuration">{% if sale and sale.software_service and sale.software_service.data %}{{ sale.software_service.data.description }}{% endif %}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="form-group" style="margin-top: 30px;">
+                <div class="form-row">
+                    <label for="status">Status *</label>
+                    <select name="status" id="status" required>
+                        <option value="paid" {% if sale and sale.status == 'paid' %}selected{% endif %}>Paid</option>
+                        <option value="pending" {% if sale and sale.status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="cancelled" {% if sale and sale.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+    
+                <div class="form-row">
+                    <label for="payment_method">Payment Method *</label>
+                    <select name="payment_method" id="payment_method" required>
+                        <option value="cash" {% if sale and sale.payment_method == 'cash' %}selected{% endif %}>Cash</option>
+                        <option value="card" {% if sale and sale.payment_method == 'card' %}selected{% endif %}>Card</option>
+                        <option value="transfer" {% if sale and sale.payment_method == 'transfer' %}selected{% endif %}>Transfer</option>
+                    </select>
+                </div>
+    
+                <div class="form-row">
+                    <label for="warranty_end_date">Warranty End Date</label>
+                    <input type="date" name="warranty_end_date" id="warranty_end_date" value="{% if sale and sale.warranty_end_date %}{{ sale.warranty_end_date|date:'Y-m-d' }}{% endif %}"
+                        {% if sale %}style="background-color: #f5f5f5;" disabled{% endif %}
+                    >
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label for="notes">Notes</label>
+                <textarea name="notes" id="notes" rows="3">{% if sale %}{{ sale.notes }}{% endif %}</textarea>
+            </div>
+
+            <!-- Buttons -->
+            <div class="form-actions">
+                <a class="btn btn--secondary" href="{% url 'crm:sales_list' %}">Back</a>
+                <button class="btn btn--primary" type="submit">Save</button>
+            </div>
+        </form>
+    </section>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // Products data with prices
+        const productsData = {
+            {% for product in products %}
+            "{{ product.id }}": {{ product.price|default:0 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        };
+
+        // Products list with names (for dropdown options)
+        const productsList = [
+            {% for product in products %}
+            {
+                id: "{{ product.id }}",
+                name: "{{ product.name|escapejs }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        // Components data for custom build
+        const componentsData = [
+            {% for component in components %}
+            {
+                id: "{{ component.id }}",
+                name: "{{ component.name|escapejs }}",
+                price: {{ component.price|default:0 }}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+    </script>
+    <script src="{% static 'js/crm/product-list.js' %}"></script>
+{% endblock extra_js %}

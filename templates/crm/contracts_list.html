@@ -1,0 +1,95 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Contracts List</h1>
+
+    <div>
+        <a class="btn btn--secondary" href="{% url 'crm:contracts_create' %}">Add contract</a>
+    </div>
+{% endblock crm__page_header %}
+
+{% block crm__content %}
+    <table class="crm-table">
+        <thead>
+            <tr>
+                <th>Number</th>
+                <th>Supplier</th>
+                <th>Products</th>
+                <th>Signing Date</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th colspan="2">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in contracts %}
+            <tr>
+                <td>{{ c.number }}</td>
+                <td>{{ c.supplier.name }}</td>
+                <td>
+                    {% if c.products %}
+                        <button onclick="toggleProducts('products_{{ forloop.counter }}')" class="btn btn--actions-primary">{{ c.products|length }} item(s)</button>
+                    {% else %}
+                        0
+                    {% endif %}
+                </td>
+                <td>{{ c.signing_date|date:"Y-m-d"|default:"N/A" }}</td>
+                <td>${{ c.total_amount|floatformat:2 }}</td>
+                <td>{{ c.status }}</td>
+                {% comment %} <td>
+                    <a href="{% url 'contract_edit' c.id %}" class="btn btn-white">Редагувати</a>
+                    <a href="{% url 'contract_delete' c.id %}" class="btn btn-danger">×</a>
+                </td> {% endcomment %}
+                <td>
+                    <a href="{% url 'crm:contracts_edit' c.id %}" class="btn btn--actions-primary">Edit</a>
+                </td>
+                <td>
+                    <form method="POST" class="delete-item" action="{% url 'crm:contracts_delete' c.id %}" onsubmit="return confirm('Delete contract?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn--actions-secondary">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            <tr id="products_{{ forloop.counter }}" style="display: none;">
+                <td colspan="8">
+                    <table class="crm-table" style="margin: 10px 0;">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in c.products %}
+                            <tr>
+                                <td>{{ product.product.name }}</td>
+                                <td>{{ product.quantity }}</td>
+                                <td>${{ product.unit_price|floatformat:2 }}</td>
+                                <td>${{ product.subtotal|default:0|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="empty">No products</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="empty">No data available</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        function toggleProducts(id) {
+            const row = document.getElementById(id);
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+    </script>
+{% endblock extra_js %}

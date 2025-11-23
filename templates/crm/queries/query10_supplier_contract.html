@@ -1,0 +1,79 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries — 10: Supplier Contract</h1>
+
+    <div>
+        <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    {% if contract and supplier %}
+        <h2 class="text-2xl font-bold">Contract Information</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <p><strong>Contract Number:</strong> {{ contract.number }}</p>
+            </div>
+            <div class="stat-card">
+                <p><strong>Total Amount:</strong> ${{ contract.total_amount|floatformat:2 }}</p>
+            </div>
+            <div class="stat-card">
+                <p><strong>Signing Date:</strong> {{ contract.signing_date|date:"Y-m-d" }}</p>
+            </div>
+            <div class="stat-card">
+                <p><strong>Status:</strong> {{ contract.status }}</p>
+            </div>
+        </div>
+        
+        <h2 class="text-2xl font-bold">Supplier Information</h3>
+        <div class="stats-grid {% if supplier.address %}stats-grid-5{% endif %}">
+            <div class="stat-card">
+                <p><strong>Name:</strong> {{ supplier.name }}</p>
+            </div>
+            <div class="stat-card">
+                <p><strong>Contact Person:</strong> {{ supplier.contact_person }}</p>
+            </div>
+            <div class="stat-card">
+                <p><strong>Email:</strong> {{ supplier.email }}</p>
+            </div>
+            <div class="stat-card">
+                <p><strong>Phone:</strong> {{ supplier.phone }}</p>
+            </div>
+            {% if supplier.address %}
+                <div class="stat-card">
+                    <p><strong>Address:</strong> {{ supplier.address }}</p>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if products %}
+            <table class="crm-table">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Manufacturer</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in products %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.product.manufacturer }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>${{ item.unit_price|floatformat:2 }}</td>
+                        <td>${{ item.subtotal|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+    {% else %}
+        <p class="empty">Contract or supplier not found</p>
+    {% endif %}
+{% endblock %}
+

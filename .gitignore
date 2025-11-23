@@ -1,0 +1,11 @@
+.env
+.idea/
+node_modules/
+.venv/
+__pycache__/
+trash/
+
+logs/*.log
+*.pdf
+тема.txt
+методичка_текст.txt

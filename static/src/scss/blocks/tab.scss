@@ -1,0 +1,49 @@
+
+.tabs {
+    display: flex;
+    gap: 1rem;
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 2rem;
+
+    .tab-btn {
+        background: none;
+        border: none;
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        position: relative;
+        color: #666;
+        transition: color 0.3s;
+
+        &:hover {
+            color: #007bff;
+        }
+
+        &.active {
+            color: #007bff;
+
+            &::after {
+                content: "";
+                position: absolute;
+                bottom: -2px;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background: #007bff;
+            }
+        }
+    }
+}
+
+.tab-content {
+    display: none;
+
+    &.active {
+        display: block;
+    }
+
+    h3 {
+        margin-bottom: 1rem;
+    }
+}

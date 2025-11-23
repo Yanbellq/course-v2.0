@@ -1,0 +1,78 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries — 1a: Suppliers and Products</h1>
+
+    <div>
+        <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    <table class="crm-table">
+        <thead>
+            <tr>
+                <th>Supplier</th>
+                <th>Products</th>
+                <th>Contact Person</th>
+                <th>Phone</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+            <tr>
+                <td>{{ result.supplier.name }}</td>
+                <td>
+                    {% comment %} <button onclick="toggleProducts('products_{{ forloop.counter }}')" class="btn btn--small">View Products</button> {% endcomment %}
+                    <button onclick="toggleProducts('products_{{ forloop.counter }}')" class="btn btn--actions-primary">{{ result.total_products }} item(s)</button>
+                </td>
+                <td>{{ result.supplier.contact_person }}</td>
+                <td>{{ result.supplier.phone }}</td>
+                <td>{{ result.supplier.email }}</td>
+            </tr>
+            <tr id="products_{{ forloop.counter }}" style="display: none;">
+                <td colspan="5">
+                    <table class="crm-table" style="margin: 10px 0;">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Manufacturer</th>
+                                <th>Type</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in result.products %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.product.manufacturer }}</td>
+                                <td>{{ item.product.product_type }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ item.unit_price|floatformat:2 }}</td>
+                                <td>${{ item.subtotal|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="empty">No products</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="empty">No data available</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        function toggleProducts(id) {
+            const row = document.getElementById(id);
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+    </script>
+{% endblock extra_js %}

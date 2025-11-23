@@ -1,0 +1,214 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries — 7: Custom Build Components</h1>
+    <div>
+        <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    {% if sale %}
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Employee</th>
+                    <th>Products</th>
+                    <th>Custom Build</th>
+                    <th>OS Setup</th>
+                    <th>Total Amount</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ sale.id|truncatechars:8 }}</td>
+                    <td>
+                        {% if sale.user %}
+                            {% with user=sale.user %}
+                                {{ user.username|default:"N/A" }}
+                            {% endwith %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if sale.employee %}
+                            {% with emp=sale.employee %}
+                                {{ emp.full_name|default:"N/A" }}
+                            {% endwith %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if sale.products %}
+                            <button onclick="toggleProducts('products_{{ forloop.counter }}')" class="btn btn--actions-primary">{{ sale.products|length }} item(s)</button>
+                            {% comment %} {{ sale.products|length }} item(s) {% endcomment %}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if sale.custom_build_service and sale.custom_build_service.purchased %}
+                            <button onclick="toggleCustomBuild('custom_build_{{ forloop.counter }}')" class="btn btn--actions-primary">
+                                Yes
+                                {% if sale.custom_build_service.data %}
+                                    ({{ sale.custom_build_service.data.name|default:"Custom Build" }})
+                                {% endif %}
+                            </button>
+                        {% else %}
+                            <span class="badge badge--secondary">No</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if sale.software_service and sale.software_service.purchased %}
+                            <button onclick="toggleSoftwareService('software_service_{{ forloop.counter }}')" class="btn btn--actions-primary">
+                                Yes
+                                {% if sale.software_service.data %}
+                                    ({{ sale.software_service.data.status|default:"Scheduled" }})
+                                {% endif %}
+                            </button>
+                        {% else %}
+                            <span class="badge badge--secondary">No</span>
+                        {% endif %}
+                    </td>
+                    <td>${{ sale.total_amount|default:"0.00"|floatformat:2 }}</td>
+                    <td>{{ sale.sale_date|date:"Y-m-d"|default:"N/A" }}</td>
+                    <td>
+                        <span class="badge badge--{% if sale.status == 'paid' %}success{% elif sale.status == 'pending' %}warning{% else %}danger{% endif %}">
+                            {{ sale.status|default:"N/A" }}
+                        </span>
+                    </td>
+                </tr>
+                <tr id="products_{{ forloop.counter }}" style="display: none;">
+                    <td colspan="9">
+                        <table class="crm-table" style="margin: 10px 0;">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in sale.products %}
+                                <tr>
+                                    <td>{{ product.product.name }}</td>
+                                    <td>{{ product.quantity }}</td>
+                                    <td>${{ product.unit_price|floatformat:2 }}</td>
+                                    <td>${{ product.subtotal|default:0|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="empty">No products</td></tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr style="padding-top: 15px;">
+                                    <td colspan="3" style="text-align: right; font-weight: bold;">Total Cost:</td>
+                                    <td style="font-weight: bold;">${{ sale.products_total_cost|floatformat:2 }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </td>
+                </tr>
+                {% if sale.custom_build_service and sale.custom_build_service.purchased and sale.custom_build_service.data %}
+                <tr id="custom_build_{{ forloop.counter }}" style="display: none;">
+                    <td colspan="9">
+                        {% if sale.custom_build_service.data.products %}
+                        <table class="crm-table" style="margin: 10px 0;">
+                            <thead>
+                                <tr>
+                                    <th>Component</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in sale.custom_build_service.data.products %}
+                                <tr>
+                                    <td>
+                                        {% if item.product %}
+                                            {{ item.product.name }}
+                                        {% else %}
+                                            Component #{{ item.product_id|truncatechars:8 }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>${{ item.unit_price|floatformat:2 }}</td>
+                                    <td>${{ item.subtotal|default:0|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr style="padding-top: 15px;">
+                                    <td colspan="3" style="text-align: right; font-weight: bold;">Total Cost:</td>
+                                    <td style="font-weight: bold;">${{ sale.custom_build_service.data.total_cost|floatformat:2 }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        {% endif %}
+                        {% if sale.custom_build_service.data.notes %}
+                        <p style="margin: 10px 0 0 0;"><strong>Notes:</strong> {{ sale.custom_build_service.data.notes }}</p>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endif %}
+                {% if sale.software_service and sale.software_service.purchased and sale.software_service.data %}
+                <tr id="software_service_{{ forloop.counter }}" style="display: none;">
+                    <td colspan="9">
+                        {% if sale.software_service.data.software_list %}
+                            <table class="crm-table" style="margin: 10px 0;">
+                                <thead>
+                                    <tr>
+                                        <th colspan="4">Software</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in sale.software_service.data.software_list %}
+                                        <tr>
+                                            <td colspan="4">
+                                                {{ item }}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr style="padding-top: 15px;">
+                                        <td colspan="3" style="text-align: right; font-weight: bold;">Total Cost:</td>
+                                        <td style="font-weight: bold;">${{ sale.software_service.data.cost|floatformat:2 }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">No sale with custom build found</p>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        function toggleProducts(id) {
+            const row = document.getElementById(id);
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+        function toggleCustomBuild(id) {
+            const row = document.getElementById(id);
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+        function toggleSoftwareService(id) {
+            const row = document.getElementById(id);
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+    </script>
+{% endblock extra_js %}

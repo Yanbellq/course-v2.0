@@ -1,0 +1,458 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Delivery — {% if delivery %}Edit{% else %}Add{% endif %}</h1>
+
+    <div>
+        <a href="{% url 'crm:deliveries_list' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    <section class="panel">
+        <form method="post" id="deliveryForm">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <div class="form-row">
+                    <label for="sale_id">Sale (Order) *</label>
+                    <select name="sale_id" id="sale_id" required {% if delivery %}style="background-color: #f5f5f5;" disabled{% endif %}>
+                        <option value="">Select sale</option>
+                        
+                        {% for sale in sales %}
+                            <option value="{{ sale.id }}" 
+                                {% if delivery_sale_id_str and delivery_sale_id_str == sale.id %}selected{% endif %}
+                                data-user-id="{{ sale.user_id }}"
+                                data-products='{{ sale.products|default:"[]" }}'>
+                                {{ sale.id|truncatechars:8 }} - {{ sale.user.username|default:"Unknown" }} - ${{ sale.total_amount|default:0|floatformat:2 }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if delivery %}
+                        <input type="hidden" name="sale_id" value="{{ delivery.sale_id|stringformat:'s' }}">
+                        <p class="form-text">Sale cannot be changed after creation</p>
+                    {% else %}
+                        <p class="form-text">Select a sale to automatically fill customer and products</p>
+                    {% endif %}
+                </div>
+    
+                <div class="form-row">
+                    <label for="user_id">Customer *</label>
+                    <select name="user_id" id="user_id" required style="background-color: #f5f5f5;" disabled>
+                        <option value="">Select sale first</option>
+                        {% for user in users %}
+                            <option value="{{ user.id }}" {% if delivery and delivery.user_id == user.id %}selected{% endif %}>
+                                {{ user.username }} ({{ user.email }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if not delivery %}
+                    <p class="form-text">Automatically filled from selected sale</p>
+                    {% else %}
+                    <p class="form-text">Customer from sale</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Products from Sale (Read-only/Editable) -->
+            <div class="form-row">
+                <label>Products</label>
+                <div class="products-container">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th style="width:100px;">Quantity</th>
+                                <th style="width:140px;">Unit Price</th>
+                                <th style="width:120px;">Subtotal</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="productsTableBody">
+                            {% if delivery_products %}
+                                {% for item in delivery_products %}
+                                <tr class="product-row">
+                                    <td>
+                                        {% comment %} <select name="product_id[]" required style="width: 100%; padding: 4px 8px;">
+                                            <option value="">Select product</option>
+                                            {% for p in products %}
+                                                <option value="{{ p.id }}"
+                                                    {% if item.product_id|stringformat:"s" == p.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ p.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select> {% endcomment %}
+                                        {{ item.product.name }}
+                                    </td>
+
+                                    <td>
+                                        {% comment %} <input type="number" name="quantity[]" min="1" class="quantity-input"
+                                            value="{{ item.quantity }}" required style="width: 100%; padding: 4px 8px;"> {% endcomment %}
+                                        {{ item.quantity }}
+                                    </td>
+
+                                    <td>
+                                        {% comment %} <input type="number" name="unit_price[]" step="0.01" min="0" class="unit-price-input"
+                                            value="{{ item.unit_price }}" required style="width: 100%; padding: 4px 8px;"> {% endcomment %}
+                                        {{ item.unit_price }}
+                                    </td>
+
+                                    <td>
+                                        <span class="subtotal-display" data-quantity="{{ item.quantity }}" data-price="{{ item.unit_price }}">$0.00</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="specification-row empty-specifications">
+                                    <td colspan="4">
+                                        Select a sale to view products
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                        
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" style="text-align: right; font-weight: bold; padding-top: 15px;">Order Total:</td>
+                                <td style="font-weight: bold; font-size: 16px; padding-top: 15px;">
+                                    <span id="orderTotalDisplayFooter">$0.00</span>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <p class="form-text">Products are automatically taken from the sale. You can edit quantities and prices if needed.</p>
+            </div>
+
+            <!-- Custom Build PC (if exists in sale) -->
+            <div class="form-row" id="customBuildSection" style="display: none;">
+                <label>Custom PC Build</label>
+                <div class="products-container">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th style="width:100px;">Quantity</th>
+                                <th style="width:140px;">Unit Price</th>
+                                <th style="width:120px;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customBuildTableBody">
+                            <tr class="specification-row empty-specifications">
+                                <td colspan="4">No custom build components</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" style="text-align: right; font-weight: bold; padding-top: 15px;">Custom Build Total:</td>
+                                <td style="font-weight: bold; font-size: 16px; padding-top: 15px;">
+                                    <span id="customBuildTotalDisplay">$0.00</span>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <p class="form-text" id="customBuildNotes"></p>
+            </div>
+
+            <!-- Software Service / OS Setup (if exists in sale) -->
+            <div class="form-row" id="softwareServiceSection" style="display: none;">
+                <label>OS Setup / Software Service</label>
+                <div class="text-xl" style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; border: 1px solid #ddd;">
+                    <p style="margin: 0 0 10px 0;"><strong>Description:</strong> <span id="softwareServiceDescription"></span></p>
+                    <p style="margin: 0 0 10px 0;"><strong>Software List:</strong> <span id="softwareServiceList"></span></p>
+                    <p style="margin: 0;"><strong>Cost:</strong> $<span id="softwareServiceCost">0.00</span></p>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label for="delivery_address">Delivery Address *</label>
+                <textarea name="delivery_address" id="delivery_address" rows="3" required placeholder="Enter delivery address...">{% if delivery and delivery.delivery_address %}{{ delivery.delivery_address }}{% endif %}</textarea>
+                <p class="form-text">Enter the full delivery address for this order</p>
+            </div>
+
+
+            <div class="form-group">
+                <div class="form-row">
+                    <label for="total_cost">Delivery Cost *</label>
+                    <input type="number" name="total_cost" id="total_cost" step="0.01" min="0" value="{% if delivery and delivery.total_cost %}{{ delivery.total_cost }}{% else %}0{% endif %}" required>
+                    <p class="form-text">Enter the delivery cost (shipping fee), not the order total</p>
+                </div>
+    
+                <div class="form-row">
+                    <label for="delivery_date">Delivery Date & Time *</label>
+                    <input type="datetime-local" name="delivery_date" id="delivery_date" value="{% if delivery and delivery.delivery_date %}{{ delivery.delivery_date|date:'Y-m-d\TH:i' }}{% else %}{{ now|date:'Y-m-d\TH:i' }}{% endif %}" required>
+                    <p class="form-text">Select delivery date and time</p>
+                </div>
+    
+                {% if delivery %}
+                <div class="form-row">
+                    <label for="received_date">Received Date</label>
+                    <input type="date" name="received_date" id="received_date" value="{% if delivery.received_date %}{{ delivery.received_date|date:'Y-m-d' }}{% endif %}">
+                </div>
+                {% endif %}
+    
+                <div class="form-row">
+                    <label for="status">Status *</label>
+                    <select name="status" id="status" required>
+                        <option value="ordered" {% if delivery and delivery.status == 'ordered' %}selected{% endif %}>Ordered</option>
+                        <option value="delivered" {% if delivery and delivery.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                        <option value="received" {% if delivery and delivery.status == 'received' %}selected{% endif %}>Received</option>
+                        <option value="cancelled" {% if delivery and delivery.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label for="notes">Notes</label>
+                <textarea name="notes" id="notes" rows="3">{% if delivery %}{{ delivery.notes|default:"" }}{% endif %}</textarea>
+            </div>
+
+            {% if errors %}
+                <div class="messages">
+                    {% for field, error_list in errors.items %}
+                        {% for error in error_list %}
+                            <div class="alert alert-error">
+                                <strong>{{ field }}:</strong> {{ error }}
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Buttons -->
+            <div class="form-actions">
+                <a class="btn btn--secondary" href="{% url 'crm:deliveries_list' %}">Back</a>
+                <button class="btn btn--primary" type="submit">Save</button>
+            </div>
+        </form>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // Products data with prices
+        const productsData = {
+            {% for product in products %}
+            "{{ product.id }}": {{ product.price|default:0 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        };
+
+        // Products list with names (for dropdown options)
+        const productsList = [
+            {% for product in products %}
+            {
+                id: "{{ product.id }}",
+                name: "{{ product.name|escapejs }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        // Sales data for JavaScript
+        const salesData = [
+            {% for sale in sales %}
+            {
+                id: "{{ sale.id }}",
+                user_id: "{{ sale.user_id }}",
+                products: {{ sale.products|safe|default:"[]" }},
+                total_amount: {{ sale.total_amount|default:0 }},
+                custom_build_service: {% if sale.custom_build_service and sale.custom_build_service.purchased and sale.custom_build_service.data %}{"purchased": true, "data": {"name": "{{ sale.custom_build_service.data.name|escapejs|default:"" }}", "products": {{ sale.custom_build_service.data.products|safe|default:"[]" }}, "total_cost": {{ sale.custom_build_service.data.total_cost|default:0 }}, "notes": "{{ sale.custom_build_service.data.notes|escapejs|default:"" }}"}}{% else %}null{% endif %},
+                software_service: {% if sale.software_service and sale.software_service.purchased and sale.software_service.data %}{"purchased": true, "data": {"description": "{{ sale.software_service.data.description|escapejs|default:"" }}", "software_list": {{ sale.software_service.data.software_list|safe|default:"[]" }}, "cost": {{ sale.software_service.data.cost|default:0 }}}}{% else %}null{% endif %}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+    </script>
+    <script>
+        // Auto-update user_id and products when sale is selected
+        document.addEventListener('DOMContentLoaded', function() {
+            const saleSelect = document.getElementById('sale_id');
+            const userSelect = document.getElementById('user_id');
+            const productsTableBody = document.getElementById('productsTableBody');
+            const orderTotalDisplay = document.getElementById('orderTotalDisplayFooter');
+            const customBuildSection = document.getElementById('customBuildSection');
+            const customBuildTableBody = document.getElementById('customBuildTableBody');
+            const customBuildTotalDisplay = document.getElementById('customBuildTotalDisplay');
+            const customBuildNotes = document.getElementById('customBuildNotes');
+            const softwareServiceSection = document.getElementById('softwareServiceSection');
+            const softwareServiceDescription = document.getElementById('softwareServiceDescription');
+            const softwareServiceList = document.getElementById('softwareServiceList');
+            const softwareServiceCost = document.getElementById('softwareServiceCost');
+            
+            function updateCustomBuild(customBuildService) {
+                if (!customBuildSection || !customBuildTableBody) return;
+                
+                if (customBuildService && customBuildService.purchased && customBuildService.data && customBuildService.data.products && customBuildService.data.products.length > 0) {
+                    customBuildSection.style.display = 'block';
+                    let html = '';
+                    let total = 0;
+                    
+                    customBuildService.data.products.forEach(item => {
+                        const productId = String(item.product_id || '');
+                        const quantity = item.quantity || 0;
+                        const unitPrice = item.unit_price || 0;
+                        const subtotal = quantity * unitPrice;
+                        total += subtotal;
+                        
+                        const product = productsList.find(p => String(p.id) === productId);
+                        const productName = product ? product.name : 'Unknown Component';
+                        
+                        html += `
+                            <tr>
+                                <td>${productName}</td>
+                                <td>${quantity}</td>
+                                <td>$${parseFloat(unitPrice).toFixed(2)}</td>
+                                <td>$${parseFloat(subtotal).toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    customBuildTableBody.innerHTML = html;
+                    if (customBuildTotalDisplay) customBuildTotalDisplay.textContent = '$' + total.toFixed(2);
+                    if (customBuildNotes && customBuildService.data.notes) {
+                        customBuildNotes.textContent = 'Notes: ' + customBuildService.data.notes;
+                    } else if (customBuildNotes) {
+                        customBuildNotes.textContent = '';
+                    }
+                } else {
+                    customBuildSection.style.display = 'none';
+                }
+            }
+            
+            function updateSoftwareService(softwareService) {
+                if (!softwareServiceSection) return;
+                
+                if (softwareService && softwareService.purchased && softwareService.data) {
+                    softwareServiceSection.style.display = 'block';
+                    if (softwareServiceDescription) {
+                        softwareServiceDescription.textContent = softwareService.data.description || 'N/A';
+                    }
+                    if (softwareServiceList) {
+                        const softwareList = softwareService.data.software_list || [];
+                        softwareServiceList.textContent = softwareList.length > 0 ? softwareList.join(', ') : 'N/A';
+                    }
+                    if (softwareServiceCost) {
+                        const cost = softwareService.data.cost || 0;
+                        softwareServiceCost.textContent = parseFloat(cost).toFixed(2);
+                    }
+                } else {
+                    softwareServiceSection.style.display = 'none';
+                }
+            }
+            
+            if (saleSelect && userSelect && productsTableBody) {
+                saleSelect.addEventListener('change', function() {
+                    const saleId = this.value;
+                    const sale = salesData.find(s => String(s.id) === String(saleId));
+                    
+                    if (!sale) {
+                        userSelect.value = '';
+                        productsTableBody.innerHTML = '<tr class="specification-row empty-specifications"><td colspan="4">Select a sale to view products</td></tr>';
+                        if (orderTotalDisplay) orderTotalDisplay.textContent = '$0.00';
+                        if (customBuildSection) customBuildSection.style.display = 'none';
+                        if (softwareServiceSection) softwareServiceSection.style.display = 'none';
+                        return;
+                    }
+                    
+                    // Update user_id
+                    userSelect.value = sale.user_id;
+                    
+                    // Update products
+                    if (sale.products && sale.products.length > 0) {
+                        let productsHTML = '';
+                        let total = 0;
+                        
+                        sale.products.forEach(item => {
+                            const productId = String(item.product_id || item.product_id);
+                            const quantity = item.quantity || 0;
+                            const unitPrice = item.unit_price || 0;
+                            const subtotal = quantity * unitPrice;
+                            total += subtotal;
+                            
+                            // Find product name
+                            const product = productsList.find(p => String(p.id) === productId);
+                            const productName = product ? product.name : 'Unknown Product';
+
+                            productsHTML += `
+                                <tr>
+                                    <td>${productName}</td>
+                                    <td>${quantity}</td>
+                                    <td>$${parseFloat(unitPrice).toFixed(2)}</td>
+                                    <td>$${parseFloat(subtotal).toFixed(2)}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        productsTableBody.innerHTML = productsHTML;
+                        // Update order total display (for information only)
+                        if (orderTotalDisplay) orderTotalDisplay.textContent = '$' + total.toFixed(2);
+                    } else {
+                        productsTableBody.innerHTML = '<tr class="specification-row empty-specifications"><td colspan="4">No products in this sale</td></tr>';
+                        if (orderTotalDisplay) orderTotalDisplay.textContent = '$0.00';
+                    }
+                    
+                    // Update custom build
+                    updateCustomBuild(sale.custom_build_service);
+                    
+                    // Update software service
+                    updateSoftwareService(sale.software_service);
+                });
+            }
+            
+            // Calculate initial order total if products exist (for edit mode)
+            if (productsTableBody && orderTotalDisplay) {
+                const productRows = productsTableBody.querySelectorAll('tr');
+                let total = 0;
+                
+                productRows.forEach(row => {
+                    const subtotalSpan = row.querySelector('.subtotal-display');
+                    if (subtotalSpan) {
+                        // Try to get from data attributes first
+                        if (subtotalSpan.dataset.quantity && subtotalSpan.dataset.price) {
+                            const quantity = parseFloat(subtotalSpan.dataset.quantity) || 0;
+                            const price = parseFloat(subtotalSpan.dataset.price) || 0;
+                            const subtotal = quantity * price;
+                            total += subtotal;
+                            subtotalSpan.textContent = '$' + subtotal.toFixed(2);
+                        } else {
+                            // Try to parse from text content
+                            const text = subtotalSpan.textContent || subtotalSpan.innerText;
+                            const value = parseFloat(text.replace(/[^0-9.-]/g, '')) || 0;
+                            total += value;
+                        }
+                    }
+                });
+                
+                if (total > 0) {
+                    orderTotalDisplay.textContent = '$' + total.toFixed(2);
+                }
+            }
+            
+            // If in edit mode and sale is already selected, populate custom build and software service
+            {% if delivery_sale_id_str %}
+            const currentSaleId = '{{ delivery_sale_id_str }}';
+            if (currentSaleId) {
+                // Find the sale data
+                const currentSale = salesData.find(s => String(s.id) === String(currentSaleId));
+                if (currentSale) {
+                    // Update custom build if exists
+                    updateCustomBuild(currentSale.custom_build_service);
+                    
+                    // Update software service if exists
+                    updateSoftwareService(currentSale.software_service);
+                }
+            }
+            {% endif %}
+        });
+    </script>
+{% endblock %}

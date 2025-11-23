@@ -1,0 +1,34 @@
+{% extends "crm/base.html" %}
+{% block content %}
+
+<div class="crm-container form-container">
+
+    <h1>{% if user_obj %}Редагувати користувача{% else %}Новий користувач{% endif %}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label>Логін</label>
+        {{ form.username }}
+
+        <label>Email</label>
+        {{ form.email }}
+
+        <label>Пароль {% if user_obj %}(не обовʼязково){% endif %}</label>
+        {{ form.password }}
+
+        <label>Роль</label>
+        {{ form.role }}
+
+        <label>Активний</label>
+        {{ form.is_active }}
+
+        <div class="actions">
+            <button class="btn btn-black">Зберегти</button>
+            <a href="{% url 'users_list' %}" class="btn btn-white">Назад</a>
+        </div>
+    </form>
+
+</div>
+
+{% endblock %}

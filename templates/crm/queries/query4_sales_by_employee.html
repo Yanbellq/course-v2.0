@@ -1,0 +1,40 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries — 4: Sales by Employee</h1>
+    <div>
+        <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    {% if results %}
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Position</th>
+                    <th>Email</th>
+                    <th>Total Products Sold</th>
+                    <th>Total Revenue</th>
+                    <th>Sales Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                    <tr>
+                        <td>{{ result.employee.full_name }}</td>
+                        <td>{{ result.employee.position }}</td>
+                        <td>{{ result.employee.email|default:"N/A" }}</td>
+                        <td>{{ result.statistics.total_products }}</td>
+                        <td>${{ result.statistics.total_amount|floatformat:2 }}</td>
+                        <td>{{ result.statistics.sales_count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">No sales data found</p>
+    {% endif %}
+{% endblock %}
+

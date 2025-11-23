@@ -1,0 +1,173 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Contract — {% if contract %}Edit{% else %}Add{% endif %}</h1>
+
+    <div>
+        <a class="btn btn--secondary" href="{% url 'crm:contracts_list' %}">Back</a>
+    </div>
+{% endblock crm__page_header %}
+
+{% block crm__content %}
+    {% if errors %}
+        <pre>{{ errors }}</pre>
+    {% endif %}
+
+    <section class="panel">
+        <form method="POST" id="contractForm">
+            {% csrf_token %}
+
+            <!-- Supplier -->
+            <div class="form-row">
+                <label>Supplier</label>
+                <select name="supplier_id" required if {% if contract %}style="background-color: #f5f5f5;" disabled{% endif %}>
+                    {% for s in suppliers %}
+                        <option value="{{ s.id }}"
+                            {% if contract and contract.supplier_id == s.id %}selected{% endif %}>
+                            {{ s.name }}
+                        </option>
+                    {% empty %}
+                        <option disabled>No suppliers found</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Signing Date -->
+            <div class="form-row">
+                <label>Signing Date</label>
+                <input type="date" name="signing_date"
+                {% if contract %}style="background-color: #f5f5f5;" disabled{% endif %}
+                    value="{{ contract.signing_date|date:'Y-m-d' }}">
+            </div>
+
+            <!-- Status -->
+            <div class="form-row">
+                <label>Status</label>
+                <select name="status">
+                    {% for value,label in STATUS_CHOICES %}
+                        <option value="{{ value }}"
+                            {% if contract and contract.status|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+           
+            <!-- PRODUCTS BLOCK -->
+            <div class="form-row">
+                <label>Products</label>
+            </div>
+            
+            <div class="products-container">
+                <table class="products-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th style="width:100px;">Quantity</th>
+                            <th style="width:140px;">Unit Price</th>
+                            <th style="width:120px;">Subtotal</th>
+                            <th style="width:60px;"></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="productsTableBody">
+                        {% if contract_products %}
+                            {% for item in contract_products %}
+                            <tr class="product-row">
+                                <td>
+                                    <select name="product_id[]" required style="width: 100%; padding: 4px 8px;">
+                                        <option value="">Select product</option>
+                                        {% for p in products %}
+                                            <option value="{{ p.id }}"
+                                                {% if item.product_id|stringformat:"s" == p.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ p.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+
+                                <td>
+                                    <input type="number" name="quantity[]" min="1" class="quantity-input"
+                                        value="{{ item.quantity }}" required style="width: 100%; padding: 4px 8px;">
+                                </td>
+
+                                <td>
+                                    <input type="number" name="unit_price[]" step="0.01" min="0" class="unit-price-input"
+                                        value="{{ item.unit_price }}" required style="width: 100%; padding: 4px 8px;">
+                                </td>
+
+                                <td>
+                                    <span class="subtotal-display" data-quantity="{{ item.quantity }}" data-price="{{ item.unit_price }}">$0.00</span>
+                                </td>
+
+                                <td style="text-align: center;">
+                                    <button type="button" class="btn btn--danger remove-product" style="padding: 4px 8px;">×</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr class="specification-row empty-specifications">
+                                <td colspan="5">
+                                    No products added yet
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                    
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="text-align: right; font-weight: bold; padding-top: 15px;">Total Amount:</td>
+                            <td style="font-weight: bold; font-size: 16px; padding-top: 15px;">
+                                <span id="totalAmountDisplayFooter">{% if contract and contract.total_amount %}${{ contract.total_amount|floatformat:2 }}{% else %}$0.00{% endif %}</span>
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                
+                <div style="margin-top: 15px;">
+                    <button type="button" class="btn btn--primary" id="addProductBtn">+ Add Product</button>
+                </div>
+            </div>
+
+            <!-- Hidden field for total_amount (auto-updated by JavaScript) -->
+            <input type="hidden" name="total_amount" id="total_amount" value="{% if contract and contract.total_amount %}{{ contract.total_amount }}{% else %}0{% endif %}">
+
+            <!-- Notes -->
+            <div class="form-row">
+                <label>Notes</label>
+                <textarea name="notes">{{ contract.notes|default:'' }}</textarea>
+            </div>
+
+
+            <!-- Buttons -->
+            <div class="form-actions">
+                <a class="btn btn--secondary" href="{% url 'crm:contracts_list' %}">Back</a>
+                <button class="btn btn--primary" type="submit">Save</button>
+            </div>
+        </form>
+    </section>
+{% endblock %}
+
+{% block crm__extra_js %}
+    <script>
+        // Products data with prices
+        const productsData = {
+            {% for product in products %}
+            "{{ product.id }}": {{ product.price|default:0 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        };
+
+        // Products list with names (for dropdown options)
+        const productsList = [
+            {% for product in products %}
+            {
+                id: "{{ product.id }}",
+                name: "{{ product.name|escapejs }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+    </script>
+    <script src="{% static 'js/crm/product-list.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,42 @@
+.upgrade-section {
+    background: var(--black);
+    color: var(--white);
+}
+
+.upgrade-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 600px;
+}
+
+.upgrade-text {
+    padding: 80px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.upgrade-text h2 {
+    font-size: 42px;
+    font-weight: 500;
+    line-height: 1.3;
+    margin-bottom: 30px;
+}
+
+.upgrade-text p {
+    font-size: 14px;
+    line-height: 1.8;
+    opacity: 0.8;
+    margin-bottom: 40px;
+}
+
+.upgrade-image {
+    position: relative;
+    overflow: hidden;
+}
+
+.upgrade-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

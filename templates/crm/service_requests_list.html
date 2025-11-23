@@ -1,0 +1,48 @@
+{% extends "user/base.html" %}
+{% block content %}
+
+<div class="crm-container">
+
+    <div class="header">
+        <h1>Сервісні заявки</h1>
+        <a href="{% url 'service_request_create' %}" class="btn btn-black">+ Нова заявка</a>
+    </div>
+
+    <table class="crm-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Клієнт</th>
+                <th>Пристрій</th>
+                <th>Проблема</th>
+                <th>Статус</th>
+                <th>Дата створення</th>
+                <th width="160">Дії</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        {% for s in service_requests %}
+            <tr>
+                <td>{{ s.id }}</td>
+                <td>{{ s.customer }}</td>
+                <td>{{ s.device_name }}</td>
+                <td>{{ s.problem_description|truncatewords:8 }}</td>
+                <td>{{ s.status }}</td>
+                <td>{{ s.created_at }}</td>
+
+                <td>
+                    <a href="{% url 'service_request_edit' s.id %}" class="btn btn-white">Редагувати</a>
+                    <a href="{% url 'service_request_delete' s.id %}" class="btn btn-danger">×</a>
+                </td>
+            </tr>
+
+        {% empty %}
+            <tr><td colspan="7" class="empty">Заявок немає</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+{% endblock %}

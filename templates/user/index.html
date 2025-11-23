@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+{% block header %}
+    <ul class="nav-menu" id="navMenu">
+        <li><a class="active cursor-pointer" id="scrollToTopBtn">Home</a></li>
+        <li><a href="#categories">Categories</a></li>
+        <li><a href="#about">About</a></li>
+        <li class="nav-menu-divider">|</li>
+        <li class="nav-menu-mobile-divider"><hr /></li>
+        <li><a href="{% url 'main:categories' %}">Shop</a></li>
+    </ul>
+{% endblock header %}
+
+
+{% block content %}
+    <!-- Hero Section with Slider -->
+    <section class="hero" id="home">
+        <div class="container">
+            <h1 class="hero-title">Electronic</h1>
+
+            <div class="hero-slider-wrapper">
+                <div class="hero-slider" id="heroSlider">
+                    <div class="hero-slide active">
+                        <div class="hero-content">
+                            <div class="hero-image">
+                                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800"
+                                    alt="Headphones">
+                            </div>
+                            <div class="hero-text">
+                                <h2>Premium Headphones</h2>
+                                <p>Welcome to Electronic Store, where we offer the latest and greatest in electronics.
+                                    Whether you're looking for a new phone, laptop, or home entertainment system, we
+                                    have you covered.</p>
+                                <a href="{% url 'main:categories' %}?category=peripheral&product_type=headphone" class="btn btn--secondary">Shop Now</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hero-slide">
+                        <div class="hero-content">
+                            <div class="hero-image">
+                                <img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800"
+                                    alt="Laptop">
+                            </div>
+                            <div class="hero-text">
+                                <h2>Powerful Laptops</h2>
+                                <p>Discover our collection of high-performance laptops for work and gaming. Experience
+                                    cutting-edge technology and superior design.</p>
+                                <a href="{% url 'main:categories' %}?category=laptop&product_type=laptop" class="btn btn--secondary">Explore</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hero-slide">
+                        <div class="hero-content">
+                            <div class="hero-image">
+                                <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800"
+                                    alt="Smartphone">
+                            </div>
+                            <div class="hero-text">
+                                <h2>Latest Smartphones</h2>
+                                <p>Get connected with the newest smartphones featuring advanced cameras, powerful
+                                    processors, and stunning displays.</p>
+                                <a href="{% url 'main:categories' %}?category=smartphone&product_type=smartphone" class="btn btn--secondary">Buy Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slider-dots" id="sliderDots"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upgrade Section -->
+    <section class="upgrade-section">
+        <div class="container">
+            <div class="upgrade-content">
+                <div class="upgrade-text">
+                    <h2>Upgrade your life with the latest in electronics!</h2>
+                    <p>Welcome to our electronics shop! We offer a wide variety of high-quality electronic products,
+                        including smartphones, laptops, tablets, cameras, and more. Our mission is to provide our
+                        customers with the latest and greatest technology at affordable prices.</p>
+                    <a class="btn btn--white text-center" href="{% url 'main:categories' %}">Shop Now</a>
+                </div>
+                <div class="upgrade-image">
+                    <img src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=800"
+                        alt="Camera Equipment">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our Categories with Slider -->
+    <section class="collections" id="categories">
+        <!-- <div class="container"> -->
+        <div class="collections-header">
+            <h2 class="section-title">Our Different Categories</h2>
+            <p>Welcome to our latest collection of electronics! We are thrilled to showcase our newest products that
+                are sure to impress.</p>
+
+            <div class="collections-nav-wrapper">
+                <button class="collections-nav prev" id="collectionsPrev">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+                <button class="collections-nav next" id="collectionsNext">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="collections-slider-wrapper">
+            <div class="collections-slider" id="collectionsSlider">
+                {# На сторінці з категоріями #}
+                {% for category in categories %}
+                    <div class="collection-slide">
+                        <img src="{{ category.image_url }}" alt="{{ category.name }}">
+                        <div class="collection-info">
+                            <h3>{{ category.name }}</h3>
+                            <a href="{% url 'main:categories' %}?category={{ category.slug }}" 
+                            class="collection-link">
+                                View Collection →
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- </div> -->
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories">
+        <div class="container">            
+            {% comment %} {% for category in categories|slice:":5" %} {% endcomment %}
+            {% for category in categories %}
+                <a href="{% url 'main:categories' %}?category={{ category.slug }}" class="category-item">
+                    <div class="category-number">{{ forloop.counter }}</div>
+                    <div class="category-content">
+                        <h3>{{ category.name }}</h3>
+                        <p>{{ category.description }}</p>
+                    </div>
+                    <div class="category-arrow">→</div>
+                </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="products-section">
+        <div class="container">
+            <div class="products-header">
+                <h2 class="section-title">Stay Updated<br>with the Latest</h2>
+                <p>Welcome to our online store, where you can browse and purchase a wide variety of products from the
+                    comfort of your own home.</p>
+            </div>
+
+            <div class="products-grid" id="productsGrid">
+                {% for product in products %}
+                    <div class="catalog-product-card">
+                        <div class="product-image">
+                            <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                            <div class="product-badge">New</div>
+                            {% comment %} <button class="product-like">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <path d="M10 17L3 10C1 8 1 5 3 3C5 1 8 1 10 3C12 1 15 1 17 3C19 5 19 8 17 10L10 17Z"
+                                        stroke="white" stroke-width="1.5" fill="none" />
+                                </svg>    
+                            </button> {% endcomment %}
+                        </div>
+                        <div class="product-details">
+                            <p>{{ product.category_name_en }}{% if product.product_type != product.category %} | {{product.product_type_en}}{% endif %}</p>
+                            <h4><a href="{% url 'main:product_detail' product.id %}">{{ product.name }}</a></h4>
+                            <h5>{{ product.manufacturer }}</h5>
+                            <p class="product-price">${{ product.price|floatformat:2 }}</p>
+                            <button class="btn btn--add-cart" data-id="{{ product.id }}" data-name="{{ product.name }}" data-price="{{ product.price }}" data-image="{{ product.image_url }}">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p style="grid-column: 1/-1; text-align: center; padding: 40px;">No products found matching your filters.</p>
+                {% endfor %}
+            </div>
+
+            <div class="products-footer">
+                <h3>Another products</h3>
+                <p>We believe that everyone should have access to high-quality electronics without breaking the bank.
+                    That's why we strive to offer competitive prices and regular promotions to help you save money on
+                    your purchases.</p>
+                <a href="{% url 'main:categories' %}" class="btn btn--secondary">Shop product</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Choose Us -->
+    <section class="why-choose" id="about">
+        <div class="container">
+            <div class="why-grid">
+                <div class="why-text">
+                    <h2 class="section-title">Why<br>Choose Us</h2>
+                    <div class="accordion" id="whyAccordion">
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Quick And Effortlessly</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Online shopping has become increasingly popular in recent years, offering convenience
+                                    and ease for consumers. At our electronic shop, we understand that time is valuable,
+                                    so we've streamlined our ordering process to make it as quick and effortless as
+                                    possible.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Diverse & Alike! Clear</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Electronic devices have become an integral part of our daily lives. From smartphones
+                                    to laptops, from gaming consoles to smart home devices, our diverse selection
+                                    ensures you'll find exactly what you need. We categorize products clearly to help
+                                    you make informed decisions.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Lighting Equipment</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Transform your space with our professional lighting equipment. Whether you're setting
+                                    up a home studio, upgrading your workspace, or creating the perfect ambiance, we
+                                    offer a comprehensive range of lighting solutions including LED panels, ring lights,
+                                    smart bulbs, and decorative fixtures.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Catching & Mesmerize</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Our products are designed to catch your eye and mesmerize with their cutting-edge
+                                    features. We carefully curate items that combine stunning aesthetics with powerful
+                                    functionality, ensuring that every purchase not only meets but exceeds your
+                                    expectations.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Premium Quality Assurance</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Every product in our inventory undergoes rigorous quality checks before reaching your
+                                    hands. We partner with renowned brands and manufacturers who share our commitment to
+                                    excellence, ensuring that you receive only authentic, high-quality electronics.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Expert Customer Support</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Our knowledgeable support team is available 24/7 to assist you with product
+                                    selection, technical queries, and after-sales service. We believe in building
+                                    lasting relationships with our customers through exceptional service and support.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Competitive Pricing</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>We constantly monitor market trends to offer you the most competitive prices without
+                                    compromising on quality. Our price match guarantee and regular promotional offers
+                                    ensure you always get the best value for your money.</p>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button class="accordion-header">
+                                <h3>Fast & Secure Delivery</h3>
+                                <span class="accordion-icon">›</span>
+                            </button>
+                            <div class="accordion-content">
+                                <p>Experience swift and secure delivery with our trusted logistics partners. We offer
+                                    multiple shipping options including express delivery, and all packages are fully
+                                    insured and tracked from our warehouse to your doorstep.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="why-description">
+                    <p>In today's world, electronics play a crucial role in our daily lives. From smartphones to
+                        laptops, tablets to smartwatches, we rely on these devices to stay connected and productive. Our
+                        commitment is to provide you with the best technology at unbeatable prices.</p>
+                </div>
+
+                <div class="why-images">
+                    <div class="why-image-card large">
+                        <img src="https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=600" alt="Setup">
+                    </div>
+                    <div class="why-image-group">
+                        <div class="why-image-card small">
+                            <img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400" alt="Workspace">
+                        </div>
+                        <div class="why-image-card small">
+                            <img src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=400" alt="Camera">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="newsletter">
+        <div class="container">
+            <div class="newsletter-content">
+                <h3>Stay in the Loop Head With</h3>
+                <form class="newsletter-form" id="newsletterForm">
+                    <input type="email" placeholder="Enter your email" required>
+                    <button type="submit" class="btn btn--subscribe">Subscribe Now</button>
+                </form>
+            </div>
+        </div>
+    </section>
+{% endblock content %}
+
+{% block extra_js %}
+    <script>
+        // Active Navigation Highlight
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            let current = '';
+
+            // Find current section in view
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (scrollY >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                // Highlight "Home" if at top of page or before first section
+                if ((current === '' || current === 'home') && link.getAttribute('id') === 'scrollToTopBtn') {
+                    link.classList.add('active');
+                } else if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+{% endblock extra_js %}

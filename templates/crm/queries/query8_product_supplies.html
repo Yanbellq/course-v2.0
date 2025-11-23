@@ -1,0 +1,63 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries — 8: Product Supplies</h1>
+
+    <div>
+        <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    {% if product %}
+        <div class="stats-grid">
+            <div class="stat-card">
+                <p><strong>Name:</strong> {{ product.name }}</p>
+            </div>
+            <div class="stat-card">
+                <p><strong>Manufacturer:</strong> {{ product.manufacturer }}</p>
+            </div>
+            <div class="stat-card">
+                <p><strong>Total Quantity Received:</strong> {{ total_quantity }}</p>
+            </div>
+            <div class="stat-card">
+                <p><strong>Period:</strong> {{ period_start|date:"Y-m-d" }} to {{ period_end|date:"Y-m-d" }}</p>
+            </div>
+        </div>
+        
+        {% if supplies %}
+            <table class="crm-table">
+                <thead>
+                    <tr>
+                        <th>Supply ID</th>
+                        <th>Supplier</th>
+                        <th>Contract Number</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Delivery Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in supplies %}
+                    <tr>
+                        <td>{{ item.supply.id|truncatechars:8 }}</td>
+                        <td>{{ item.supplier.name|default:"N/A" }}</td>
+                        <td>{{ item.contract.number|default:"N/A" }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>${{ item.unit_price|floatformat:2 }}</td>
+                        <td>{{ item.supply.delivery_date|date:"Y-m-d"|default:"N/A" }}</td>
+                        <td>{{ item.supply.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="empty">No supplies found for this product in the specified period</p>
+        {% endif %}
+
+    {% else %}
+        <p class="empty">Product not found</p>
+    {% endif %}
+{% endblock %}
+

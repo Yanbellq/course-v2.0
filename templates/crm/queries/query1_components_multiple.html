@@ -1,0 +1,75 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries — 1b: Components Supplied by 2+ Suppliers</h1>
+
+    <div>
+        <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    {% if results %}
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Manufacturer</th>
+                    <th>Type</th>
+                    <th>Suppliers</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td>{{ result.product.name }}</td>
+                    <td>{{ result.product.manufacturer }}</td>
+                    <td>{{ result.product.product_type }}</td>
+                    <td>
+                        <button onclick="toggleProducts('products_{{ forloop.counter }}')" class="btn btn--actions-primary">{{ result.suppliers_count }} supplier(s)</button>
+                    </td>
+                </tr>
+                <tr id="products_{{ forloop.counter }}" style="display: none;">
+                    <td colspan="4">
+                        <table class="crm-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Contact person</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in result.suppliers %}
+                                    <tr>
+                                        <td>{{ item.name }}</td>
+                                        <td>{{ item.contact_person }}</td>
+                                        <td>{{ item.phone }}</td>
+                                        <td>{{ item.email }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr><td colspan="4" class="empty">No suppliers</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                {% empty %}
+                    <tr><td colspan="4" class="empty">No components found supplied by 2+ suppliers</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">No components found supplied by 2+ suppliers</p>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        function toggleProducts(id) {
+            const row = document.getElementById(id);
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+    </script>
+{% endblock extra_js %}

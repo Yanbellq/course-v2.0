@@ -1,0 +1,131 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Repairs List</h1>
+
+    <div>
+        <a href="{% url 'crm:repairs_create' %}" class="btn btn--secondary">New Repair</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    <table class="crm-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Employee</th>
+                <th>Product</th>
+                <th>Products Used</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Cost</th>
+                <th>Start Date</th>
+                <th colspan="2">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for repair in repairs %}
+            <tr>
+                <td>{{ repair.id|truncatechars:8 }}</td>
+                {% comment %} <td>
+                    {% if repair.user %}
+                        {% with user=sale.user %}
+                            {{ user.username|default:"N/A" }}
+                        {% endwith %}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td> {% endcomment %}
+                <td>
+                    {% if repair.user %}
+                        {% with user=repair.user %}
+                            {{ user.username|default:"N/A" }}
+                        {% endwith %}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>
+                    {% if repair.employee %}
+                        {% with emp=repair.employee %}
+                            {{ emp.full_name|default:"N/A" }}
+                        {% endwith %}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>
+                    {% if repair.product %}
+                        {% with product=repair.product %}
+                            {{ product.name|default:"N/A" }}
+                        {% endwith %}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>
+                    <button onclick="toggleProducts('products_{{ forloop.counter }}')" class="btn btn--actions-primary">{{ repair.products_used|length }} item(s)</button>
+                </td>
+                <td>
+                    <span class="badge badge--secondary">{{ repair.repair_type|default:"N/A" }}</span>
+                </td>
+                <td>
+                    <span class="badge badge--{% if repair.status == 'completed' %}success{% elif repair.status == 'cancelled' %}danger{% elif repair.status == 'returned' %}success{% else %}warning{% endif %}">
+                        {{ repair.status|default:"N/A" }}
+                    </span>
+                </td>
+                <td>${{ repair.cost|default:"0.00"|floatformat:2 }}</td>
+                <td>{{ repair.start_date|date:"Y-m-d"|default:"N/A" }}</td>
+                <td>
+                    <a href="{% url 'crm:repairs_edit' repair.id %}" class="btn btn--actions-primary">Edit</a>
+                </td>
+                <td>
+                    <form method="POST" class="delete-item" action="{% url 'crm:repairs_delete' repair.id %}" onsubmit="return confirm('Delete repair?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn--actions-secondary">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            <tr id="products_{{ forloop.counter }}" style="display: none;">
+                <td colspan="11">
+                    <table class="crm-table" style="margin: 10px 0;">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Subtotal</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in repair.products_used %}
+                            <tr>
+                                <td>{{ product.product.name }}</td>
+                                <td>{{ product.quantity }}</td>
+                                <td>${{ product.unit_price|floatformat:2 }}</td>
+                                <td>${{ product.subtotal|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="empty">No products</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" class="empty">No repairs found</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        function toggleProducts(id) {
+            const row = document.getElementById(id);
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+    </script>
+{% endblock extra_js %}

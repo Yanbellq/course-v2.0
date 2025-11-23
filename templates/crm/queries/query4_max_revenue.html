@@ -1,0 +1,26 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries — 4: Max Revenue for Month</h1>
+    <div>
+        <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    {% if max_sale %}
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Maximum Revenue: ${{ max_revenue|floatformat:2 }}</h3>
+            </div>
+            <div class="stat-card">
+                <h3>Sale ID: {{ max_sale.id|truncatechars:8 }}</h3>
+            </div>
+            <div class="stat-card">
+                <h3>Sale Date: {{ max_sale.sale_date|date:"Y-m-d" }}</h3>
+            </div>
+        {% else %}
+            <p class="empty">No sales found for month {{ month }}</p>
+        {% endif %}
+    </div>
+{% endblock crm__content %}

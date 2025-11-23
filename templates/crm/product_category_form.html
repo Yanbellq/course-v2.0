@@ -1,0 +1,57 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Category — {% if category %}Edit{% else %}Add{% endif %}</h1>
+
+    <div>
+        <a href="{% url 'crm:product_categories_list' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock crm__page_header %}
+
+{% block crm__content %}
+<section class="panel">
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-row">
+            <label for="name">Name *</label>
+            <input type="text" name="name" id="name" value="{% if category %}{{ category.name }}{% elif form.name %}{{ form.name }}{% endif %}" required>
+        </div>
+
+        <div class="form-row">
+            <label for="slug">Slug *</label>
+            <input type="text" name="slug" id="slug" value="{% if category %}{{ category.slug }}{% elif form.slug %}{{ form.slug }}{% endif %}" required>
+            <p>URL-friendly identifier (e.g., "processors", "monitors")</small>
+        </div>
+        
+        <div class="form-row">
+            <label for="image_url">Image URL *</label>
+            <input type="url" name="image_url" id="image_url" value="{% if category %}{{ category.image_url }}{% elif form.image_url %}{{ form.image_url }}{% endif %}" required>
+            <p>URL to category image</small>
+        </div>
+
+        <div class="form-row">
+            <label for="description">Description</label>
+            <textarea name="description" id="description" rows="3">{% if category %}{{ category.description|default:"" }}{% elif form.description %}{{ form.description }}{% endif %}</textarea>
+        </div>
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Buttons -->
+        <div class="form-actions">
+            <a class="btn btn--secondary" href="{% url 'crm:product_categories_list' %}">Back</a>
+            <button class="btn btn--primary" type="submit">Save</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

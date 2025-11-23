@@ -1,0 +1,20 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM {{ page_title|default:"Query" }}</h1>
+    <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back to Queries</a>
+{% endblock %}
+
+{% block crm__content %}
+<div class="crm-container">
+    {% if error %}
+    <div class="error-message">
+        <p>{{ error }}</p>
+    </div>
+    {% endif %}
+    
+    {% block query_content %}
+    {% endblock %}
+</div>
+{% endblock %}
+

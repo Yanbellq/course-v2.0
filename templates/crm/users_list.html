@@ -1,0 +1,48 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    {% comment %} <h1 class="page-title">Users</h1> {% endcomment %}
+    <h1 class="page-title">CRM Users List</h1>
+
+    {% comment %} <div>
+        <a href="{% url 'crm:users_create' %}" class="btn btn--secondary">Add user</a>
+    </div> {% endcomment %}
+{% endblock %}
+
+{% block crm__content %}
+    <table class="crm-table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Last Login</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    <span class="badge badge--{% if user.role == 'admin' %}danger{% elif user.role == 'operator' %}warning{% else %}secondary{% endif %}">
+                        {{ user.role|default:"user"|title }}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge {% if user.is_active %}badge--success{% else %}badge--danger{% endif %}">
+                        {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </td>
+                <td>{{ user.created_at|date:"Y-m-d"|default:"N/A" }}</td>
+                <td>{{ user.last_login|date:"Y-m-d H:i"|default:"Never" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="empty">No users found</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

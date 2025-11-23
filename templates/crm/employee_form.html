@@ -1,0 +1,69 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Employee — {% if action == 'edit' %}Edit{% else %}Add{% endif %}</h1>
+
+    <div>
+        <a href="{% url 'crm:employees_list' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    <section class="panel">
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <label for="full_name">Full Name *</label>
+                <input type="text" name="full_name" id="full_name" value="{% if action == 'edit' %}{{ employee.full_name }}{% endif %}" required maxlength="200">
+            </div>
+
+            <div class="form-row">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" value="{% if action == 'edit' %}{{ employee.email|default:"" }}{% endif %}">
+            </div>
+
+            <div class="form-row">
+                <label for="phone">Phone</label>
+                <input type="text" name="phone" id="phone" value="{% if action == 'edit' %}{{ employee.phone|default:"" }}{% endif %}" maxlength="20">
+            </div>
+            
+            <div class="form-group">
+                <div class="form-row">
+                    <label for="position">Position *</label>
+                    <select name="position" id="position" required>
+                        <option value="">Select position</option>
+                        {% for choice_value, choice_label in employee.POSITION_CHOICES %}
+                        <option value="{{ choice_value }}" {% if action == 'edit' and employee.position == choice_value %}selected{% endif %}>
+                            {{ choice_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+    
+                <div class="form-row">
+                    <label for="hire_date">Hire Date</label>
+                    <input type="date" name="hire_date" id="hire_date" value="{% if action == 'edit' and employee.hire_date %}{{ employee.hire_date|date:'Y-m-d' }}{% endif %}">
+                </div>
+    
+                <div class="form-row">
+                    <label for="salary">Salary</label>
+                    <input type="number" name="salary" id="salary" step="0.01" min="0" value="{% if action == 'edit' %}{{ employee.salary|default:0 }}{% endif %}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label>
+                    <input type="checkbox" name="is_active" id="is_active" {% if action == 'edit' and employee.is_active or not employee %}checked{% endif %}>
+                    Active
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <a class="btn btn--secondary" href="{% url 'crm:employees_list' %}">Back</a>
+                <button class="btn btn--primary" type="submit">Save</button>
+            </div>
+        </form>
+    </section>
+{% endblock %}

@@ -1,0 +1,17 @@
+<aside class="crm-sidebar">
+    {% comment %} <div class="logo">CRM</div> {% endcomment %}
+    <nav>
+        <a href="{% url 'crm:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
+        <a href="{% url 'crm:suppliers_list' %}" class="{% if request.resolver_match.url_name == 'suppliers_list' %}active{% endif %}">Suppliers</a>
+        <a href="{% url 'crm:contracts_list' %}" class="{% if request.resolver_match.url_name == 'contracts_list' %}active{% endif %}">Contracts</a>
+        <a href="{% url 'crm:supplies_list' %}" class="{% if request.resolver_match.url_name == 'supplies_list' %}active{% endif %}">Supplies</a>
+        <a href="{% url 'crm:sales_list' %}" class="{% if request.resolver_match.url_name == 'sales_list' %}active{% endif %}">Sales</a>
+        <a href="{% url 'crm:repairs_list' %}" class="{% if request.resolver_match.url_name == 'repairs_list' %}active{% endif %}">Repairs</a>
+        <a href="{% url 'crm:deliveries_list' %}" class="{% if request.resolver_match.url_name == 'deliveries_list' %}active{% endif %}">Deliveries</a>
+        <a href="{% url 'crm:product_categories_list' %}" class="{% if request.resolver_match.url_name == 'product_categories_list' %}active{% endif %}">Product Categories</a>
+        <a href="{% url 'crm:products_list' %}" class="{% if request.resolver_match.url_name == 'products_list' %}active{% endif %}">Products</a>
+        <a href="{% url 'crm:employees_list' %}" class="{% if request.resolver_match.url_name == 'employees_list' %}active{% endif %}">Employees</a>
+        <a href="{% url 'crm:users_list' %}" class="{% if request.resolver_match.url_name == 'users_list' %}active{% endif %}">Users</a>
+        <a href="{% url 'crm:queries_index' %}" class="{% if 'queries' in request.resolver_match.url_name %}active{% endif %}">Queries</a>
+    </nav>
+</aside>

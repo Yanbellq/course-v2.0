@@ -1,0 +1,54 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+
+{% block title %}Деталі постачальника | Інформаційна система комп'ютерної фірми{% endblock %}
+
+{% block page_header %}
+<div class="page-header w-full flex justify-between items-center pt-6">
+    <div class="page-header__main flex flex-col items-start">
+        <h1 class="page-header__title" id="supplier-name">Завантаження...</h1>
+        <p class="page-header__subtitle">Детальна інформація про постачальника</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="supplier-detail-container">
+    <p>Завантаження даних про постачальника...</p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        const supplierId = '{{ supplier_id }}';
+        const container = document.getElementById('supplier-detail-container');
+        const nameEl = document.getElementById('supplier-name');
+
+        try {
+            const response = await PCManagement.apiRequest(`/suppliers/${supplierId}/`);
+            const supplier = response.supplier;
+
+            nameEl.textContent = supplier.name;
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-1 bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold mb-4">Контактна інформація</h3>
+                        <p><strong>Контактна особа:</strong> ${supplier.contact_person || 'Не вказано'}</p>
+                        <p><strong>Email:</strong> <a href="mailto:${supplier.email}" class="text-primary">${supplier.email}</a></p>
+                        <p><strong>Телефон:</strong> <a href="tel:${supplier.phone}" class="text-primary">${supplier.phone}</a></p>
+                        <p><strong>Адреса:</strong> ${supplier.address || 'Не вказано'}</p>
+                    </div>
+                    <div class="md:col-span-2 bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold mb-4">Операції</h3>
+                        <p>Тут буде інформація про договори та поставки від цього постачальника.</p>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            nameEl.textContent = 'Помилка';
+            container.innerHTML = '<p class="text-error">Не вдалося завантажити дані про постачальника.</p>';
+        }
+    });
+</script>
+{% endblock %}

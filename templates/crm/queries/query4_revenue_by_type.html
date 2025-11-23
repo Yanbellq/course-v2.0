@@ -1,0 +1,41 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries — 4: Revenue by Product Type (Last Week)</h1>
+    <div>
+        <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    {% if results %}
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Period: {{ period_start|date:"Y-m-d" }} to {{ period_end|date:"Y-m-d" }}</h3>
+            </div>
+            <div class="stat-card">
+                <h3>Total Revenue: ${{ total_revenue|floatformat:2 }}</h3>
+            </div>
+        </div>
+
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>Product Type</th>
+                    <th>Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                    <tr>
+                        <td>{{ result.product_type }}</td>
+                        <td>${{ result.revenue|floatformat:2 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">No revenue data found for last week</p>
+    {% endif %}
+{% endblock %}
+

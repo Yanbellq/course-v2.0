@@ -1,0 +1,77 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries — 9b: Contract Count by Supplier</h1>
+
+    <div>
+        <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+
+    {% if results %}
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>Supplier</th>
+                    <th>Contact Person</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Total Amount</th>
+                    <th>Contracts</th>
+                    <th>Contracts Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                    <tr>
+                        <td>{{ result.supplier.name }}</td>
+                        <td>{{ result.supplier.contact_person }}</td>
+                        <td>{{ result.supplier.email }}</td>
+                        <td>{{ result.supplier.phone }}</td>
+                        <td>${{ result.total_amount|floatformat:2 }}</td>
+                        <td>
+                            <button onclick="toggleContracts('contracts_{{ forloop.counter }}')" class="btn btn--actions-primary">{{ result.contracts_count }} contract(s)</button>
+                        </td>
+                        <td><strong>{{ result.contracts_count }}</strong></td>
+                    </tr>
+                    <tr id="contracts_{{ forloop.counter }}" style="display: none;">
+                        <td colspan="7">
+                            <table class="crm-table" style="margin: 10px 0;">
+                                <thead>
+                                    <tr>
+                                        <th>Contract Number</th>
+                                        <th>Signing Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for contract in result.contracts %}
+                                        <tr>
+                                            <td>{{ contract.number }}</td>
+                                            <td>{{ contract.signing_date|date:"Y-m-d" }}</td>
+                                            <td>{{ contract.status }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">No contracts found</p>
+    {% endif %}
+
+{% endblock %}
+    
+{% block extra_js %}
+    <script>
+    function toggleContracts(id) {
+        const row = document.getElementById(id);
+        row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+    }
+    </script>
+{% endblock extra_js %}

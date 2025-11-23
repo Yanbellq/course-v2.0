@@ -1,0 +1,165 @@
+.auth-section {
+    min-height: calc(100vh - 80px);
+    padding: 60px 0;
+    background: var(--gray-light);
+    display: flex;
+    align-items: center;
+}
+
+.auth-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: var(--white);
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.auth-tabs {
+    grid-column: span 2;
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 20px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.3s;
+    position: relative;
+}
+
+.auth-tab.active {
+    color: var(--black);
+}
+
+.auth-tab.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--black);
+}
+
+.auth-form-container {
+    display: none;
+    padding: 50px;
+}
+
+.auth-form-container.active {
+    display: block;
+}
+
+.auth-forms {
+    position: relative;
+}
+
+.auth-form {
+    display: none;
+}
+
+.auth-form.active {
+    display: block;
+    animation: slideIn 0.4s ease-out;
+}
+
+.auth-form h2 {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.auth-subtitle {
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+    font-size: 15px;
+}
+
+
+.auth-divider {
+    text-align: center;
+    margin: 20px 0;
+    position: relative;
+}
+
+.auth-divider::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.auth-divider span {
+    background: var(--white);
+    padding: 0 15px;
+    position: relative;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+
+.auth-switch {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.switch-btn {
+    padding-left: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--black);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: all 0.15s;
+}
+
+.switch-btn:hover {
+    opacity: 0.7;
+}
+
+.auth-illustration {
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-illustration img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+.admin-notice {
+    margin-top: 30px;
+    padding: 15px;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: start;
+}
+
+.admin-notice svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.admin-notice p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}

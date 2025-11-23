@@ -1,0 +1,60 @@
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .nav-menu {
+        display: flex;
+        list-style: none;
+        gap: 40px;
+
+        &:has(.dropdown) {
+            gap: 2rem;
+        }
+    
+        a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            transition: color 0.3s;
+            position: relative;
+            
+            &:hover,
+            &.active {
+                color: var(--black);
+            }
+            
+            &.active::after {
+                content: "";
+                position: absolute;
+                bottom: -8px;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background: var(--black);
+            }
+        }
+
+        .nav-menu-divider {
+            color: var(--gray-dark);
+            cursor: default;
+            font-size: 16px;
+
+            &--mobile {
+                display: none;
+            }
+        }
+    }
+    
+    .nav-icons {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+}
+
+
+
+
+
+

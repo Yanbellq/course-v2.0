@@ -1,0 +1,86 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries — 9a: Contracts by Period</h1>
+
+    <div>
+        <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    <div class="stats-grid">
+        <div class="stat-card">
+            <p><strong>Period:</strong> {{ period_start|date:"Y-m-d" }} to {{ period_end|date:"Y-m-d" }}</p>
+        </div>
+    </div>
+
+    {% if results %}
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>Contract Number</th>
+                    <th>Supplier</th>
+                    <th>Contact Person</th>
+                    <th>Products Count</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                    <th>Signing Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                    <tr>
+                        <td>{{ result.contract.number }}</td>
+                        <td>{{ result.supplier.name|default:"N/A" }}</td>
+                        <td>{{ result.supplier.contact_person|default:"N/A" }}</td>
+                        <td>
+                            <button onclick="toggleProducts('products_{{ forloop.counter }}')" class="btn btn--actions-primary">{{ result.contract.products|length|default:0 }} product(s)</button>
+                        </td>
+                        <td>${{ result.contract.total_amount|floatformat:2 }}</td>
+                        <td>{{ result.contract.status }}</td>
+                        <td>{{ result.contract.signing_date|date:"Y-m-d" }}</td>
+                    </tr>
+                    <tr id="products_{{ forloop.counter }}" style="display: none;">
+                        <td colspan="7">
+                            <table class="crm-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product Name</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Price</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in result.contract.products %}
+                                    <tr>
+                                        <td>{{ product.product.name }}</td>
+                                        <td>{{ product.quantity }}</td>
+                                        <td>${{ product.unit_price|floatformat:2 }}</td>
+                                        <td>${{ product.subtotal|floatformat:2 }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="4" class="empty">No products</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">No contracts found for the specified period</p>
+    {% endif %}
+{% endblock %}
+
+
+{% block extra_js %}
+    <script>
+        function toggleProducts(id) {
+            const row = document.getElementById(id);
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+    </script>
+{% endblock extra_js %}

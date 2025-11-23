@@ -1,0 +1,112 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Supplies List</h1>
+
+    <div>
+        <a href="{% url 'crm:supplies_create' %}" class="btn btn--secondary">Add supply</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    <table class="crm-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Contract</th>
+                <th>Supplier</th>
+                <th>Products</th>
+                <th>Delivery Date</th>
+                <th>Total Cost</th>
+                <th>Status</th>
+                <th colspan="2">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for supply in supplies %}
+            <tr>
+                <td>{{ supply.id|truncatechars:8 }}</td>
+                <td>
+                    {% if supply.contract %}
+                        {% with contract=supply.contract %}
+                            {{ contract.number|default:"N/A" }}
+                        {% endwith %}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>
+                    {% if supply.supplier %}
+                        {% with supplier=supply.supplier %}
+                            {{ supplier.name|default:"N/A" }}
+                        {% endwith %}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>
+                    {% if supply.products %}
+                        <button onclick="toggleProducts('products_{{ forloop.counter }}')" class="btn btn--actions-primary">{{ supply.products|length }} item(s)</button>
+                    {% else %}
+                        0
+                    {% endif %}
+                </td>
+                <td>{{ supply.delivery_date|date:"Y-m-d"|default:"N/A" }}</td>
+                <td>${{ supply.total_cost|default:"0.00"|floatformat:2 }}</td>
+                <td>
+                    <span class="badge badge--{% if supply.status == 'received' %}success{% elif supply.status == 'cancelled' %}danger{% else %}warning{% endif %}">
+                        {{ supply.status|default:"N/A" }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{% url 'crm:supplies_edit' supply.id %}" class="btn btn--actions-primary">Edit</a>
+                </td>
+                <td>
+                    <form method="POST" action="{% url 'crm:supplies_delete' supply.id %}" onsubmit="return confirm('Delete this supply?');" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn--actions-secondary">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            <tr id="products_{{ forloop.counter }}" style="display: none;">
+                <td colspan="9">
+                    <table class="crm-table" style="margin: 10px 0;">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in supply.products %}
+                            <tr>
+                                <td>{{ product.product.name }}</td>
+                                <td>{{ product.quantity }}</td>
+                                <td>${{ product.unit_price|floatformat:2 }}</td>
+                                <td>${{ product.subtotal|default:0|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="empty">No products</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="empty">No supplies found</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        function toggleProducts(id) {
+            const row = document.getElementById(id);
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+    </script>
+{% endblock extra_js %}

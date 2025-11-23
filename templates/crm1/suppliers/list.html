@@ -1,0 +1,50 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+
+{% block title %}Постачальники | Інформаційна система комп'ютерної фірми{% endblock %}
+
+{% block page_header %}
+<div class="page-header w-full flex justify-between items-center pt-6">
+    <div class="page-header__main flex flex-col items-start">
+        <h1 class="page-header__title">Постачальники</h1>
+        <p class="page-header__subtitle">Список всіх постачальників фірми</p>
+    </div>
+    <div class="page-header__actions flex justify-center items-center">
+{#        <a href="{% url 'crm:supplier_add' %}" class="btn btn--primary shadow-glow">#}
+{#            <i data-lucide="plus"></i>#}
+{#            <span>Додати постачальника</span>#}
+{#        </a>#}
+        <div class=" flex justify-center items-center" id="page-header-actions"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="table-container full-screen mt-5">
+
+    <div class="table-wrapper">
+        <table class="table" id="supplier-list-table">
+            <thead>
+                <tr>
+                    <th data-sortable="true">Назва компанії</th>
+                    <th data-sortable="true">Контактна особа</th>
+                    <th>Email</th>
+                    <th>Телефон</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody id="supplier-list-body">
+                {# Дані будуть завантажені асинхронно за допомогою JavaScript #}
+                <tr>
+                    <td colspan="5" class="text-center">Завантаження...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module" src="{% static 'dist/js/crm/pages/suppliers.js' %}"></script>
+{% endblock %}

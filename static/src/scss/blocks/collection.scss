@@ -1,0 +1,129 @@
+.collections {
+    padding: 10rem 0 5rem 0;
+    background: var(--white);
+}
+
+.collections-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.collections-header p {
+    max-width: 600px;
+    margin: 0 auto;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+.collections-slider-wrapper {
+    position: relative;
+}
+
+.collections-slider {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: hidden;
+    padding-bottom: 20px;
+    scrollbar-width: thin;
+    padding: 1rem;
+}
+
+.collections-slider::-webkit-scrollbar {
+    height: 8px;
+}
+
+.collections-slider::-webkit-scrollbar-track {
+    background: var(--gray-light);
+    border-radius: 4px;
+}
+
+.collections-slider::-webkit-scrollbar-thumb {
+    background: var(--gray-medium);
+    border-radius: 4px;
+}
+
+.collection-slide {
+    min-width: 400px;
+    height: 500px;
+    position: relative;
+    border-radius: 30px;
+    overflow: hidden;
+    transition: transform 0.3s;
+}
+
+.collection-slide:hover {
+    transform: scale(1.02);
+}
+
+.collection-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.collection-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 30px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    color: var(--white);
+}
+
+.collection-info h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.collection-link {
+    color: var(--white);
+    text-decoration: none;
+    font-size: 14px;
+    opacity: 0.9;
+    transition: opacity 0.3s;
+}
+
+.collection-link:hover {
+    opacity: 1;
+}
+
+.collections-nav-wrapper {
+    position: relative;
+    width: 4rem;
+    margin: 1rem 4rem 1rem auto;
+}
+
+.collections-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    background: var(--white);
+    border: 1px solid var(--black);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    z-index: 10;
+}
+
+.collections-nav.prev {
+    left: -25px;
+}
+
+.collections-nav.next {
+    right: -25px;
+}
+
+.collections-nav:hover {
+    background: var(--black);
+}
+
+.collections-nav:hover svg path {
+    stroke: var(--white);
+}

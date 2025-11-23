@@ -1,0 +1,38 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries — 6: Suppliers by Repair Frequency</h1>
+    <div>
+        <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    {% if results %}
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>Supplier</th>
+                    <th>Contact Person</th>
+                    <th>Email</th>
+                    <th>Products Count</th>
+                    <th>Repairs Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td>{{ result.supplier.name }}</td>
+                    <td>{{ result.supplier.contact_person }}</td>
+                    <td>{{ result.supplier.email }}</td>
+                    <td>{{ result.products_count }}</td>
+                    <td><strong>{{ result.repairs_count }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">No suppliers found with repair data</p>
+    {% endif %}
+{% endblock %}
+

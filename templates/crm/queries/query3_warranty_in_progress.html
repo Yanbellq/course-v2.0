@@ -1,0 +1,44 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries — 3c: Warranty Repairs In Progress</h1>
+
+    <div>
+        <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    {% if results %}
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>Repair ID</th>
+                    <th>Status</th>
+                    <th>Product</th>
+                    <th>Manufacturer</th>
+                    <th>Customer</th>
+                    <th>Employee</th>
+                    <th>Start Date</th>
+                    <th>Estimated Completion</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                    <tr>
+                        <td>{{ result.repair.id|truncatechars:8 }}</td>
+                        <td><span class="badge badge--warning">{{ result.repair.status }}</span></td>
+                        <td>{{ result.product.name|default:"N/A" }}</td>
+                        <td>{{ result.product.manufacturer|default:"N/A" }}</td>
+                        <td>{{ result.customer.username|default:"N/A" }}</td>
+                        <td>{{ result.employee.full_name|default:"N/A" }}</td>
+                        <td>{{ result.repair.start_date|date:"Y-m-d"|default:"N/A" }}</td>
+                        <td>{{ result.repair.estimated_completion|date:"Y-m-d"|default:"N/A" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">No warranty repairs in progress found</p>
+    {% endif %}
+{% endblock crm__content %}

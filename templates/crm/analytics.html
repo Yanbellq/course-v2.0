@@ -1,0 +1,65 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="crm-container">
+
+    <h1 class="page-title">Аналітика</h1>
+
+    <!-- === KPI CARDS === -->
+    <div class="kpi-grid">
+
+        <div class="kpi-card">
+            <div class="kpi-title">Місячний прибуток</div>
+            <div class="kpi-value">{{ monthly_revenue }} ₴</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-title">Продажів за місяць</div>
+            <div class="kpi-value">{{ monthly_sales_count }}</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-title">Нові клієнти</div>
+            <div class="kpi-value">{{ new_customers }}</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-title">Закритих ремонтів</div>
+            <div class="kpi-value">{{ completed_repairs }}</div>
+        </div>
+
+    </div>
+
+    <!-- === CHARTS GRID === -->
+    <div class="charts-grid">
+
+        <div class="chart-card">
+            <h2>Прибуток по місяцям</h2>
+            <canvas id="revenueChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <h2>Продажі по категоріям</h2>
+            <canvas id="categoryChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <h2>Кількість ремонтів</h2>
+            <canvas id="repairChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <h2>Нові клієнти по місяцям</h2>
+            <canvas id="customerChart"></canvas>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/crm/analytics.js' %}"></script>
+
+{% endblock %}

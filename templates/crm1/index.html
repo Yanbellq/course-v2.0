@@ -1,0 +1,161 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+
+
+{% block title %}Головна | Інформаційна система комп'ютерної фірми{% endblock %}
+
+{% block page_header %}
+    <div class="page-header">
+        <h1 class="page-header__title">Панель управління</h1>
+        <p class="page-header__subtitle">Інформаційна система комп'ютерної фірми</p>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <!-- Статистика -->
+    <section class="dashboard-stats">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-card__icon">📦</div>
+                <div class="stat-card__content">
+                    <h3 class="stat-card__title">Товарів на складі</h3>
+                    <div class="stat-card__value" data-stat="products-count">...</div>
+                    <p class="stat-card__description">Загальна кількість позицій</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card__icon">👥</div>
+                <div class="stat-card__content">
+                    <h3 class="stat-card__title">Активних клієнтів</h3>
+                    <div class="stat-card__value" data-stat="customers-count">...</div>
+                    <p class="stat-card__description">За останній місяць</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card__icon">💰</div>
+                <div class="stat-card__content">
+                    <h3 class="stat-card__title">Виторг за місяць</h3>
+                    <div class="stat-card__value" data-stat="monthly-revenue">...</div>
+                    <p class="stat-card__description">Грудень 2024</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card__icon">🔧</div>
+                <div class="stat-card__content">
+                    <h3 class="stat-card__title">Активних ремонтів</h3>
+                    <div class="stat-card__value" data-stat="active-repairs">...</div>
+                    <p class="stat-card__description">В роботі зараз</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Швидкі дії -->
+    <section class="quick-actions">
+        <h2 class="section-title">Швидкі дії</h2>
+        <div class="actions-grid">
+            <a href="{% comment %}{% url 'crm:sale_add' %}{% endcomment %}#" class="action-card">
+                <div class="action-card__icon">🛒</div>
+                <h3 class="action-card__title">Нова продажа</h3>
+                <p class="action-card__description">Оформити продажу товару</p>
+            </a>
+
+            <a href="{% comment %}{% url 'crm:customer_add' %}{% endcomment %}#" class="action-card">
+                <div class="action-card__icon">👤</div>
+                <h3 class="action-card__title">Додати клієнта</h3>
+                <p class="action-card__description">Реєстрація нового клієнта</p>
+            </a>
+
+            <a href="{% comment %}{% url 'crm:repair_add' %}{% endcomment %}#" class="action-card">
+                <div class="action-card__icon">⚙️</div>
+                <h3 class="action-card__title">Новий ремонт</h3>
+                <p class="action-card__description">Прийняти техніку в ремонт</p>
+            </a>
+
+            <a href="{% comment %}{% url 'crm:contract_add' %}{% endcomment %}#" class="action-card">
+                <div class="action-card__icon">📋</div>
+                <h3 class="action-card__title">Новий договір</h3>
+                <p class="action-card__description">Укласти договір з постачальником</p>
+            </a>
+
+            <a href="{% comment %}{% url 'crm:custom_pc_add' %}{% endcomment %}#" class="action-card">
+                <div class="action-card__icon">🖥️</div>
+                <h3 class="action-card__title">Збірка ПК</h3>
+                <p class="action-card__description">Створити замовлення на збірку</p>
+            </a>
+
+            <a href="{% comment %}{% url 'crm:service_add' %}{% endcomment %}#" class="action-card">
+                <div class="action-card__icon">💻</div>
+                <h3 class="action-card__title">Послуга ПЗ</h3>
+                <p class="action-card__description">Налаштування програм</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- Останні операції -->
+    <section class="recent-operations">
+        <div class="operations-grid">
+            <div class="operation-block">
+                <div class="operation-block__header">
+                    <h2 class="operation-block__title">Останні продажі</h2>
+                    <a href="{% comment %}{% url 'crm:sales_list' %}{% endcomment %}#" class="operation-block__link">Всі продажі</a>
+                </div>
+                <div class="operation-list" id="recent-sales">
+                    <!-- Дані завантажуються динамічно через JS -->
+                </div>
+            </div>
+
+            <div class="operation-block">
+                <div class="operation-block__header">
+                    <h2 class="operation-block__title">Активні ремонти</h2>
+                    <a href="{% comment %}{% url 'crm:repairs_list' %}{% endcomment %}#" class="operation-block__link">Всі ремонти</a>
+                </div>
+                <div class="operation-list" id="active-repairs">
+                    <!-- Дані завантажуються динамічно через JS -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Критичні запаси -->
+    <section class="low-stock-alert">
+        <div class="alert-block">
+            <div class="alert-block__header">
+                <h2 class="alert-block__title">⚠️ Критичні запаси</h2>
+                <span class="alert-block__count" id="low-stock-count">...</span>
+            </div>
+            <div class="alert-list" id="low-stock-products">
+                <!-- Дані завантажуються динамічно через JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Графіки та аналітика -->
+    <section class="analytics">
+        <div class="analytics-grid">
+            <div class="chart-block">
+                <h2 class="chart-block__title">Продажі за тиждень</h2>
+                <div class="chart-container">
+                    <canvas id="sales-chart" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-block">
+                <h2 class="chart-block__title">Топ категорії</h2>
+                <div class="chart-container">
+                    <canvas id="categories-chart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    {# Підключаємо скрипт, специфічний для цієї сторінки. Gulp автоматично скомпілює його в main.js #}
+    <script type="module" src="{% static 'js/crm/pages/dashboard.js' %}"></script>
+    <!-- Для ініціалізації графіків потрібна бібліотека, наприклад Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}

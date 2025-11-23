@@ -1,0 +1,55 @@
+{% extends "crm/queries/query_base.html" %}
+
+{% block query_content %}
+{% if error %}
+<div class="alert alert-error">
+    <strong>Error:</strong> {{ error }}
+</div>
+{% endif %}
+
+{% block query_results %}
+{% endblock %}
+{% endblock %}
+
+<style>
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.alert-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.crm-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.crm-table th,
+.crm-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.crm-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+}
+
+.crm-table tr:hover {
+    background: #f8f9fa;
+}
+
+.empty {
+    text-align: center;
+    color: #999;
+    padding: 20px;
+}
+</style>
+

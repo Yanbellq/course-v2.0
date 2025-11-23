@@ -1,0 +1,204 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electronic - Магазин електроніки</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/libs/tailwind.css' %}">
+    <link rel="shortcut icon" href="{% static 'img/logo-icon.png' %}" type="image/x-icon">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="{% url "main:index" %}" class="logo cursor-pointer" id="logoScrollToTop">Electronic</a>
+
+                {% block header %}
+                    <ul class="nav-menu" id="navMenu">
+                        <li><a href="{% url 'main:index' %}" id="scrollToTopBtn">Home</a></li>
+                        <li class="nav-menu-divider">|</li>
+                        <li class="nav-menu-divider--mobile">
+                            <hr />
+                        </li>
+                        <li><a href="{% url 'main:categories' %}">Shop</a></li>
+                    </ul>
+                {% endblock header %}
+
+                {% block header_actions %}
+                    <div class="nav-icons" id="navIcons">
+                        <button class="icon-btn search-toggle" id="searchToggle" aria-label="Search">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2" />
+                                <path d="M13 13L17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                        </button>
+                        <button class="icon-btn cart-toggle" id="cartToggle" aria-label="Cart">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <circle cx="8" cy="18" r="1.5" fill="currentColor" />
+                                <circle cx="16" cy="18" r="1.5" fill="currentColor" />
+                                <path d="M1 1H4L6 13H17L19 5H5" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <span class="cart-count" id="cartCount">0</span>
+                        </button>
+                        <a href="{% url 'main:auth' %}" class="icon-btn user-btn" id="userBtn" aria-label="User">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="2" />
+                                <path d="M3 19C3 15 6 13 10 13C14 13 17 15 17 19" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" />
+                            </svg>
+                        </a>
+                    </div>
+                {% endblock header_actions %}
+
+                <button class="mobile-toggle" id="mobileToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </nav>
+
+            <!-- Виїжджаючий пошук -->
+            <div class="search-overlay" id="searchOverlay">
+                <div class="search-container">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search...">
+                    <button class="search-close" id="searchClose">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="search-results" id="searchResults"></div>
+            </div>
+        </div>
+    </header>
+
+
+    {% block content %}{% endblock %}
+
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col">
+                    <h4>Categories</h4>
+                    <ul>
+                        {% if categories %}
+                            {% for category in categories %}
+                                <li><a href="{% url 'main:categories' %}?category={{ category.slug }}">{{ category.name }}</a></li>
+                            {% endfor %}
+                            {% comment %} <li><a href="{% url 'main:categories' %}?category=peripheral">Headphones</a></li>
+                            <li><a href="{% url 'main:categories' %}?category=smartphone">Mobile Phones</a></li>
+                            <li><a href="{% url 'main:categories' %}?category=laptop">Laptops</a></li>
+                            <li><a href="{% url 'main:categories' %}?category=smartwatch">Smart Watches</a></li> {% endcomment %}
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Shipping Info</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Press</a></li>
+                        <li><a href="#">Blog</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Follow us</h4>
+                    <ul>
+                        <li><a href="#">Facebook</a></li>
+                        <li><a href="#">Instagram</a></li>
+                        <li><a href="#">Twitter</a></li>
+                        <li><a href="#">LinkedIn</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>© 2025 Electronic. All rights reserved</p>
+                <div class="footer-logo">Electronic</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Виїжджаюча корзина -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>Shopping Cart</h3>
+            <button class="cart-close" id="cartClose">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty">
+                <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                    <circle cx="40" cy="40" r="38" stroke="#e0e0e0" stroke-width="4" />
+                    <path d="M20 20L30 35L50 50L60 60" stroke="#e0e0e0" stroke-width="4" stroke-linecap="round" />
+                </svg>
+                <p>Your cart is empty</p>
+            </div>
+        </div>
+
+        <div class="cart-footer">
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="cartSubtotal">$0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping:</span>
+                    <span>Free</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total:</span>
+                    <span id="cartTotal">$0.00</span>
+                </div>
+            </div>
+            <button class="btn btn--checkout">Proceed to Checkout</button>
+            <button class="btn btn--continue-shopping" id="continueShopping">Continue Shopping</button>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    {% block base_js %}
+        <script type="module" src="{% static 'js/user/main.js' %}"></script>
+        <script type="module" src="{% static 'js/user/slider.js' %}"></script>
+        <script type="module" src="{% static 'js/user/cart.js' %}"></script>
+    {% endblock base_js %}
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+
+    {% block extra_js %}{% endblock extra_js %}
+</body>
+
+</html>

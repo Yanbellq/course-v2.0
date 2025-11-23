@@ -1,0 +1,30 @@
+.logo {
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--black);
+    text-decoration: none;
+    position: relative;
+    border-right: 1px solid var(--black);
+    padding-right: 5px;
+    animation: blinking 1s steps(1, end) infinite;
+    
+    &::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 5px;
+        width: 0;
+        height: 2px;
+        background: var(--black);
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    &:hover {
+        color: inherit;
+
+        &::after {
+            width: 100%;
+        }
+    }
+}

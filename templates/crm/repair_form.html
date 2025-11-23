@@ -1,0 +1,222 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Repair — {% if repair %}Edit{% else %}Add{% endif %}</h1>
+
+    <div>
+        <a href="{% url 'crm:repairs_list' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    <section class="panel">
+        <form method="POST">
+            {% csrf_token %}
+
+            
+            <div class="form-group">
+                <div class="form-row">
+                    <label for="user_id">Customer *</label>
+                    <select name="user_id" id="user_id" required
+                        {% if repair %}style="background-color: #f5f5f5;" disabled{% endif %}
+                    >
+                        <option value="">Select customer</option>
+                        {% for user in users %}
+                        <option value="{{ user.id }}" {% if repair and repair.user_id == user.id %}selected{% endif %}>
+                            {{ user.username }} ({{ user.email }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <label for="employee_id">Employee *</label>
+                    <select name="employee_id" id="employee_id" required
+                        {% if repair %}style="background-color: #f5f5f5;" disabled{% endif %}
+                    >
+                        <option value="">Select employee</option>
+                        {% for employee in employees %}
+                        <option value="{{ employee.id }}" {% if repair and repair.employee_id == employee.id %}selected{% endif %}>
+                            {{ employee.full_name }} ({{ employee.position }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label for="product_id">Product</label>
+                <select name="product_id" id="product_id"
+                    {% if repair %}style="background-color: #f5f5f5;" disabled{% endif %}
+                >
+                    <option value="">Select product (optional)</option>
+                    {% for product in products %}
+                    <option value="{{ product.id }}" {% if repair and repair.product_id == product.id %}selected{% endif %}>
+                        {{ product.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <div class="form-row">
+                    <label for="repair_type">Repair Type *</label>
+                    <select name="repair_type" id="repair_type" required
+                        {% if repair %}style="background-color: #f5f5f5;" disabled{% endif %}
+                    >
+                        <option value="paid" {% if repair and repair.repair_type == 'paid' %}selected{% endif %}>Paid</option>
+                        <option value="warranty" {% if repair and repair.repair_type == 'warranty' %}selected{% endif %}>Warranty</option>
+                        <option value="software" {% if repair and repair.repair_type == 'software' %}selected{% endif %}>Software</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label for="status">Status *</label>
+                    <select name="status" id="status" required>
+                        <option value="received" {% if repair and repair.status == 'received' %}selected{% endif %}>Received</option>
+                        <option value="diagnosed" {% if repair and repair.status == 'diagnosed' %}selected{% endif %}>Diagnosed</option>
+                        <option value="repairing" {% if repair and repair.status == 'repairing' %}selected{% endif %}>Repairing</option>
+                        <option value="completed" {% if repair and repair.status == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="returned" {% if repair and repair.status == 'returned' %}selected{% endif %}>Returned</option>
+                        <option value="cancelled" {% if repair and repair.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label for="description">Description *</label>
+                <textarea name="description" id="description" rows="4" required>{% if repair %}{{ repair.description }}{% endif %}</textarea>
+            </div>
+
+            {% comment %} <input type="number" name="cost" id="cost" step="0.01" min="0" value="{% if repair %}{{ repair.cost|default:0 }}{% else %}0{% endif %}" hidden> {% endcomment %}
+
+            <div class="form-group">
+                <div class="form-row">
+                    <label for="start_date">Start Date *</label>
+                    <input type="date" name="start_date" id="start_date" value="{% if repair and repair.start_date %}{{ repair.start_date|date:'Y-m-d' }}{% else %}{{ now|date:'Y-m-d' }}{% endif %}" required>
+                </div>
+           
+                <div class="form-row">
+                    <label for="estimated_completion">Estimated Completion</label>
+                    <input type="date" name="estimated_completion" id="estimated_completion" value="{% if repair and repair.estimated_completion %}{{ repair.estimated_completion|date:'Y-m-d' }}{% endif %}">
+                </div>
+            </div>
+
+            <!-- PRODUCTS USED BLOCK -->
+            <div class="form-row">
+                <label>Products Used</label>
+            </div>
+            
+            <div class="products-container">
+                <table class="products-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th style="width:100px;">Quantity</th>
+                            <th style="width:140px;">Unit Price</th>
+                            <th style="width:120px;">Subtotal</th>
+                            <th style="width:60px;"></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="productsUsedTableBody">
+                        {% if repair_products_used %}
+                            {% for item in repair_products_used %}
+                            <tr class="product-row">
+                                <td>
+                                    <select name="used_product_id[]" required style="width: 100%; padding: 4px 8px;">
+                                        <option value="">Select product</option>
+                                        {% for p in products %}
+                                            <option value="{{ p.id }}"
+                                                {% if item.product_id|stringformat:"s" == p.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ p.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+
+                                <td>
+                                    <input type="number" name="used_quantity[]" min="1" class="quantity-input"
+                                        value="{{ item.quantity }}" required style="width: 100%; padding: 4px 8px;">
+                                </td>
+
+                                <td>
+                                    <input type="number" name="used_unit_price[]" step="0.01" min="0" class="unit-price-input"
+                                        value="{{ item.unit_price }}" required style="width: 100%; padding: 4px 8px;">
+                                </td>
+
+                                <td>
+                                    <span class="subtotal-display" data-quantity="{{ item.quantity }}" data-price="{{ item.unit_price }}">$0.00</span>
+                                </td>
+
+                                <td style="text-align: center;">
+                                    <button type="button" class="btn btn--danger remove-product" style="padding: 4px 8px;">×</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                    
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="text-align: right; font-weight: bold; padding-top: 15px;">Total Cost:</td>
+                            <td style="font-weight: bold; font-size: 16px; padding-top: 15px;">
+                                <span id="productsUsedTotalDisplay">$0.00</span>
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                
+                <div style="margin-top: 15px;">
+                    <button type="button" class="btn btn--primary" id="addProductUsedBtn">+ Add Product</button>
+                </div>
+            </div>
+
+
+            <div class="form-row" style="margin-top: 15px;">
+                <label for="notes">Notes</label>
+                <textarea name="notes" id="notes" rows="3">{% if repair %}{{ repair.notes|default:"" }}{% endif %}</textarea>
+            </div>
+
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Buttons -->
+            <div class="form-actions">
+                <a class="btn btn--secondary" href="{% url 'crm:repairs_list' %}">Back</a>
+                <button class="btn btn--primary" type="submit">Save</button>
+            </div>
+        </form>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // Products data with prices
+        const productsData = {
+            {% for product in products %}
+            "{{ product.id }}": {{ product.price|default:0 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        };
+
+        // Products list with names (for dropdown options)
+        const productsList = [
+            {% for product in products %}
+            {
+                id: "{{ product.id }}",
+                name: "{{ product.name|escapejs }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+    </script>
+    <script src="{% static 'js/crm/product-list.js' %}"></script>
+{% endblock %}

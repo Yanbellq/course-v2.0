@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+{% block content %}
+    <div class="profile-wrapper">
+
+        <div class="profile-card">
+
+            <h1 class="section-title">Account details</h1>
+            
+            <div class="info-block">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username"
+                        placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email"
+                        placeholder="Enter your email">
+                </div>
+            </div>
+
+
+            <h2 class="section-subtitle">Password change</h2>
+            <div class="info-block">
+                <div class="form-group">
+                    <label for="current-password">Current password</label>
+                    <input type="password" id="current-password" name="current-password" required
+                        placeholder="Enter your password">
+                </div>
+                <div class="form-group">
+                    <label for="new-password">New password</label>
+                    <input type="password" id="new-password" name="new-password" required
+                        placeholder="Enter your password">
+                </div>
+                <div class="form-group">
+                    <label for="confirm-new-password">Confirm new password</label>
+                    <input type="password" id="confirm-new-password" name="confirm-new-password" required
+                        placeholder="Enter your password">
+                </div>
+            </div>
+
+            <button class="btn btn--secondary w-full" id="changeProfileBtn">Save changes</button>
+        </div>
+    </div>
+
+{% endblock content %}
+
+{% block extra_js %}
+    <script src="{% static 'js/user/profile.js' %}" defer></script>
+    <script type="module" src="{% static 'js/user/auth.js' %}"></script>
+{% endblock extra_js %}

@@ -1,0 +1,261 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Deliveries List</h1>
+
+    <div>
+        <a href="{% url 'crm:deliveries_create' %}" class="btn btn--secondary">Add Delivery</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    <table class="crm-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Sale</th>
+                <th>Customer</th>
+                <th>Delivery Address</th>
+                <th>Products</th>
+                <th>Custom Build</th>
+                <th>OS Setup</th>
+                <th>Delivery Cost</th>
+                <th>Delivery Date</th>
+                <th>Status</th>
+                <th colspan="2">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for delivery in deliveries %}
+            <tr>
+                <td>{{ delivery.id|truncatechars:8 }}</td>
+                <td>
+                    {% if delivery.sale %}
+                        {{ delivery.sale_id|truncatechars:8 }}
+                        {% if delivery.sale.total_amount %}
+                            (${{ delivery.sale.total_amount|floatformat:2 }})
+                        {% endif %}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>
+                    {% if delivery.user %}
+                        {{ delivery.user.username|default:"N/A" }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>
+                    {% if delivery.delivery_address %}
+                        {{ delivery.delivery_address|truncatewords:10 }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                {% comment %} <td>
+                    {% if delivery.products %}
+                        <button onclick="toggleProducts('products_{{ forloop.counter }}')" class="btn btn--actions-primary">{{ delivery.products|length }} item(s)</button>
+                    {% else %}
+                        0
+                    {% endif %}
+                    {% if delivery.sale and delivery.sale.custom_build_service and delivery.sale.custom_build_service.purchased %}
+                        <br><button onclick="toggleCustomBuild('custom_build_{{ forloop.counter }}')" class="btn btn--actions-primary" style="margin-top: 5px;">
+                            Custom PC
+                            {% if delivery.sale.custom_build_service.data %}
+                                ({{ delivery.sale.custom_build_service.data.name|default:"Custom Build" }})
+                            {% endif %}
+                        </button>
+                    {% endif %}
+                    {% if delivery.sale and delivery.sale.software_service and delivery.sale.software_service.purchased %}
+                        <br><button onclick="toggleSoftwareService('software_service_{{ forloop.counter }}')" class="btn btn--actions-primary" style="margin-top: 5px;">
+                            OS Setup
+                            {% if delivery.sale.software_service.data %}
+                                ({{ delivery.sale.software_service.data.status|default:"Scheduled" }})
+                            {% endif %}
+                        </button>
+                    {% endif %}
+                </td> {% endcomment %}
+                <td>
+                    {% if delivery.products %}
+                        <button onclick="toggleProducts('products_{{ forloop.counter }}')" class="btn btn--actions-primary">{{ delivery.products|length }} item(s)</button>
+                    {% else %}
+                        0
+                    {% endif %}
+                </td>
+                <td>
+                    {% if delivery.sale and delivery.sale.custom_build_service and delivery.sale.custom_build_service.purchased %}
+                        <button onclick="toggleCustomBuild('custom_build_{{ forloop.counter }}')" class="btn btn--actions-primary">
+                            Yes
+                            {% if delivery.sale.custom_build_service.data %}
+                                ({{ delivery.sale.custom_build_service.data.name|default:"Custom Build" }})
+                            {% endif %}
+                        </button>
+                    {% else %}
+                        <span class="badge badge--secondary">No</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if delivery.sale and delivery.sale.software_service and delivery.sale.software_service.purchased %}
+                        <button onclick="toggleSoftwareService('software_service_{{ forloop.counter }}')" class="btn btn--actions-primary">
+                            Yes
+                            {% if delivery.sale.software_service.data %}
+                                ({{ delivery.sale.software_service.data.status|default:"Scheduled" }})
+                            {% endif %}
+                        </button>
+                    {% else %}
+                        <span class="badge badge--secondary">No</span>
+                    {% endif %}
+                </td>
+                <td>${{ delivery.total_cost|default:"0.00"|floatformat:2 }}</td>
+                <td>{{ delivery.delivery_date|date:"Y-m-d"|default:"N/A" }}</td>
+                <td>
+                    <span class="badge badge--{% if delivery.status == 'received' %}success{% elif delivery.status == 'cancelled' %}danger{% elif delivery.status == 'delivered' %}info{% else %}warning{% endif %}">
+                        {{ delivery.status|default:"N/A" }}
+                    </span>
+                </td>
+                <td class="actions">
+                    <a href="{% url 'crm:deliveries_edit' delivery.id %}" class="btn btn--actions-primary">Edit</a>
+                </td>
+                <td>
+                    <form method="POST" action="{% url 'crm:deliveries_delete' delivery.id %}" onsubmit="return confirm('Delete this delivery?');" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn--actions-secondary">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            <tr id="products_{{ forloop.counter }}" style="display: none;">
+                <td colspan="12">
+                    <table class="crm-table" style="margin: 10px 0;">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in delivery.products %}
+                            <tr>
+                                <td>
+                                    {% if product.product %}
+                                        {{ product.product.name }}
+                                    {% else %}
+                                        Product #{{ product.product_id|truncatechars:8 }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ product.quantity }}</td>
+                                <td>${{ product.unit_price|floatformat:2 }}</td>
+                                <td>${{ product.subtotal|default:0|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="empty">No products</td></tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr style="padding-top: 15px;">
+                                <td colspan="3" style="text-align: right; font-weight: bold;">Total Cost:</td>
+                                <td style="font-weight: bold;">${{ delivery.sale.products_total_cost|floatformat:2 }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </td>
+            </tr>
+            {% if delivery.sale and delivery.sale.custom_build_service and delivery.sale.custom_build_service.purchased and delivery.sale.custom_build_service.data %}
+            <tr id="custom_build_{{ forloop.counter }}" style="display: none;">
+                <td colspan="12">
+                    {% if delivery.sale.custom_build_service.data.products %}
+                    <table class="crm-table" style="margin: 10px 0;">
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in delivery.sale.custom_build_service.data.products %}
+                            <tr>
+                                <td>
+                                    {% if item.product %}
+                                        {{ item.product.name }}
+                                    {% else %}
+                                        Component #{{ item.product_id|truncatechars:8 }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ item.unit_price|floatformat:2 }}</td>
+                                <td>${{ item.subtotal|default:0|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" style="text-align: right; font-weight: bold;">Total Cost:</td>
+                                <td style="font-weight: bold;">${{ delivery.sale.custom_build_service.data.total_cost|floatformat:2 }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    {% endif %}
+                    {% if delivery.sale.custom_build_service.data.notes %}
+                    <p style="margin: 10px 0 0 0;"><strong>Notes:</strong> {{ delivery.sale.custom_build_service.data.notes }}</p>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endif %}
+            {% if delivery.sale and delivery.sale.software_service and delivery.sale.software_service.purchased and delivery.sale.software_service.data %}
+            <tr id="software_service_{{ forloop.counter }}" style="display: none;">
+                <td colspan="12">
+                    {% if delivery.sale.software_service.data.software_list %}
+                        <table class="crm-table" style="margin: 10px 0;">
+                            <thead>
+                                <tr>
+                                    <th colspan="4">Software</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in delivery.sale.software_service.data.software_list %}
+                                    <tr>
+                                        <td colspan="4">
+                                            {{ item }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr style="padding-top: 15px;">
+                                    <td colspan="3" style="text-align: right; font-weight: bold;">Total Cost:</td>
+                                    <td style="font-weight: bold;">${{ delivery.sale.software_service.data.cost|floatformat:2 }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endif %}
+            {% empty %}
+            <tr><td colspan="9" class="empty">No deliveries found</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        function toggleProducts(id) {
+            const row = document.getElementById(id);
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+        function toggleCustomBuild(id) {
+            const row = document.getElementById(id);
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+        function toggleSoftwareService(id) {
+            const row = document.getElementById(id);
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+    </script>
+{% endblock extra_js %}

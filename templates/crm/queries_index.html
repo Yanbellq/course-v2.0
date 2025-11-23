@@ -1,0 +1,153 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries</h1>
+{% endblock crm__page_header %}
+
+{% block crm__content %}
+    <div class="stats-grid">
+        
+        <!-- Query 1 -->
+        <div class="stat-card">
+            <h3>Query 1: Suppliers and Products</h3>
+            <p>Display information about suppliers and the products they supply</p>
+            <div class="stat-actions">
+                <a href="{% url 'crm:query1_suppliers' %}" class="btn btn--primary">View Suppliers & Products</a>
+                <a href="{% url 'crm:query1_components' %}" class="btn btn--secondary">Components (2+ Suppliers)</a>
+            </div>
+        </div>
+
+        <!-- Query 2 -->
+        <div class="stat-card">
+            <h3>Query 2: Customers by Manufacturer</h3>
+            <p>Display full information about customers who bought products from specified manufacturer</p>
+            <form method="GET" action="{% url 'crm:query2_customers' %}" class="stat-actions">
+                <div class="form-row">
+                    <label for="manufacturer">Manufacturer name (e.g., Intel)</label>
+                    <input type="text" name="manufacturer" placeholder="Manufacturer name (e.g., Intel)" required>
+                </div>
+                <button type="submit" class="btn btn--primary">Execute Query</button>
+            </form>
+        </div>
+
+        <!-- Query 3 -->
+        <div class="stat-card">
+            <h3>Query 3: Warranty Repairs</h3>
+            <p>Display information about warranty repairs</p>
+            <div class="stat-actions">
+                <a href="{% url 'crm:query3_returned' %}" class="btn btn--secondary">Returned for Repair</a>
+                <a href="{% url 'crm:query3_completed' %}" class="btn btn--secondary">Completed Repairs</a>
+                <a href="{% url 'crm:query3_in_progress' %}" class="btn btn--secondary">In Progress</a>
+            </div>
+        </div>
+
+        <!-- Query 4 -->
+        <div class="stat-card">
+            <h3>Query 4: Revenue and Sales</h3>
+            <p>Revenue analytics and sales statistics</p>
+            <form method="GET" action="{% url 'crm:query4_max_revenue' %}" class="stat-actions">
+                <div class="form-row">
+                    <label for="month">Month</label>
+                    <input type="month" name="month" placeholder="YYYY-MM" value="{{ current_month }}">
+                </div>
+                <button type="submit" class="btn btn--secondary">Max Revenue</button>
+                <a href="{% url 'crm:query4_revenue_type' %}" class="btn btn--secondary">Revenue by Type (Week)</a>
+                <a href="{% url 'crm:query4_sales_employee' %}" class="btn btn--secondary">Sales by Employee</a>
+            </form>
+        </div>
+
+        <!-- Query 5 -->
+        <div class="stat-card">
+            <h3>Query 5: Components by Price</h3>
+            <p>List components with price not exceeding specified amount</p>
+            <form method="GET" action="{% url 'crm:query5_components' %}" class="stat-actions">
+                <div class="form-row">
+                    <label for="max_price">Max price</label>
+                    <input type="number" name="max_price" placeholder="Max price (e.g., 5000)" min="0" step="0.01" required>
+                </div>
+                <button type="submit" class="btn btn--primary">Execute Query</button>
+            </form>
+        </div>
+
+        <!-- Query 6 -->
+        <div class="stat-card">
+            <h3>Query 6: Suppliers by Repair Frequency</h3>
+            <p>Suppliers whose products most frequently need repair</p>
+            <div class="stat-actions">
+                <a href="{% url 'crm:query6_suppliers' %}" class="btn btn--primary">Execute Query</a>
+            </div>
+        </div>
+
+        <!-- Query 7 -->
+        <div class="stat-card">
+            <h3>Query 7: Custom Build Components</h3>
+            <p>Display components of custom PC build for customer</p>
+            <form method="GET" action="{% url 'crm:query7_custom_build' %}" class="stat-actions">
+                <div class="form-row">
+                    <label for="user_id">User ID (optional)</label>
+                    <input type="text" name="user_id" placeholder="User ID (optional)">
+                </div>
+                <div class="form-row">
+                    <label for="sale_id">Sale ID (optional)</label>
+                    <input type="text" name="sale_id" placeholder="Sale ID (optional)">
+                </div>
+                <button type="submit" class="btn btn--primary">Execute Query</button>
+            </form>
+        </div>
+
+        <!-- Query 8 -->
+        <div class="stat-card">
+            <h3>Query 8: Product Supplies by Period</h3>
+            <p>Amount of specified product received from suppliers in period</p>
+            <form method="GET" action="{% url 'crm:query8_supplies' %}" class="stat-actions">
+                <div class="form-row">
+                    <label for="product_id">Product ID</label>
+                    <input type="text" name="product_id" placeholder="Product ID" required>
+                </div>
+                <div class="form-row">
+                    <label for="start_date">Start Date</label>
+                    <input type="date" name="start_date" placeholder="Start Date">
+                </div>
+                <div class="form-row">
+                    <label for="end_date">End Date</label>
+                    <input type="date" name="end_date" placeholder="End Date">
+                </div>
+                <button type="submit" class="btn btn--primary">Execute Query</button>
+            </form>
+        </div>
+
+        <!-- Query 9 -->
+        <div class="stat-card">
+            <h3>Query 9: Contracts</h3>
+            <p>Contracts information and statistics</p>
+            <form method="GET" action="{% url 'crm:query9_contracts_period' %}" class="stat-actions">
+                <div class="form-row">
+                    <label for="start_date">Start Date</label>
+                    <input type="date" name="start_date" placeholder="Start Date">
+                </div>
+                <div class="form-row">
+                    <label for="end_date">End Date</label>
+                    <input type="date" name="end_date" placeholder="End Date">
+                </div>
+                <button type="submit" class="btn btn--secondary">Contracts by Period</button>
+                <a href="{% url 'crm:query9_contracts_count' %}" class="btn btn--secondary">Contract Count by Supplier</a>
+            </form>
+        </div>
+
+        <!-- Query 10 -->
+        <div class="stat-card">
+            <h3>Query 10: Supplier by Contract Number</h3>
+            <p>Display full information about supplier by contract number</p>
+            <form method="GET" action="{% url 'crm:query10_supplier' %}" class="stat-actions">
+                <div class="form-row">
+                    <label for="contract_number">Contract Number</label>
+                    <input type="text" name="contract_number" placeholder="Contract Number" required>
+                </div>
+                <button type="submit" class="btn btn--primary">Execute Query</button>
+            </form>
+        </div>
+
+    </div>
+{% endblock %}
+

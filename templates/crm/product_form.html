@@ -1,0 +1,208 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Product — {% if product %}Edit{% else %}Add{% endif %}</h1>
+
+    <div>
+        <a href="{% url 'crm:products_list' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+<section class="panel">
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-row">
+            <label for="name">Product Name *</label>
+            <input type="text" name="name" id="name" value="{% if product %}{{ product.name }}{% elif form.name %}{{ form.name }}{% endif %}" required maxlength="200">
+        </div>
+
+        <div class="form-group">
+            <div class="form-row">
+                <label for="category">Category *</label>
+                <select name="category" id="category" required>
+                    <option value="">Select category</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.slug }}" {% if product and product.category == cat.slug %}selected{% elif form.category == cat.slug %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+    
+            <div class="form-row">
+                <label for="product_type">Product Type *</label>
+                <select name="product_type" id="product_type" required>
+                    <option value="">Select type</option>
+                    {% for choice_value, choice_label in PRODUCT_TYPE_CHOICES %}
+                    <option value="{{ choice_value }}" {% if product and product.product_type == choice_value %}selected{% elif form.product_type == choice_value %}selected{% endif %}>
+                        {{ choice_label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <label for="manufacturer">Manufacturer *</label>
+            <input type="text" name="manufacturer" id="manufacturer" value="{% if product %}{{ product.manufacturer }}{% elif form.manufacturer %}{{ form.manufacturer }}{% endif %}" required maxlength="150">
+        </div>
+        
+        <div class="form-group">
+            <div class="form-row">
+                <label for="price">Price *</label>
+                <input type="number" name="price" id="price" step="0.01" min="0" value="{% if product %}{{ product.price }}{% elif form.price %}{{ form.price }}{% else %}0{% endif %}" required>
+            </div>
+    
+            <div class="form-row">
+                <label for="quantity_in_stock">Quantity in Stock</label>
+                <input type="number" name="quantity_in_stock" id="quantity_in_stock" min="0" value="{% if product %}{{ product.quantity_in_stock|default:0 }}{% elif form.quantity_in_stock %}{{ form.quantity_in_stock }}{% else %}0{% endif %}">
+            </div>
+    
+            <div class="form-row">
+                <label for="warranty_months">Warranty (months)</label>
+                <input type="number" name="warranty_months" id="warranty_months" min="0" value="{% if product %}{{ product.warranty_months|default:12 }}{% elif form.warranty_months %}{{ form.warranty_months }}{% else %}12{% endif %}">
+            </div>
+        </div>
+        
+        <!-- SPECIFICATIONS BLOCK -->
+        <div class="form-row">
+            <label>Specifications</label>
+        </div>
+        
+        <div class="products-container">
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th style="width:200px;">Slug</th>
+                        <th>Value</th>
+                        <th style="width:60px;"></th>
+                    </tr>
+                </thead>
+
+                <tbody id="specificationsTableBody">
+                    {% if product and product.specifications %}
+                        {% for spec in product.specifications %}
+                        <tr class="specification-row">
+                            <td>
+                                <input type="text" name="spec_name[]" value="{{ spec.name|default:'' }}" required style="width: 100%; padding: 4px 8px;" placeholder="e.g., Processor">
+                            </td>
+                            <td>
+                                <input type="text" name="spec_slug[]" value="{{ spec.slug|default:'' }}" required style="width: 100%; padding: 4px 8px;" placeholder="e.g., processor">
+                            </td>
+                            <td>
+                                <input type="text" name="spec_value[]" value="{{ spec.value|default:'' }}" required style="width: 100%; padding: 4px 8px;" placeholder="e.g., Intel Core i7">
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" class="btn btn--danger remove-specification" style="padding: 4px 8px;">×</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr class="specification-row empty-specifications">
+                            <td colspan="3">
+                                No specifications added yet
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 15px;">
+                <button type="button" class="btn btn--primary" id="addSpecificationBtn">+ Add Specification</button>
+            </div>
+        </div>
+        
+        <div class="form-row" style="margin-top: 20px">
+            <label for="image_url">Image URL *</label>
+            <input type="url" name="image_url" id="image_url" value="{% if product %}{{ product.image_url }}{% elif form.image_url %}{{ form.image_url }}{% endif %}" required>
+            <p>URL to product image</p>
+        </div>
+
+        <div class="form-row">
+            <label for="description">Description</label>
+            <textarea name="description" id="description" rows="4">{% if product %}{{ product.description|default:"" }}{% elif form.description %}{{ form.description }}{% endif %}</textarea>
+        </div>
+
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Buttons -->
+        <div class="form-actions">
+            <a class="btn btn--secondary" href="{% url 'crm:products_list' %}">Back</a>
+            <button class="btn btn--primary" type="submit">Save</button>
+        </div>
+    </form>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add specification row
+    function addSpecificationRow() {
+        const tableBody = document.getElementById('specificationsTableBody');
+    
+        // Видаляємо рядок "No specifications added yet", якщо він є
+        const emptyRow = tableBody.querySelector('.empty-specifications');
+        if (emptyRow) {
+            emptyRow.remove();
+        }
+    
+        const row = document.createElement('tr');
+        row.className = 'specification-row';
+        row.innerHTML = `
+            <td>
+                <input type="text" name="spec_name[]" required style="width: 100%; padding: 4px 8px;" placeholder="e.g., Processor">
+            </td>
+            <td>
+                <input type="text" name="spec_slug[]" required style="width: 100%; padding: 4px 8px;" placeholder="e.g., processor">
+            </td>
+            <td>
+                <input type="text" name="spec_value[]" required style="width: 100%; padding: 4px 8px;" placeholder="e.g., Intel Core i7">
+            </td>
+            <td style="text-align: center;">
+                <button type="button" class="btn btn--danger remove-specification" style="padding: 4px 8px;">×</button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    }
+    
+    // Remove specification row
+    document.addEventListener('DOMContentLoaded', function() {
+        const addBtn = document.getElementById('addSpecificationBtn');
+        if (addBtn) {
+            addBtn.addEventListener('click', addSpecificationRow);
+        }
+    
+        // Event delegation for remove buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-specification')) {
+                const tableBody = document.getElementById('specificationsTableBody');
+                e.target.closest('tr').remove();
+    
+                // Якщо після видалення немає жодного рядка специфікацій → додаємо заглушку
+                if (tableBody.querySelectorAll('.specification-row').length === 0) {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.className = 'specification-row empty-specifications';
+                    emptyRow.innerHTML = `
+                        <td colspan="3">No specifications added yet</td>
+                    `;
+                    tableBody.appendChild(emptyRow);
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

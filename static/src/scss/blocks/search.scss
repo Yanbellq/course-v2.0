@@ -1,0 +1,111 @@
+/* ============ SEARCH OVERLAY ============ */
+.search-overlay {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    padding: 40px 0 20px 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 999;
+}
+
+.search-overlay.active {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+.search-container {
+    max-width: 550px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 45px 10px 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 50px;
+    font-size: 18px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.search-input:focus {
+    border-color: var(--black);
+}
+
+.search-close {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s;
+}
+
+.search-close:hover {
+    opacity: 0.6;
+}
+
+.search-results {
+    max-width: 65rem;
+    margin: 20px auto 0;
+    padding: 0 40px;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    border-radius: 10px;
+    transition: background 0.3s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.search-result-item:hover {
+    background: var(--gray-light);
+
+    .search-result-image {
+        transform: scale(1.05);
+    }
+}
+
+.search-result-image-container {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+        transition: all 0.15s;
+    }
+}
+
+.search-result-info h4 {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.search-result-info p {
+    font-size: 16px;
+    font-weight: 600;
+}

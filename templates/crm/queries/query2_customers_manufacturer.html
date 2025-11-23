@@ -1,0 +1,71 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries — 2: Customers by Manufacturer</h1>
+
+    <div>
+        <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    {% if results %}
+    <table class="crm-table">
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Email</th>
+                <th>Purchases</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+            <tr>
+                <td>{{ result.customer.username }}</td>
+                <td>{{ result.customer.email }}</td>
+                <td>
+                    <button onclick="togglePurchases('purchases_{{ forloop.counter }}')" class="btn btn--actions-primary">{{ result.total_purchases }} purchase(s)</button>
+                </td>
+                {% comment %} <td>
+                    <button onclick="togglePurchases('purchases_{{ forloop.counter }}')" class="btn btn--small">View Purchases</button>
+                </td> {% endcomment %}
+            </tr>
+            <tr id="purchases_{{ forloop.counter }}" style="display: none;">
+                <td colspan="3">
+                    <table class="crm-table" style="margin: 10px 0;">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Sale Date</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for purchase in result.purchases %}
+                            <tr>
+                                <td>{{ purchase.product_name }}</td>
+                                <td>{{ purchase.sale.sale_date|date:"Y-m-d" }}</td>
+                                <td>${{ purchase.sale.total_amount }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No customers found{% if manufacturer %} for manufacturer: {{ manufacturer }}{% endif %}</p>
+    {% endif %}
+{% endblock %}
+
+
+{% block extra_js %}
+    <script>
+        function togglePurchases(id) {
+            const row = document.getElementById(id);
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+    </script>
+{% endblock extra_js %}

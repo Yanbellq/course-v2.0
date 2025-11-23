@@ -1,0 +1,59 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Supplier — {% if supplier %}Edit{% else %}Add{% endif %}</h1>
+
+    <div>
+        <a class="btn btn--secondary" href="{% url 'crm:suppliers_list' %}">Back</a>
+    </div>
+{% endblock crm__page_header %}
+
+{% block crm__content %}
+    <section class="panel">
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <label>Name *</label>
+                <input name="name" value="{{ supplier.name }}" required>
+            </div>
+
+            <div class="form-row">
+                <label>Contact person *</label>
+                <input name="contact_person" value="{{ supplier.contact_person }}" required>
+            </div>
+
+            <div class="form-group">
+                <div class="form-row">
+                    <label>Email *</label>
+                    <input name="email" type="email" value="{{ supplier.email }}" required>
+                </div>
+    
+                <div class="form-row">
+                    <label>Phone *</label>
+                    <input name="phone" value="{{ supplier.phone }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label>Address</label>
+                <input name="address" value="{{ supplier.address|default:'' }}">
+            </div>
+            
+            <div class="form-row">
+                <label>Description</label>
+                <textarea name="description">{{ supplier.description|default:'' }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <a class="btn btn--secondary" href="{% url 'crm:suppliers_list' %}">Back</a>
+                <button class="btn btn--primary" type="submit">Save</button>
+            </div>
+        </form>
+    </section>
+{% endblock %}
+
+{% block crm__extra_js %}
+
+{% endblock crm__extra_js %}    

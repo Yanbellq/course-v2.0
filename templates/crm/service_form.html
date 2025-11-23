@@ -1,0 +1,26 @@
+{% extends "user/base.html" %}
+{% block content %}
+
+<div class="crm-container form-container">
+
+    <h1>{% if service %}Редагувати послугу{% else %}Нова послуга{% endif %}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label>Назва</label>
+        {{ form.name }}
+
+        <label>Ціна</label>
+        {{ form.price }}
+
+        <div class="actions">
+            <button class="btn btn-black">Зберегти</button>
+            <a href="{% url 'services_list' %}" class="btn btn-white">Назад</a>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

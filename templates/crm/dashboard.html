@@ -1,0 +1,240 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Dashboard</h1>
+{% endblock crm__page_header %}
+
+{% block crm__content %}
+
+    <!-- === STAT CARDS === -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-title">Suppliers</div>
+            <div class="stat-value">{{ suppliers_count|default:0 }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Employees</div>
+            <div class="stat-value">{{ employees_count|default:0 }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Sales</div>
+            <div class="stat-value">{{ sales_count|default:0 }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Active Repairs</div>
+            <div class="stat-value">{{ repairs_count|default:0 }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Products</div>
+            <div class="stat-value">{{ products_count|default:0 }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Categories</div>
+            <div class="stat-value">{{ categories_count|default:0 }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Users</div>
+            <div class="stat-value">{{ users_count|default:0 }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Deliveries</div>
+            <div class="stat-value">{{ deliveries_count|default:0 }}</div>
+        </div>
+    </div>
+
+
+    <!-- === RECENT SECTION === -->
+    <div class="section-block">
+        <h2>Recent Sales</h2>
+
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Employee</th>
+                    <th>Total Amount</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in last_sales %}
+                <tr>
+                    <td>{{ sale.id|truncatechars:8 }}</td>
+                    <td>
+                        {% if sale.user %}
+                            {% with user=sale.user %}
+                                {{ user.username|default:"N/A" }}
+                            {% endwith %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if sale.employee %}
+                            {% with emp=sale.employee %}
+                                {{ emp.full_name|default:"N/A" }}
+                            {% endwith %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>${{ sale.total_amount|default:"0.00"|floatformat:2 }}</td>
+                    <td>{{ sale.sale_date|date:"Y-m-d"|default:"N/A" }}</td>
+                    <td>
+                        <span class="badge badge--{% if sale.status == 'paid' %}success{% elif sale.status == 'pending' %}warning{% else %}danger{% endif %}">
+                            {{ sale.status|default:"N/A" }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="empty">No sales found</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="section-block">
+        <h2>Recent Repairs</h2>
+
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Employee</th>
+                    <th>Product</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Cost</th>
+                    <th>Start Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for repair in last_repairs %}
+                <tr>
+                    <td>{{ repair.id|truncatechars:8 }}</td>
+                    <td>
+                        {% if repair.user %}
+                            {% with user=repair.user %}
+                                {{ user.username|default:"N/A" }}
+                            {% endwith %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if repair.employee %}
+                            {% with emp=repair.employee %}
+                                {{ emp.full_name|default:"N/A" }}
+                            {% endwith %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if repair.product %}
+                            {% with product=repair.product %}
+                                {{ product.name|default:"N/A" }}
+                            {% endwith %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge--secondary">{{ repair.repair_type|default:"N/A" }}</span>
+                    </td>
+                    <td>
+                        <span class="badge badge--{% if repair.status == 'completed' %}success{% elif repair.status == 'cancelled' %}danger{% else %}warning{% endif %}">
+                            {{ repair.status|default:"N/A" }}
+                        </span>
+                    </td>
+                    <td>${{ repair.cost|default:"0.00"|floatformat:2 }}</td>
+                    <td>{{ repair.start_date|date:"Y-m-d"|default:"N/A" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="empty">No repairs found</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="section-block">
+        <h2>Recent Products</h2>
+
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Type</th>
+                    <th>Manufacturer</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Warranty</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in recent_products %}
+                <tr>
+                    <td>{{ product.name }}</td>
+                    <td>{{ product.category }}</td>
+                    <td>
+                        <span class="badge badge--secondary">{{ product.product_type }}</span>
+                    </td>
+                    <td>{{ product.manufacturer }}</td>
+                    <td>${{ product.price|default:"0.00"|floatformat:2 }}</td>
+                    <td>
+                        <span class="badge {% if product.quantity_in_stock > 0 %}badge--success{% else %}badge--danger{% endif %}">
+                            {{ product.quantity_in_stock|default:0 }}
+                        </span>
+                    </td>
+                    <td>{{ product.warranty_months|default:12 }}m</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="empty">No products found</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section-block">
+        <h2>Recent Suppliers</h2>
+
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Contact Person</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for supplier in recent_suppliers %}
+                <tr>
+                    <td>{{ supplier.name }}</td>
+                    <td>{{ supplier.contact_person }}</td>
+                    <td>{{ supplier.phone }}</td>
+                    <td>{{ supplier.email }}</td>
+                    <td>{{ supplier.created_at|date:"Y-m-d"|default:"N/A" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="empty">No suppliers found</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Suppliers List</h1>
+
+    <div>
+        <a class="btn btn--secondary" href="{% url 'crm:suppliers_create' %}">Add supplier</a>
+    </div>
+{% endblock crm__page_header %}
+
+{% block crm__content %}
+    <table class="crm-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Contact person</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th colspan="2">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in suppliers %}
+            <tr>
+                <td>{{ s.name }}</td>
+                <td>{{ s.contact_person }}</td>
+                <td>{{ s.phone }}</td>
+                <td>{{ s.email }}</td>
+                <td>
+                    <a href="{% url 'crm:suppliers_edit' s.id %}" class="btn btn--actions-primary">Edit</a>
+                </td>
+                <td>
+                    <form method="POST" class="delete-item" action="{% url 'crm:suppliers_delete' s.id %}" onsubmit="return confirm('Delete supplier?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn--actions-secondary">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="empty">No data available</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

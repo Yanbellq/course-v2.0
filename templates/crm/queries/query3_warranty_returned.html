@@ -1,0 +1,44 @@
+{% extends "crm/base.html" %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Queries — 3a: Products Returned for Warranty Repair</h1>
+
+    <div>
+        <a href="{% url 'crm:queries_index' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+
+    {% if results %}
+        <table class="crm-table">
+            <thead>
+                <tr>
+                    <th>Repair ID</th>
+                    <th>Product</th>
+                    <th>Manufacturer</th>
+                    <th>Customer</th>
+                    <th>Description</th>
+                    <th>Start Date</th>
+                    <th>Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td>{{ result.repair.id|truncatechars:8 }}</td>
+                    <td>{{ result.product.name|default:"N/A" }}</td>
+                    <td>{{ result.product.manufacturer|default:"N/A" }}</td>
+                    <td>{{ result.customer.username|default:"N/A" }}</td>
+                    <td>{{ result.repair.description|truncatewords:10 }}</td>
+                    <td>{{ result.repair.start_date|date:"Y-m-d"|default:"N/A" }}</td>
+                    <td>${{ result.repair.cost|default:"0.00"|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">No products returned for warranty repair found</p>
+    {% endif %}
+{% endblock crm__content %}
+

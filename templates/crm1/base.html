@@ -1,0 +1,223 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Інформаційна система комп'ютерної фірми{% endblock %}</title>
+
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="{% static 'css/libs/tailwind.css' %}">
+
+    <!-- Ваші кастомні SCSS стилі -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'img/logo-icon.png' %}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="{% url "main:index" %}" class="logo cursor-pointer" id="logoScrollToTop">Electronic</a>
+
+                {% block header %}
+                    <ul class="nav-menu" id="navMenu">
+                        <li class="nav-menu__item dropdown">
+                            <a href="{% comment %}{% url 'crm:products_list' %}{% endcomment %}#" class="nav-menu__link dropdown-toggle">
+                                Products <i data-lucide="chevron-down" class="dropdown-icon"></i>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% comment %}{% url 'crm:products_list' %}{% endcomment %}#">All products</a></li>
+                                <li><a href="{% comment %}{% url 'crm:categories_list' %}{% endcomment %}#">Categories</a></li>
+                                <li><a href="{% comment %}{% url 'crm:product_add' %}{% endcomment %}#">Add product</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-menu__item dropdown">
+                            <a href="{% comment %}{% url 'crm:customers_list' %}{% endcomment %}#" class="nav-menu__link dropdown-toggle">
+                                Customers <i data-lucide="chevron-down" class="dropdown-icon"></i>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% comment %}{% url 'crm:customers_list' %}{% endcomment %}#">All customers</a></li>
+                                <li><a href="{% comment %}{% url 'crm:customer_add' %}{% endcomment %}#">Add customer</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-menu__item dropdown">
+                            <a href="{% comment %}{% url 'crm:suppliers_list' %}{% endcomment %}#" class="nav-menu__link dropdown-toggle">
+                                <i data-lucide="truck" class="h-5 w-5"></i>Suppliers <i data-lucide="chevron-down" class="dropdown-icon"></i>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% comment %}{% url 'crm:suppliers_list' %}{% endcomment %}#"><i data-lucide="truck"></i>All suppliers</a></li>
+                                <li><a href="{% comment %}{% url 'crm:supplier_add' %}{% endcomment %}#">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" data-lucide="truck-plus"
+                                            class="lucide lucide-truck-plus">
+                                            <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"></path>
+                                            <path d="M15 18H9"></path>
+                                            <path
+                                                d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14">
+                                            </path>
+                                            <circle cx="17" cy="18" r="2"></circle>
+                                            <circle cx="7" cy="18" r="2"></circle>
+                                            <!-- Плюсик біля кабіни вантажівки -->
+                                            <line x1="23" x2="23" y1="2" y2="8"></line> <!-- вертикальна частина плюсика -->
+                                            <line x1="26" x2="20" y1="5" y2="5"></line>
+                                            <!-- горизонтальна частина плюсика -->
+                                        </svg>
+                                        Add supplier</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-menu__item dropdown">
+                            <a href="{% comment %}{% url 'crm:sales_list' %}{% endcomment %}#" class="nav-menu__link dropdown-toggle">
+                                <i data-lucide="banknote" class="h-5 w-5"></i>Sales <i data-lucide="chevron-down" class="dropdown-icon"></i>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% comment %}{% url 'crm:sales_list' %}{% endcomment %}#"><i data-lucide="banknote"></i>All sales</a></li>
+                                <li><a href="{% comment %}{% url 'crm:sale_add' %}{% endcomment %}#">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M13 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5" />
+                                            <line x1="17" y1="18" x2="22" y2="18" />
+                                            <line x1="19.5" y1="15.5" x2="19.5" y2="20.5" />
+                                            <path d="M18 12h.01" />
+                                            <path d="M6 12h.01" />
+                                            <circle cx="12" cy="12" r="2" />
+                                        </svg>
+                                        Add sale</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-menu__item dropdown">
+                            <a class="nav-menu__link dropdown-toggle cursor-pointer">
+                                <i data-lucide="cog" class="h-5 w-5"></i>Service <i data-lucide="chevron-down" class="dropdown-icon"></i>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% comment %}{% url 'crm:repairs_list' %}{% endcomment %}#"> <i data-lucide="wrench"></i>Repairs</a></li>
+                                <li><a href="{% comment %}{% url 'crm:services_list' %}{% endcomment %}#"> <i data-lucide="monitor-cog"></i>Software service</a></li>
+                                <li><a href="{% comment %}{% url 'crm:warranties_list' %}{% endcomment %}#"> <i data-lucide="file-check-2"></i>Warranties</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-menu__item dropdown">
+                            <a class="nav-menu__link dropdown-toggle cursor-pointer">
+                                <i data-lucide="file-text" class="h-5 w-5"></i>Operations <i data-lucide="chevron-down" class="dropdown-icon"></i>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% comment %}{% url 'crm:contracts_list' %}{% endcomment %}#"> <i data-lucide="file-text"></i>Contracts</a></li>
+                                <li><a href="{% comment %}{% url 'crm:supplies_list' %}{% endcomment %}#"> <i data-lucide="package-check"></i>Supplies</a></li>
+                                <li><a href="{% comment %}{% url 'crm:custom_pc_list' %}{% endcomment %}#"> <i data-lucide="pc-case"></i>Custom PC</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-menu__item">
+                            <a href="{% comment %}{% url 'crm:reports' %}{% endcomment %}#" class="nav-menu__link">
+                                <i data-lucide="bar-chart-2" class="h-5 w-5"></i>Reports
+                            </a>
+                        </li>
+                        <li class="nav-menu__item">
+                            <a href="{% comment %}{% url 'crm:employees_list' %}{% endcomment %}#" class="nav-menu__link">
+                                <i data-lucide="users" class="h-5 w-5"></i>Employees
+                            </a>
+                        </li>
+                    </ul>
+                {% endblock header %}
+
+                {% block header_actions %}
+                    <div class="nav-icons" id="navIcons">
+                        <button class="icon-btn search-toggle" id="searchToggle" aria-label="Search">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2" />
+                                <path d="M13 13L17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                        </button>
+                        <button class="icon-btn user-btn" id="userBtn" aria-label="User" type="button">
+                            {% comment %} <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="2" />
+                                <path d="M3 19C3 15 6 13 10 13C14 13 17 15 17 19" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" />
+                            </svg> {% endcomment %}
+                            <i data-lucide="log-out"></i>
+                        </button>
+                    </div>
+                {% endblock header_actions %}
+
+                <button class="mobile-toggle" id="mobileToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </nav>
+
+            <!-- Виїжджаючий пошук -->
+            <div class="search-overlay" id="searchOverlay">
+                <div class="search-container">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search...">
+                    <button class="search-close" id="searchClose">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="search-results" id="searchResults"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Breadcrumbs -->
+            {% block breadcrumbs %}{% endblock %}
+
+            <!-- Page Header -->
+            {% block page_header %}{% endblock %}
+
+            <!-- Content -->
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer fixed w-full bottom-0">
+        <div class="container">
+            <div class="footer__content">
+                <p class="footer__text">
+                    © 2025 Інформаційна система комп'ютерної фірми.
+                    Розроблено для управління продажами, ремонтом та обслуговуванням.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Завантаження...</p>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script type="module" src="{% static 'js/crm/main.js' %}"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+
+    {% block extra_js %}{% endblock %}
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+
+</html>

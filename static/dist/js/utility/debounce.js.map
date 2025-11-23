@@ -1,0 +1,1 @@
+{"version":3,"names":[],"mappings":"","sources":["debounce.js"],"sourcesContent":["export default function debounce(fn, delay) {\r\n    let timer;\r\n    return (...args) => {\r\n        clearTimeout(timer);\r\n        timer = setTimeout(() => fn(...args), delay);\r\n    };\r\n}\r\n"],"file":"debounce.js"}

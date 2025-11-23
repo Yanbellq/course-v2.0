@@ -1,0 +1,54 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Categories List</h1>
+
+    <div>
+        <a href="{% url 'crm:product_categories_create' %}" class="btn btn--secondary">Add category</a>
+    </div>
+{% endblock %}
+
+{% block crm__content %}
+    <table class="crm-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Slug</th>
+                <th>Description</th>
+                <th>Image URL</th>
+                <th>Created</th>
+                <th colspan="2">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+            <tr>
+                <td>{{ category.name }}</td>
+                <td>{{ category.slug }}</td>
+                <td>{{ category.description|truncatewords:10|default:"—" }}</td>
+                <td>
+                    {% if category.image_url %}
+                        <a class="btn btn--actions-primary" href="{{ category.image_url }}" target="_blank" rel="noopener noreferrer">View Image</a>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>{{ category.created_at|date:"Y-m-d"|default:"—" }}</td>
+                <td>
+                    <a href="{% url 'crm:product_categories_edit' category.id %}" class="btn btn--actions-primary">Edit</a>
+                </td>
+                <td>
+                    <form method="POST" class="delete-item" action="{% url 'crm:product_categories_delete' category.id %}" onsubmit="return confirm('Delete category?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn--actions-secondary">Delete</button>
+                        </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="empty">No categories found</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+

@@ -1,0 +1,34 @@
+{% extends "user/base.html" %}
+{% block content %}
+
+<div class="crm-container form-container">
+
+    <h1>{% if service_request %}Редагувати заявку{% else %}Нова сервісна заявка{% endif %}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label>Клієнт</label>
+        {{ form.customer }}
+
+        <label>Пристрій</label>
+        {{ form.device_name }}
+
+        <label>Проблема</label>
+        {{ form.problem_description }}
+
+        <label>Статус</label>
+        {{ form.status }}
+
+        <label>Призначено працівнику</label>
+        {{ form.assigned_to }}
+
+        <div class="actions">
+            <button class="btn btn-black">Зберегти</button>
+            <a href="{% url 'service_requests_list' %}" class="btn btn-white">Назад</a>
+        </div>
+    </form>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1>Shop</h1>
+            <p>Explore our extensive collection of electronic devices and accessories</p>
+        </div>
+    </section>
+
+    <!-- Filters and Products -->
+    <section class="catalog-section">
+        <div class="container">
+            <div class="catalog-layout">
+                <!-- Sidebar Filters -->
+                <aside class="filters-sidebar">
+                    <form method="GET" action="{% url 'main:categories' %}" id="filter-form">
+                        <!-- Category Filter -->
+                        <div class="filter-group">
+                            <h3>Categories</h3>
+                            <div class="filter-options">
+                                <label class="filter-checkbox">
+                                    <input type="radio" name="category" value="all" 
+                                           {% if current_category == 'all' %}checked{% endif %}>
+                                    <span>All Products</span>
+                                </label>
+                                {% for category in categories %}
+                                    <label class="filter-checkbox">
+                                        <input type="radio" name="category" value="{{ category.slug }}" 
+                                               {% if current_category == category.slug %}checked{% endif %}>
+                                        <span>{{ category.name }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Types Filter -->
+                        <div class="filter-group">
+                            <h3>Types</h3>
+                            <div class="filter-options">
+                                <label class="filter-checkbox">
+                                    <input type="radio" name="product_type" value="all" 
+                                           {% if current_type == 'all' %}checked{% endif %}>
+                                    <span>All Types</span>
+                                </label>
+                                {% for type in types %}
+                                    <label class="filter-checkbox">
+                                        <input type="radio" name="product_type" value="{{ type.1 }}" 
+                                               {% if current_type == type.1 %}checked{% endif %}>
+                                        <span>{{ type.0 }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <div class="flex justify-between items-center">
+                                <h3 class="m-0!">Price Range</h3>
+                                <span class="text-xl cursor-pointer text-gray-600 hover:text-gray-900 transition-colors" id="reset-price-range">Reset</span>
+                            </div>
+                            <div class="price-range">
+                                <div class="flex justify-between text-gray-600 mb-3">
+                                    <span id="priceValue">Min: $<span id="price-min-val">{{ current_min_price|default:0 }}</span></span>
+                                    <span id="priceValue">Max: $<span id="price-max-val">{{ current_max_price|default:2000 }}</span></span>
+                                </div>
+
+                                <div class="filter__range">
+                                    <input class="filter__range-left" type="range" name="min_price" id="min-range" min="0" max="2000" step="1" value="{{ current_min_price|default:0 }}">
+                                    <input class="filter__range-right" type="range" name="max_price" id="max-range" min="0" max="2000" step="1" value="{{ current_max_price|default:2000 }}">
+
+                                    <div class="filter__range-slider">
+                                        <div class="filter__range-slider-track"></div>
+                                        <div class="filter__range-slider-range"></div>
+                                        <div class="filter__range-slider-thumb left"></div>
+                                        <div class="filter__range-slider-thumb right"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="price-labels">
+                                    <span>$0</span>
+                                    <span>$650</span>
+                                    <span>$1350</span>
+                                    <span>$2000</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Brands Filter -->
+                        <div class="filter-group">
+                            <h3>Brands</h3>
+                            <div class="filter-options">
+                                <label class="filter-checkbox">
+                                    <input type="radio" name="brand" value="all" 
+                                           {% if current_brand == 'all' %}checked{% endif %}>
+                                    <span>All Brands</span>
+                                </label>
+                                {% for brand in brands %}
+                                    <label class="filter-checkbox">
+                                        <input type="radio" name="brand" value="{{ brand }}" 
+                                               {% if current_brand == brand %}checked{% endif %}>
+                                        <span>{{ brand }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <button type="button" id="reset-filters" class="btn btn--reset-filters">Reset Filters</button>
+                    </form>
+                </aside>
+
+                <!-- Products Grid -->
+                <div class="catalog-content">
+                    <div class="catalog-toolbar">
+                        <div class="results-count">
+                            <span>Showing <strong>{{ products|length }}</strong> results</span>
+                        </div>
+                        <div class="sort-options">
+                            <label>Sort by:</label>
+                            <select name="sort" id="sortSelect" form="filter-form">
+                                <option value="price-low" {% if current_sort == 'price-low' %}selected{% endif %}>Price: Low to High</option>
+                                <option value="price-high" {% if current_sort == 'price-high' %}selected{% endif %}>Price: High to Low</option>
+                                <option value="latest" {% if current_sort == 'latest' %}selected{% endif %}>Latest</option>
+                                <option value="name-asc" {% if current_sort == 'name-asc' %}selected{% endif %}>Name: A to Z</option>
+                                <option value="name-desc" {% if current_sort == 'name-desc' %}selected{% endif %}>Name: Z to A</option>
+                            </select>
+                        </div>
+                        <div class="view-toggle">
+                            <button class="view-btn active" data-view="grid">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                    <rect width="8" height="8" />
+                                    <rect x="12" width="8" height="8" />
+                                    <rect y="12" width="8" height="8" />
+                                    <rect x="12" y="12" width="8" height="8" />
+                                </svg>
+                            </button>
+                            <button class="view-btn" data-view="list">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                    <rect width="20" height="3" />
+                                    <rect y="8" width="20" height="3" />
+                                    <rect y="16" width="20" height="3" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="products-catalog grid-view" id="productsCatalog">
+                        {% for product in products %}
+                            <div class="catalog-product-card">
+                                <div class="product-image">
+                                    <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                                    <div class="product-badge">New</div>
+                                    {% comment %} <button class="product-like">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                            <path d="M10 17L3 10C1 8 1 5 3 3C5 1 8 1 10 3C12 1 15 1 17 3C19 5 19 8 17 10L10 17Z"
+                                                stroke="white" stroke-width="1.5" fill="none" />
+                                        </svg>    
+                                    </button> {% endcomment %}
+                                </div>
+                                <div class="product-details">
+                                    <div class="product-info">
+                                        <p>{{ product.category_name_en }}{% if product.product_type != product.category %} | {{product.product_type_en}}{% endif %}</p>
+                                        <h4><a href="{% url 'main:product_detail' product.id %}">{{ product.name }}</a></h4>
+                                        <h5>{{ product.manufacturer }}</h5>
+                                        <p class="product-price">${{ product.price|floatformat:2 }}</p>
+                                    </div>
+                                    <button class="btn btn--add-cart" data-id="{{ product.id }}" data-name="{{ product.name }}" data-price="{{ product.price }}" data-image="{{ product.image_url }}">
+                                        Add to Cart
+                                    </button>
+                                </div>
+                            </div>
+                        {% empty %}
+                            {% comment %} <p style="grid-column: 1/-1; text-align: center; padding: 40px;">No products found matching your filters.</p> {% endcomment %}
+                            <div class='flex flex-col items-center p-12 space-y-5' style="grid-column: 1/-1;">
+                                <i data-lucide="box" class="h-15 w-15"></i>
+                                <h3 class="text-3xl font-medium text-gray-900 text-center mt-4">Товари не знайдено</h3>
+                                <p class="text-2xl text-gray-500 text-center pb-4 mt-12">
+                                    Спробуйте змінити параметри пошуку або створіть новий товар.
+                                </p>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination">
+                        {% if current_page > 1 %}
+                            <a href="?page={{ current_page|add:'-1' }}&category={{ current_category }}&brand={{ current_brand }}&min_price={{ current_min_price }}&max_price={{ current_max_price }}&sort={{ current_sort }}" 
+                               class="page-btn">Previous</a>
+                        {% else %}
+                            <button class="page-btn" disabled>Previous</button>
+                        {% endif %}
+
+                        {% for page_num in total_pages|make_range %}
+                            <a href="?page={{ page_num }}&category={{ current_category }}&brand={{ current_brand }}&min_price={{ current_min_price }}&max_price={{ current_max_price }}&sort={{ current_sort }}" 
+                               class="page-btn {% if page_num == current_page %}active{% endif %}">{{ page_num }}</a>
+                        {% endfor %}
+
+                        {% if current_page < total_pages %}
+                            <a href="?page={{ current_page|add:'1' }}&category={{ current_category }}&brand={{ current_brand }}&min_price={{ current_min_price }}&max_price={{ current_max_price }}&sort={{ current_sort }}" 
+                               class="page-btn">Next</a>
+                        {% else %}
+                            <button class="page-btn" disabled>Next</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock content %}
+
+{% block extra_js %}
+    <script src="{% static 'js/user/filter.js' %}" defer></script>
+    <script src="{% static 'js/user/products_grid.js' %}" defer></script>
+{% endblock extra_js %}
