@@ -181,13 +181,38 @@ class ProductViewSerializer(serializers.Serializer):
     category = serializers.CharField()
     product_type = serializers.CharField()
     manufacturer = serializers.CharField()
-    specifications = ProductSpecificationSerializer(many=True)
+    specifications = serializers.SerializerMethodField()
     price = serializers.FloatField()
     quantity_in_stock = serializers.IntegerField()
     warranty_months = serializers.IntegerField()
     image_url = serializers.URLField()
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
+    
+    def get_specifications(self, obj):
+        """Безпечна серіалізація specifications з обробкою різних форматів"""
+        specs = getattr(obj, 'specifications', None) or []
+        normalized_specs = []
+        
+        for spec in specs:
+            if isinstance(spec, dict):
+                # Якщо це словник, перевіряємо наявність потрібних полів
+                if 'name' in spec and 'slug' in spec and 'value' in spec:
+                    normalized_specs.append({
+                        'name': spec.get('name', ''),
+                        'slug': spec.get('slug', ''),
+                        'value': spec.get('value', '')
+                    })
+            elif hasattr(spec, 'name') and hasattr(spec, 'slug') and hasattr(spec, 'value'):
+                # Якщо це об'єкт з атрибутами
+                normalized_specs.append({
+                    'name': getattr(spec, 'name', ''),
+                    'slug': getattr(spec, 'slug', ''),
+                    'value': getattr(spec, 'value', '')
+                })
+            # Ігноруємо рядки та інші невідповідні типи
+        
+        return normalized_specs
 
     def to_representation(self, instance):
         """Додаткове форматування даних"""

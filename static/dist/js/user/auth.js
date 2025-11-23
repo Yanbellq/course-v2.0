@@ -69,6 +69,7 @@ if (userLoginForm) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',  // Важливо для cookies на Render
                 body: JSON.stringify({ username, password })
             });
             if (!response.ok) {
@@ -150,6 +151,7 @@ if (userRegisterForm) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',  // Важливо для cookies на Render
                 body: JSON.stringify({
                     username,
                     email,
@@ -211,6 +213,7 @@ if (adminLoginForm) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',  // Важливо для cookies на Render
                 body: JSON.stringify({
                     username,
                     password,
@@ -224,7 +227,7 @@ if (adminLoginForm) {
             // Save admin data
             const adminData = await resp.json();
 
-            if (adminData.data.user.role !== 'operator') {
+            if (adminData.data.user.role !== 'operator' && adminData.data.user.role !== 'admin') {
                 throw 'You are not authorized to access the admin panel.'
             }
             
