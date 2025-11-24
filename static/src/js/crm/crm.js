@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const url = form.action;  // Django URL /crm/supplier/delete/ID/
+            const url = form.action;  // Django URL /crm/***/delete/ID/
 
             const csrf = form.querySelector("input[name='csrfmiddlewaretoken']")?.value;
 

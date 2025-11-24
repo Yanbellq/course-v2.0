@@ -46,16 +46,13 @@ class RoleBasedAccessMiddleware:
         
         # Перевірка Web admin endpoints
         if any(path.startswith(p) for p in web_admin_paths):
-            admin_id = request.session.get('admin_id')
+            # Використовуємо request.user з JWT middleware замість session
+            if not hasattr(request, 'user') or not request.user:
+                return redirect('/auth/?next=' + path)
             
-            if not admin_id:
-                return redirect('crm:login')
-            
-            # Отримуємо адміна з MongoDB
-            from apps.main.models import User
-            admin = User.find_by_id(admin_id)
-            
-            if not admin or admin.role != 'admin':
+            # Перевіряємо роль користувача
+            user_role = getattr(request.user, 'role', None)
+            if user_role not in ['admin', 'operator']:
                 return HttpResponseForbidden('Admin access required')
         
         response = self.get_response(request)

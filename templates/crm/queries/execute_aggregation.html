@@ -1,0 +1,135 @@
+{% extends "crm/base.html" %}
+{% load static %}
+
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Execute MongoDB Aggregation Query</h1>
+    <p style="color: var(--muted); margin-top: 0.5rem;">
+        <strong>Note:</strong> MongoDB uses aggregation pipeline (JSON array), not SQL. This feature is available only for administrators.
+    </p>
+{% endblock %}
+
+{% block crm__content %}
+    <section class="panel">
+        <form method="POST" id="aggregationForm">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 2rem;">
+                <label for="collection" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Collection Name:
+                </label>
+                <select name="collection" id="collection" required style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1.4rem;">
+                    <option value="">-- Select Collection --</option>
+                    {% for coll in allowed_collections %}
+                        <option value="{{ coll }}" {% if collection_name == coll %}selected{% endif %}>{{ coll }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 2rem;">
+                <label for="pipeline" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Aggregation Pipeline (JSON Array):
+                </label>
+                <textarea 
+                    name="pipeline" 
+                    id="pipeline" 
+                    required 
+                    rows="15"
+                    placeholder='[
+    { "$match": { "status": "active" } },
+    { "$group": { "_id": "$category", "count": { "$sum": 1 } } },
+    { "$sort": { "count": -1 } }
+]'
+                    style="width: 100%; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 1.3rem; line-height: 1.6;">{{ pipeline_str }}</textarea>
+                <small style="color: var(--muted); display: block; margin-top: 0.5rem;">
+                    Enter a valid JSON array representing the MongoDB aggregation pipeline. Example: <code>[{ "$match": { "price": { "$gte": 100 } } }]</code>
+                </small>
+            </div>
+            
+            <button type="submit" class="btn btn--primary" style="padding: 1rem 2rem; font-size: 1.4rem; font-weight: 600;">
+                Execute Query
+            </button>
+        </form>
+        
+        {% if error %}
+            <div style="margin-top: 2rem; padding: 1.5rem; background: #fee; border: 1px solid #fcc; border-radius: 8px; color: #c33;">
+                <strong>Error:</strong> {{ error }}
+            </div>
+        {% endif %}
+        
+        {% if results is not None %}
+            <div style="margin-top: 3rem;">
+                <h2 style="font-size: 2rem; margin-bottom: 1rem;">
+                    Results ({{ results_count }} document{{ results_count|pluralize }})
+                </h2>
+                
+                {% if results_count > 0 %}
+                    <div style="overflow-x: auto; max-height: 600px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 1rem;">
+                        <pre style="margin: 0; font-family: 'Courier New', monospace; font-size: 1.2rem; white-space: pre-wrap; word-wrap: break-word;">{{ results_json }}</pre>
+                    </div>
+                {% else %}
+                    <p style="color: var(--muted); padding: 2rem; text-align: center; background: #f9f9f9; border-radius: 8px;">
+                        No results found.
+                    </p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </section>
+    
+    <section class="panel">
+        <h3 style="font-size: 1.8rem; margin-bottom: 1rem;">Examples:</h3>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <h4 style="font-size: 1.4rem; margin-bottom: 0.5rem;">1. Count documents by category:</h4>
+            <pre style="background: white; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 1.2rem;"><code>[
+  { "$group": { "_id": "$category", "count": { "$sum": 1 } } },
+  { "$sort": { "count": -1 } }
+]</code></pre>
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <h4 style="font-size: 1.4rem; margin-bottom: 0.5rem;">2. Find products with price >= 100:</h4>
+            <pre style="background: white; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 1.2rem;"><code>[
+  { "$match": { "price": { "$gte": 100 } } },
+  { "$sort": { "price": 1 } }
+]</code></pre>
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <h4 style="font-size: 1.4rem; margin-bottom: 0.5rem;">3. Calculate total revenue by product type:</h4>
+            <pre style="background: white; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 1.2rem;"><code>[
+  { "$group": { 
+      "_id": "$product_type", 
+      "total_revenue": { "$sum": "$total_amount" } 
+  } },
+  { "$sort": { "total_revenue": -1 } }
+]</code></pre>
+        </div>
+    </section>
+{% endblock %}
+
+{% block crm__extra_js %}
+    <script>
+        // Format JSON on submit
+        document.getElementById('aggregationForm').addEventListener('submit', function(e) {
+            const pipelineTextarea = document.getElementById('pipeline');
+            const pipelineValue = pipelineTextarea.value.trim();
+            
+            if (pipelineValue) {
+                try {
+                    // Try to parse and format JSON
+                    const parsed = JSON.parse(pipelineValue);
+                    pipelineTextarea.value = JSON.stringify(parsed, null, 2);
+                } catch (err) {
+                    // If parsing fails, let the server handle the error
+                    console.warn('JSON parsing failed, will be validated on server:', err);
+                }
+            }
+        });
+        
+        // Format results display
+        {% if results %}
+            // Results are already formatted by Django template
+        {% endif %}
+    </script>
+{% endblock %}
+

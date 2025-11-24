@@ -1,65 +1,77 @@
 {% extends "crm/base.html" %}
 {% load static %}
 
-{% block content %}
+{% block crm__page_header %}
+    <h1 class="page-title">CRM Analytics</h1>
+{% endblock crm__page_header %}
 
-<div class="crm-container">
+{% block crm__content %}
 
-    <h1 class="page-title">Аналітика</h1>
+    <div class="crm-container">
+        <!-- === KPI CARDS === -->
+        <div class="stats-grid">
 
-    <!-- === KPI CARDS === -->
-    <div class="kpi-grid">
+            <div class="stat-card">
+                <div class="kpi-title">Monthly Revenue</div>
+                <div class="kpi-value">${{ monthly_revenue }}</div>
+            </div>
 
-        <div class="kpi-card">
-            <div class="kpi-title">Місячний прибуток</div>
-            <div class="kpi-value">{{ monthly_revenue }} ₴</div>
+            <div class="stat-card">
+                <div class="kpi-title">Sales This Month</div>
+                <div class="kpi-value">{{ monthly_sales_count }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="kpi-title">New Customers</div>
+                <div class="kpi-value">{{ new_customers }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="kpi-title">Completed Repairs</div>
+                <div class="kpi-value">{{ completed_repairs }}</div>
+            </div>
+
         </div>
 
-        <div class="kpi-card">
-            <div class="kpi-title">Продажів за місяць</div>
-            <div class="kpi-value">{{ monthly_sales_count }}</div>
-        </div>
+        <!-- === CHARTS GRID === -->
+        <div class="charts-grid">
 
-        <div class="kpi-card">
-            <div class="kpi-title">Нові клієнти</div>
-            <div class="kpi-value">{{ new_customers }}</div>
-        </div>
+            <div class="chart-card">
+                <h2>Revenue by Month</h2>
+                <canvas id="revenueChart"></canvas>
+            </div>
 
-        <div class="kpi-card">
-            <div class="kpi-title">Закритих ремонтів</div>
-            <div class="kpi-value">{{ completed_repairs }}</div>
+            <div class="chart-card">
+                <h2>Sales by Category</h2>
+                <canvas id="categoryChart"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <h2>Repairs by Status</h2>
+                <canvas id="repairChart"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <h2>New Customers by Month</h2>
+                <canvas id="customerChart"></canvas>
+            </div>
+
         </div>
 
     </div>
-
-    <!-- === CHARTS GRID === -->
-    <div class="charts-grid">
-
-        <div class="chart-card">
-            <h2>Прибуток по місяцям</h2>
-            <canvas id="revenueChart"></canvas>
-        </div>
-
-        <div class="chart-card">
-            <h2>Продажі по категоріям</h2>
-            <canvas id="categoryChart"></canvas>
-        </div>
-
-        <div class="chart-card">
-            <h2>Кількість ремонтів</h2>
-            <canvas id="repairChart"></canvas>
-        </div>
-
-        <div class="chart-card">
-            <h2>Нові клієнти по місяцям</h2>
-            <canvas id="customerChart"></canvas>
-        </div>
-
-    </div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{% static 'js/crm/analytics.js' %}"></script>
-
 {% endblock %}
+    
+{% block crm__extra_js %}
+    <script src="{% static 'js/utility/chart.umd.min.js' %}" onerror="console.error('Failed to load Chart.js')"></script>
+    <script>
+        // Перевіряємо завантаження Chart.js
+        window.addEventListener('load', function() {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js failed to load from static files!');
+            } else {
+                console.log('Chart.js loaded successfully from static files');
+            }
+        });
+    </script>
+    <script src="{% static 'js/crm/analytics.js' %}" onerror="console.error('Failed to load analytics.js')"></script>
+{% endblock crm__extra_js %}

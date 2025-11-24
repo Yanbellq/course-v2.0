@@ -1,34 +1,126 @@
 {% extends "crm/base.html" %}
-{% block content %}
+{% load static %}
 
-<div class="crm-container form-container">
+{% block crm__page_header %}
+    <h1 class="page-title">CRM User — {% if action == 'edit' %}Edit{% else %}Add{% endif %}</h1>
+    
+    <div>
+        <a href="{% url 'crm:users_list' %}" class="btn btn--secondary">Back</a>
+    </div>
+{% endblock %}
 
-    <h1>{% if user_obj %}Редагувати користувача{% else %}Новий користувач{% endif %}</h1>
+{% block crm__content %}
+    <section class="panel">        
+        <form method="POST" id="userForm">
+            {% csrf_token %}
+            
+            {% if errors %}
+                {% if errors.general %}
+                    <div style="padding: 1rem; background: #fee; border: 1px solid #fcc; border-radius: 8px; color: #c33; margin-bottom: 1.5rem;">
+                        <strong>Error:</strong> {{ errors.general }}
+                    </div>
+                {% endif %}
+            {% endif %}
+            
+            <div class="form-row">
+                <label for="username">Username *</label>
+                <input type="text" name="username" id="username" value="{% if form.username %}{{ form.username }}{% elif form %}{{ form.username|default:'' }}{% elif user %}{{ user.username }}{% endif %}" required minlength="3">
+                {% if errors.username %}
+                    <p>{{ errors.username }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="form-row">
+                <label for="email">Email *</label>
+                <input type="email" name="email" id="email" value="{% if form.email %}{{ form.email }}{% elif form %}{{ form.email|default:'' }}{% elif user %}{{ user.email }}{% endif %}" required>
+                {% if errors.email %}
+                    <p>{{ errors.email }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="form-row">
+                <label for="password">Password {% if action == 'edit' %}<span style="color: var(--muted); font-weight: normal;">(leave blank to keep current)</span>{% else %}<span style="color: #c33;">*</span>{% endif %}</label>
+                <input type="password" name="password" id="password" {% if action == 'create' %}required{% endif %} minlength="6">
+                {% if errors.password %}
+                    <p>{{ errors.password }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="form-row">
+                <label for="password_confirm">Confirm Password {% if action == 'edit' %}<span style="color: var(--muted); font-weight: normal;">(required if changing password)</span>{% else %}<span style="color: #c33;">*</span>{% endif %}</label>
+                <input type="password" name="password_confirm" id="password_confirm" {% if action == 'create' %}required{% endif %} minlength="6">
+                {% if errors.password_confirm %}
+                    <p>{{ errors.password_confirm }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="form-row">
+                <label for="role">Role *</label>
+                {% if action == 'edit' and user.role == 'admin' %}
+                    <input type="text" value="Admin (cannot be changed)" disabled>
+                    <input type="hidden" name="role" value="admin">
+                    <p>Admin role cannot be changed.</p>
+                {% else %}
+                    <select name="role" id="role" required>
+                        {% for value, label in role_choices %}
+                            <option value="{{ value }}" {% if form.role == value or form.role|default:'' == value or user.role == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if errors.role %}
+                        <p>{{ errors.role }}</p>
+                    {% endif %}
+                    <p>Note: Admin can only assign "user" or "operator" roles, not "admin".</p>
+                {% endif %}
+            </div>
 
-    <form method="post">
-        {% csrf_token %}
+            <div class="form-row">
+                <label>
+                    <input type="checkbox" name="is_active" id="is_active" {% if form.is_active == 'on' or form.is_active|default:'' == 'on' or user.is_active %}checked{% endif %}>
+                    Active
+                </label>
+            </div>
+            
+            <!-- Buttons -->
+            <div class="form-actions">
+                <a class="btn btn--secondary" href="{% url 'crm:users_list' %}">Back</a>
+                <button class="btn btn--primary" type="submit">Save</button>
+            </div>
+        </form>
+    </section>
+{% endblock %}
 
-        <label>Логін</label>
-        {{ form.username }}
-
-        <label>Email</label>
-        {{ form.email }}
-
-        <label>Пароль {% if user_obj %}(не обовʼязково){% endif %}</label>
-        {{ form.password }}
-
-        <label>Роль</label>
-        {{ form.role }}
-
-        <label>Активний</label>
-        {{ form.is_active }}
-
-        <div class="actions">
-            <button class="btn btn-black">Зберегти</button>
-            <a href="{% url 'users_list' %}" class="btn btn-white">Назад</a>
-        </div>
-    </form>
-
-</div>
-
+{% block crm__extra_js %}
+    <script>
+        document.getElementById('userForm').addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('submitBtn');
+            const password = document.getElementById('password').value;
+            const passwordConfirm = document.getElementById('password_confirm').value;
+            
+            // Валідація паролів на клієнті
+            {% if action == 'create' %}
+                if (!password || password.length < 6) {
+                    e.preventDefault();
+                    alert('Password must be at least 6 characters');
+                    return false;
+                }
+            {% else %}
+                // При редагуванні пароль не обов'язковий, але якщо введено - перевіряємо
+                if (password && password.length < 6) {
+                    e.preventDefault();
+                    alert('Password must be at least 6 characters');
+                    return false;
+                }
+            {% endif %}
+            
+            if (password && password !== passwordConfirm) {
+                e.preventDefault();
+                alert('Passwords do not match');
+                return false;
+            }
+            
+            // Блокуємо кнопку під час відправки
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+        });
+    </script>
 {% endblock %}

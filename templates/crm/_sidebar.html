@@ -1,6 +1,7 @@
 <aside class="crm-sidebar">
     {% comment %} <div class="logo">CRM</div> {% endcomment %}
     <nav>
+        <a href="{% url 'crm:analytics' %}" class="{% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">Analytics</a>
         <a href="{% url 'crm:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
         <a href="{% url 'crm:suppliers_list' %}" class="{% if request.resolver_match.url_name == 'suppliers_list' %}active{% endif %}">Suppliers</a>
         <a href="{% url 'crm:contracts_list' %}" class="{% if request.resolver_match.url_name == 'contracts_list' %}active{% endif %}">Contracts</a>
@@ -12,6 +13,9 @@
         <a href="{% url 'crm:products_list' %}" class="{% if request.resolver_match.url_name == 'products_list' %}active{% endif %}">Products</a>
         <a href="{% url 'crm:employees_list' %}" class="{% if request.resolver_match.url_name == 'employees_list' %}active{% endif %}">Employees</a>
         <a href="{% url 'crm:users_list' %}" class="{% if request.resolver_match.url_name == 'users_list' %}active{% endif %}">Users</a>
-        <a href="{% url 'crm:queries_index' %}" class="{% if 'queries' in request.resolver_match.url_name %}active{% endif %}">Queries</a>
+        {% if request.user and request.user.role == 'admin' %}
+        <a href="{% url 'crm:queries_index' %}" class="{% if 'queries' in request.resolver_match.url_name and request.resolver_match.url_name != 'execute_aggregation' %}active{% endif %}">Queries</a>
+        <a href="{% url 'crm:execute_aggregation' %}" class="{% if request.resolver_match.url_name == 'execute_aggregation' %}active{% endif %}">Execute Aggregation</a>
+        {% endif %}
     </nav>
 </aside>

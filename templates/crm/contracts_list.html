@@ -85,11 +85,11 @@
     </table>
 {% endblock %}
 
-{% block extra_js %}
+{% block crm__extra_js %}
     <script>
         function toggleProducts(id) {
             const row = document.getElementById(id);
             row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
         }
     </script>
-{% endblock extra_js %}
+{% endblock crm__extra_js %}

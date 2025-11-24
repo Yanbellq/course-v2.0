@@ -334,14 +334,13 @@ def contracts_edit(request, pk):
 
 @login_required
 @admin_required
+@api_view(['POST'])
 def contracts_delete(request, pk):
-    if request.method == 'POST':
-        c = Contract.find_by_id(pk)
-        if c:
-            c.delete()
-            messages.success(request, 'Contract deleted successfully')
-            return redirect('crm:contracts_list')
-    return HttpResponseForbidden()
+    contract = Contract.find_by_id(pk)
+    if not contract:
+        return Response({"success": False}, status=404)
+    contract.delete()
+    return Response({"success": True})
 
 
 # ---------- Supplies ----------
@@ -416,7 +415,7 @@ def supplies_create(request):
         return redirect('crm:supplies_list')
     
     # Filter contracts: only active and completed (not cancelled)
-    contracts = Contract.objects().filter(status__in=['active', 'completed']).all()
+    contracts = Contract.objects().filter(status__in=['active']).all()
     suppliers = Supplier.objects().all()
     products = Product.objects().all()
     
@@ -473,6 +472,10 @@ def supplies_edit(request, pk):
         return redirect('crm:supplies_list')
     
     if request.method == 'POST':
+        # Зберігаємо старий статус та received_date для перевірки зміни
+        old_status = supply.status
+        old_received_date = supply.received_date
+        
         # Parse delivery_date from form
         delivery_date_str = request.POST.get('delivery_date')
         if delivery_date_str:
@@ -496,7 +499,45 @@ def supplies_edit(request, pk):
         if supplier_id:
             supply.supplier_id = supplier_id
         
-        supply.status = request.POST.get('status', supply.status)
+        # Оновлюємо статус
+        new_status = request.POST.get('status', supply.status)
+        supply.status = new_status
+        
+        # Якщо статус змінився на 'received', оновлюємо кількість продуктів на складі
+        # АЛЕ тільки якщо received_date ще не було заповнене (захист від повторного оновлення)
+        if new_status == 'received' and old_status != 'received' and not old_received_date:
+            # Встановлюємо received_date якщо його немає
+            if not supply.received_date:
+                supply.received_date = datetime.now()
+            
+            # Оновлюємо кількість продуктів на складі
+            if hasattr(supply, 'products') and supply.products:
+                for product_item in supply.products:
+                    # Обробляємо як dict, так і object формат
+                    if isinstance(product_item, dict):
+                        product_id = product_item.get('product_id')
+                        quantity = product_item.get('quantity', 0) or 0
+                    else:
+                        product_id = getattr(product_item, 'product_id', None)
+                        quantity = getattr(product_item, 'quantity', 0) or 0
+                    
+                    if product_id:
+                        try:
+                            # Конвертуємо product_id в рядок якщо потрібно (find_by_id приймає рядок або ObjectId)
+                            product_id_str = str(product_id) if product_id else None
+                            if product_id_str:
+                                # Знаходимо продукт
+                                product = Product.find_by_id(product_id_str)
+                                if product:
+                                    # Додаємо кількість з поставки до наявної кількості
+                                    current_quantity = getattr(product, 'quantity_in_stock', 0) or 0
+                                    product.quantity_in_stock = current_quantity + int(quantity)
+                                    product.updated_at = datetime.now()
+                                    product.save()
+                        except Exception as e:
+                            # Логуємо помилку, але продовжуємо обробку інших продуктів
+                            print(f"Помилка при оновленні продукту {product_id}: {e}")
+        
         supply.notes = request.POST.get('notes') or None
         supply.updated_at = datetime.now()
         supply.save()
@@ -560,14 +601,13 @@ def supplies_edit(request, pk):
 
 @login_required
 @admin_required
+@api_view(['POST'])
 def supplies_delete(request, pk):
-    if request.method == 'POST':
-        s = Supply.find_by_id(pk)
-        if s:
-            s.delete()
-            messages.success(request, 'Supply deleted successfully')
-            return redirect('crm:supplies_list')
-    return HttpResponseForbidden()
+    supply = Supply.find_by_id(pk)
+    if not supply:
+        return Response({"success": False}, status=404)
+    supply.delete()
+    return Response({"success": True})
 
 
 # ---------- Employees ----------
@@ -646,14 +686,13 @@ def employees_edit(request, pk):
 
 @login_required
 @admin_required
+@api_view(['POST'])
 def employees_delete(request, pk):
-    if request.method == 'POST':
-        e = Employee.find_by_id(pk)
-        if e:
-            e.delete()
-            messages.success(request, 'Employee deleted successfully')
-        return redirect('crm:employees_list')
-    return HttpResponseForbidden()
+    employee = Employee.find_by_id(pk)
+    if not employee:
+        return Response({"success": False}, status=404)
+    employee.delete()
+    return Response({"success": True})
 
 
 # ---------- Sales ----------
@@ -776,13 +815,60 @@ def sales_create(request):
         if software_service_config:
             sale_data['software_service'] = software_service_config
         
-        Sale.create(**sale_data)
+        # Створюємо продаж
+        sale = Sale.create(**sale_data)
+        
+        # Віднімаємо кількість продуктів, які продалися
+        if products:
+            for product_item in products:
+                product_id = product_item.get('product_id')
+                quantity = product_item.get('quantity', 0) or 0
+                
+                if product_id and quantity > 0:
+                    try:
+                        product_id_str = str(product_id) if product_id else None
+                        if product_id_str:
+                            product = Product.find_by_id(product_id_str)
+                            if product:
+                                current_quantity = getattr(product, 'quantity_in_stock', 0) or 0
+                                # Віднімаємо кількість, але не дозволяємо від'ємні значення
+                                new_quantity = max(0, current_quantity - int(quantity))
+                                product.quantity_in_stock = new_quantity
+                                product.updated_at = datetime.now()
+                                product.save()
+                    except Exception as e:
+                        # Логуємо помилку, але продовжуємо обробку інших продуктів
+                        print(f"Помилка при оновленні продукту {product_id}: {e}")
+        
+        # Віднімаємо кількість продуктів, які використалися для збірки (custom build)
+        if custom_build_config and custom_build_config.get('data') and custom_build_config['data'].get('products'):
+            custom_build_products = custom_build_config['data']['products']
+            for product_item in custom_build_products:
+                product_id = product_item.get('product_id')
+                quantity = product_item.get('quantity', 0) or 0
+                
+                if product_id and quantity > 0:
+                    try:
+                        product_id_str = str(product_id) if product_id else None
+                        if product_id_str:
+                            product = Product.find_by_id(product_id_str)
+                            if product:
+                                current_quantity = getattr(product, 'quantity_in_stock', 0) or 0
+                                # Віднімаємо кількість, але не дозволяємо від'ємні значення
+                                new_quantity = max(0, current_quantity - int(quantity))
+                                product.quantity_in_stock = new_quantity
+                                product.updated_at = datetime.now()
+                                product.save()
+                    except Exception as e:
+                        # Логуємо помилку, але продовжуємо обробку інших продуктів
+                        print(f"Помилка при оновленні продукту з custom build {product_id}: {e}")
+        
         messages.success(request, 'Sale created successfully')
         return redirect('crm:sales_list')
     
     users = User.objects().all()
     employees = Employee.objects().all()
-    products = Product.objects().all()
+    products = Product.objects().filter(quantity_in_stock__gt=0).all()
     return render(request, 'crm/sale_form.html', {
         'users': users,
         'employees': employees,
@@ -800,8 +886,12 @@ def sales_edit(request, pk):
         return redirect('crm:sales_list')
     
     if request.method == 'POST':
+        # Зберігаємо старий статус для перевірки зміни
+        old_status = sale.status
+        
         # Update basic fields
-        sale.status = request.POST.get('status', sale.status)
+        new_status = request.POST.get('status', sale.status)
+        sale.status = new_status
         sale.payment_method = request.POST.get('payment_method', sale.payment_method)
         sale.notes = request.POST.get('notes', sale.notes)
         
@@ -919,6 +1009,129 @@ def sales_edit(request, pk):
         
         sale.total_amount = total_amount
         sale.updated_at = datetime.now()
+        
+        # Обробка зміни статусу на 'cancelled' - повертаємо продукти на склад
+        if new_status == 'cancelled' and old_status != 'cancelled':
+            # Повертаємо кількість проданих продуктів на склад
+            if hasattr(sale, 'products') and sale.products:
+                for product_item in sale.products:
+                    # Обробляємо як dict, так і object формат
+                    if isinstance(product_item, dict):
+                        product_id = product_item.get('product_id')
+                        quantity = product_item.get('quantity', 0) or 0
+                    else:
+                        product_id = getattr(product_item, 'product_id', None)
+                        quantity = getattr(product_item, 'quantity', 0) or 0
+                    
+                    if product_id and quantity > 0:
+                        try:
+                            product_id_str = str(product_id) if product_id else None
+                            if product_id_str:
+                                product = Product.find_by_id(product_id_str)
+                                if product:
+                                    # Додаємо кількість назад на склад
+                                    current_quantity = getattr(product, 'quantity_in_stock', 0) or 0
+                                    product.quantity_in_stock = current_quantity + int(quantity)
+                                    product.updated_at = datetime.now()
+                                    product.save()
+                        except Exception as e:
+                            print(f"Помилка при поверненні продукту {product_id} на склад: {e}")
+            
+            # Повертаємо кількість продуктів зі збірки на склад
+            if hasattr(sale, 'custom_build_service') and sale.custom_build_service:
+                custom_build_data = sale.custom_build_service
+                # Обробляємо як dict, так і object формат
+                if isinstance(custom_build_data, dict):
+                    custom_build_products = custom_build_data.get('data', {}).get('products', [])
+                elif hasattr(custom_build_data, 'data'):
+                    custom_build_products = getattr(custom_build_data.data, 'products', []) if hasattr(custom_build_data.data, 'products') else []
+                else:
+                    custom_build_products = []
+                
+                for product_item in custom_build_products:
+                    if isinstance(product_item, dict):
+                        product_id = product_item.get('product_id')
+                        quantity = product_item.get('quantity', 0) or 0
+                    else:
+                        product_id = getattr(product_item, 'product_id', None)
+                        quantity = getattr(product_item, 'quantity', 0) or 0
+                    
+                    if product_id and quantity > 0:
+                        try:
+                            product_id_str = str(product_id) if product_id else None
+                            if product_id_str:
+                                product = Product.find_by_id(product_id_str)
+                                if product:
+                                    # Додаємо кількість назад на склад
+                                    current_quantity = getattr(product, 'quantity_in_stock', 0) or 0
+                                    product.quantity_in_stock = current_quantity + int(quantity)
+                                    product.updated_at = datetime.now()
+                                    product.save()
+                        except Exception as e:
+                            print(f"Помилка при поверненні продукту з custom build {product_id} на склад: {e}")
+        
+        # Обробка зміни статусу з 'cancelled' на інший - знову віднімаємо продукти
+        elif old_status == 'cancelled' and new_status != 'cancelled':
+            # Віднімаємо кількість проданих продуктів зі складу
+            if hasattr(sale, 'products') and sale.products:
+                for product_item in sale.products:
+                    # Обробляємо як dict, так і object формат
+                    if isinstance(product_item, dict):
+                        product_id = product_item.get('product_id')
+                        quantity = product_item.get('quantity', 0) or 0
+                    else:
+                        product_id = getattr(product_item, 'product_id', None)
+                        quantity = getattr(product_item, 'quantity', 0) or 0
+                    
+                    if product_id and quantity > 0:
+                        try:
+                            product_id_str = str(product_id) if product_id else None
+                            if product_id_str:
+                                product = Product.find_by_id(product_id_str)
+                                if product:
+                                    # Віднімаємо кількість, але не дозволяємо від'ємні значення
+                                    current_quantity = getattr(product, 'quantity_in_stock', 0) or 0
+                                    new_quantity = max(0, current_quantity - int(quantity))
+                                    product.quantity_in_stock = new_quantity
+                                    product.updated_at = datetime.now()
+                                    product.save()
+                        except Exception as e:
+                            print(f"Помилка при відніманні продукту {product_id} зі складу: {e}")
+            
+            # Віднімаємо кількість продуктів зі збірки зі складу
+            if hasattr(sale, 'custom_build_service') and sale.custom_build_service:
+                custom_build_data = sale.custom_build_service
+                # Обробляємо як dict, так і object формат
+                if isinstance(custom_build_data, dict):
+                    custom_build_products = custom_build_data.get('data', {}).get('products', [])
+                elif hasattr(custom_build_data, 'data'):
+                    custom_build_products = getattr(custom_build_data.data, 'products', []) if hasattr(custom_build_data.data, 'products') else []
+                else:
+                    custom_build_products = []
+                
+                for product_item in custom_build_products:
+                    if isinstance(product_item, dict):
+                        product_id = product_item.get('product_id')
+                        quantity = product_item.get('quantity', 0) or 0
+                    else:
+                        product_id = getattr(product_item, 'product_id', None)
+                        quantity = getattr(product_item, 'quantity', 0) or 0
+                    
+                    if product_id and quantity > 0:
+                        try:
+                            product_id_str = str(product_id) if product_id else None
+                            if product_id_str:
+                                product = Product.find_by_id(product_id_str)
+                                if product:
+                                    # Віднімаємо кількість, але не дозволяємо від'ємні значення
+                                    current_quantity = getattr(product, 'quantity_in_stock', 0) or 0
+                                    new_quantity = max(0, current_quantity - int(quantity))
+                                    product.quantity_in_stock = new_quantity
+                                    product.updated_at = datetime.now()
+                                    product.save()
+                        except Exception as e:
+                            print(f"Помилка при відніманні продукту з custom build {product_id} зі складу: {e}")
+        
         sale.save()
         messages.success(request, 'Sale updated successfully')
         return redirect('crm:sales_list')
@@ -937,14 +1150,13 @@ def sales_edit(request, pk):
 
 @login_required
 @admin_required
+@api_view(['POST'])
 def sales_delete(request, pk):
-    if request.method == 'POST':
-        s = Sale.find_by_id(pk)
-        if s:
-            s.delete()
-            messages.success(request, 'Sale deleted successfully')
-            return redirect('crm:sales_list')
-    return HttpResponseForbidden()
+    sale = Sale.find_by_id(pk)
+    if not sale:
+        return Response({"success": False}, status=404)
+    sale.delete()
+    return Response({"success": True})
 
 
 # ---------- Repairs ----------
@@ -970,7 +1182,7 @@ def repairs_create(request):
         if not user_id:
             messages.error(request, 'Customer is required')
             users = User.objects().all()
-            products = Product.objects().all()
+            products = Product.objects().filter(quantity_in_stock__gt=0).all()
             employees = Employee.objects().all()
             return render(request, 'crm/repair_form.html', {
                 'users': users,
@@ -982,7 +1194,7 @@ def repairs_create(request):
         if not employee_id:
             messages.error(request, 'Employee is required')
             users = User.objects().all()
-            products = Product.objects().all()
+            products = Product.objects().filter(quantity_in_stock__gt=0).all()
             employees = Employee.objects().all()
             return render(request, 'crm/repair_form.html', {
                 'users': users,
@@ -994,7 +1206,7 @@ def repairs_create(request):
         if not description:
             messages.error(request, 'Description is required')
             users = User.objects().all()
-            products = Product.objects().all()
+            products = Product.objects().filter(quantity_in_stock__gt=0).all()
             employees = Employee.objects().all()
             return render(request, 'crm/repair_form.html', {
                 'users': users,
@@ -1111,7 +1323,7 @@ def repairs_create(request):
         if missing_fields:
             messages.error(request, f'Missing required fields: {", ".join(missing_fields)}')
             users = User.objects().all()
-            products = Product.objects().all()
+            products = Product.objects().filter(quantity_in_stock__gt=0).all()
             employees = Employee.objects().all()
             return render(request, 'crm/repair_form.html', {
                 'users': users,
@@ -1121,7 +1333,30 @@ def repairs_create(request):
             })
         
         try:
-            Repair.create(**data)
+            repair = Repair.create(**data)
+            
+            # Віднімаємо кількість використаних продуктів зі складу
+            if products_used:
+                for product_item in products_used:
+                    product_id = product_item.get('product_id')
+                    quantity = product_item.get('quantity', 0) or 0
+                    
+                    if product_id and quantity > 0:
+                        try:
+                            product_id_str = str(product_id) if product_id else None
+                            if product_id_str:
+                                product = Product.find_by_id(product_id_str)
+                                if product:
+                                    # Віднімаємо кількість, але не дозволяємо від'ємні значення
+                                    current_quantity = getattr(product, 'quantity_in_stock', 0) or 0
+                                    new_quantity = max(0, current_quantity - int(quantity))
+                                    product.quantity_in_stock = new_quantity
+                                    product.updated_at = datetime.now()
+                                    product.save()
+                        except Exception as e:
+                            # Логуємо помилку, але продовжуємо обробку інших продуктів
+                            print(f"Помилка при відніманні продукту {product_id} зі складу: {e}")
+            
             messages.success(request, 'Repair created successfully')
             return redirect('crm:repairs_list')
         except ValueError as e:
@@ -1132,7 +1367,7 @@ def repairs_create(request):
             print("===========================", file=sys.stderr)
             messages.error(request, f'Validation error: {str(e)}. Please check all required fields are filled.')
             users = User.objects().all()
-            products = Product.objects().all()
+            products = Product.objects().filter(quantity_in_stock__gt=0).all()
             employees = Employee.objects().all()
             return render(request, 'crm/repair_form.html', {
                 'users': users,
@@ -1141,7 +1376,7 @@ def repairs_create(request):
                 'form': request.POST
             })
     users = User.objects().all()
-    products = Product.objects().all()
+    products = Product.objects().filter(quantity_in_stock__gt=0).all()
     employees = Employee.objects().all()
     return render(request, 'crm/repair_form.html', {
         'users': users,
@@ -1158,6 +1393,9 @@ def repairs_edit(request, pk):
         messages.error(request, 'Ремонт не знайдено')
         return redirect('crm:repairs_list')
     if request.method == 'POST':
+        # Зберігаємо старі використані продукти для відновлення кількості
+        old_products_used = repair.products_used if hasattr(repair, 'products_used') and repair.products_used else []
+        
         repair.description = request.POST.get('description')
         repair.status = request.POST.get('status')
         
@@ -1192,6 +1430,53 @@ def repairs_edit(request, pk):
         repair.notes = request.POST.get('notes')
         repair.updated_at = datetime.now()
         repair.save()
+        
+        # Повертаємо кількість старих продуктів на склад
+        if old_products_used:
+            for product_item in old_products_used:
+                # Обробляємо як dict, так і object формат
+                if isinstance(product_item, dict):
+                    product_id = product_item.get('product_id')
+                    quantity = product_item.get('quantity', 0) or 0
+                else:
+                    product_id = getattr(product_item, 'product_id', None)
+                    quantity = getattr(product_item, 'quantity', 0) or 0
+                
+                if product_id and quantity > 0:
+                    try:
+                        product_id_str = str(product_id) if product_id else None
+                        if product_id_str:
+                            product = Product.find_by_id(product_id_str)
+                            if product:
+                                # Повертаємо кількість на склад
+                                current_quantity = getattr(product, 'quantity_in_stock', 0) or 0
+                                product.quantity_in_stock = current_quantity + int(quantity)
+                                product.updated_at = datetime.now()
+                                product.save()
+                    except Exception as e:
+                        print(f"Помилка при поверненні продукту {product_id} на склад: {e}")
+        
+        # Віднімаємо кількість нових продуктів зі складу
+        if products_used:
+            for product_item in products_used:
+                product_id = product_item.get('product_id')
+                quantity = product_item.get('quantity', 0) or 0
+                
+                if product_id and quantity > 0:
+                    try:
+                        product_id_str = str(product_id) if product_id else None
+                        if product_id_str:
+                            product = Product.find_by_id(product_id_str)
+                            if product:
+                                # Віднімаємо кількість, але не дозволяємо від'ємні значення
+                                current_quantity = getattr(product, 'quantity_in_stock', 0) or 0
+                                new_quantity = max(0, current_quantity - int(quantity))
+                                product.quantity_in_stock = new_quantity
+                                product.updated_at = datetime.now()
+                                product.save()
+                    except Exception as e:
+                        print(f"Помилка при відніманні продукту {product_id} зі складу: {e}")
+        
         messages.success(request, 'Repair updated successfully')
         return redirect('crm:repairs_list')
     
@@ -1223,14 +1508,13 @@ def repairs_edit(request, pk):
 
 @login_required
 @admin_required
+@api_view(['POST'])
 def repairs_delete(request, pk):
-    if request.method == 'POST':
-        r = Repair.find_by_id(pk)
-        if r:
-            r.delete()
-            messages.success(request, 'Repair deleted successfully')
-            return redirect('crm:repairs_list')
-    return HttpResponseForbidden()
+    repair = Repair.find_by_id(pk)
+    if not repair:
+        return Response({"success": False}, status=404)
+    repair.delete()
+    return Response({"success": True})
 
 
 # ---------- Deliveries ----------
@@ -1244,8 +1528,8 @@ def deliveries_list(request):
 @login_required
 @admin_required
 def deliveries_create(request):
-    # Get all sales, products, users for dropdowns
-    sales_sorted = Sale.objects().order_by('-sale_date').all()
+    # Get all sales with status 'paid' (оплачено), products, users for dropdowns
+    sales_sorted = Sale.objects().filter(status='paid').order_by('-sale_date').all()
     sales = [SaleSerializer(s).data for s in sales_sorted]
     products_qs = Product.objects().all()
     users = User.objects().all()
@@ -1336,6 +1620,13 @@ def deliveries_create(request):
         
         if serializer.is_valid():
             serializer.save()
+            
+            # Змінюємо статус продажу на 'pending' (відправлено)
+            if sale:
+                sale.status = 'pending'
+                sale.updated_at = datetime.now()
+                sale.save()
+            
             messages.success(request, 'Delivery created successfully')
             return redirect('crm:deliveries_list')
         
@@ -1362,7 +1653,7 @@ def deliveries_edit(request, pk):
         messages.error(request, 'Delivery not found')
         return redirect('crm:deliveries_list')
     
-    # Get all sales, products, users for dropdowns
+    # Get all sales with status 'paid' (оплачено), products, users for dropdowns
     sales_sorted = Sale.objects().order_by('-sale_date').all()
     sales = [SaleSerializer(s).data for s in sales_sorted]
     products = Product.objects().all()
@@ -1515,25 +1806,304 @@ def deliveries_edit(request, pk):
 
 @login_required
 @admin_required
+@api_view(['POST'])
 def deliveries_delete(request, pk):
+    delivery = Delivery.find_by_id(pk)
+    if not delivery:
+        return Response({"success": False}, status=404)
+    delivery.delete()
+    return Response({"success": True})
+
+
+# ---------- Users (Admin and Operator) ----------
+@login_required
+def users_list(request):
+    """Список користувачів (для адмінів та операторів - read-only для операторів)"""
+    # Перевірка, що користувач є адміном або оператором
+    user_role = getattr(request.user, 'role', 'user') if request.user else 'user'
+    if user_role not in ['admin', 'operator']:
+        return HttpResponseForbidden("Access denied. Admin or operator role required.")
+    
+    # Отримуємо всіх користувачів
+    users = list(User.objects().all())
+    
+    # Визначаємо пріоритет ролі для сортування (user=0, operator=1, admin=2)
+    def get_role_priority(role):
+        role_priorities = {'user': 0, 'operator': 1, 'admin': 2}
+        return role_priorities.get(role, 3)
+    
+    # Сортуємо: спочатку по ролі (user, operator, admin), потім по даті створення (новіші перші)
+    def sort_key(user):
+        role = getattr(user, 'role', 'user')
+        role_priority = get_role_priority(role)
+        created_at = getattr(user, 'created_at', None)
+        # Якщо created_at є datetime об'єктом, використовуємо timestamp, інакше 0
+        if created_at and isinstance(created_at, datetime):
+            timestamp = created_at.timestamp()
+        else:
+            timestamp = 0
+        return (role_priority, -timestamp)  # -timestamp для сортування від новіших до старіших
+    
+    users.sort(key=sort_key)
+    
+    return render(request, 'crm/users_list.html', {
+        'users': users,
+        'can_edit': user_role == 'admin'  # Тільки адмін може редагувати
+    })
+
+
+@login_required
+def users_create(request):
+    """Створення користувача (тільки для адмінів)"""
+    # Перевірка, що користувач є адміном
+    user_role = getattr(request.user, 'role', 'user') if request.user else 'user'
+    if user_role != 'admin':
+        return HttpResponseForbidden("Access denied. Admin role required.")
+    
     if request.method == 'POST':
-        d = Delivery.find_by_id(pk)
-        if d:
-            d.delete()
-            messages.success(request, 'Delivery deleted successfully')
-            return redirect('crm:deliveries_list')
-    return HttpResponseForbidden()
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+        password_confirm = request.POST.get('password_confirm', '').strip()
+        role = request.POST.get('role', 'user').strip()
+        is_active = request.POST.get('is_active') == 'on'
+        
+        # Валідація
+        errors = {}
+        
+        if not username or len(username) < 3:
+            errors['username'] = 'Username must be at least 3 characters'
+        elif User.objects().filter(username=username).first():
+            errors['username'] = 'Username already exists'
+        
+        if not email or '@' not in email:
+            errors['email'] = 'Valid email is required'
+        elif User.objects().filter(email=email).first():
+            errors['email'] = 'Email already exists'
+        
+        if not password or len(password) < 6:
+            errors['password'] = 'Password must be at least 6 characters'
+        elif password != password_confirm:
+            errors['password_confirm'] = 'Passwords do not match'
+        
+        # Адмін може призначати тільки 'user' та 'operator', не 'admin'
+        if role not in ['user', 'operator']:
+            errors['role'] = 'Admin can only assign "user" or "operator" roles'
+        
+        if errors:
+            return render(request, 'crm/user_form.html', {
+                'action': 'create',
+                'errors': errors,
+                'form': {
+                    'username': username,
+                    'email': email,
+                    'role': role,
+                    'is_active': 'on' if is_active else ''
+                },
+                'role_choices': [('user', 'User'), ('operator', 'Operator')]
+            })
+        
+        # Створюємо користувача
+        try:
+            user = User(
+                username=username,
+                email=email,
+                role=role,
+                is_active=is_active,
+                created_at=datetime.now()
+            )
+            user.set_password(password)
+            user.save()
+            
+            messages.success(request, f'User "{username}" created successfully')
+            return redirect('crm:users_list')
+        except Exception as e:
+            import traceback
+            error_msg = str(e)
+            print(f"Error creating user: {error_msg}")
+            print(traceback.format_exc())
+            messages.error(request, f'Error creating user: {error_msg}')
+            return render(request, 'crm/user_form.html', {
+                'action': 'create',
+                'errors': {'general': error_msg},
+                'form': {
+                    'username': username,
+                    'email': email,
+                    'role': role,
+                    'is_active': 'on' if is_active else ''
+                },
+                'role_choices': [('user', 'User'), ('operator', 'Operator')]
+            })
+    
+    return render(request, 'crm/user_form.html', {
+        'action': 'create',
+        'errors': {},
+        'form': {},
+        'role_choices': [('user', 'User'), ('operator', 'Operator')]
+    })
 
 
-# ---------- Users (list only) ----------
+@login_required
+def users_edit(request, pk):
+    """Редагування користувача (тільки для адмінів)"""
+    # Перевірка, що користувач є адміном
+    user_role = getattr(request.user, 'role', 'user') if request.user else 'user'
+    if user_role != 'admin':
+        return HttpResponseForbidden("Access denied. Admin role required.")
+    
+    user = User.find_by_id(pk)
+    if not user:
+        messages.error(request, 'User not found')
+        return redirect('crm:users_list')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+        password_confirm = request.POST.get('password_confirm', '').strip()
+        role = request.POST.get('role', 'user').strip()
+        is_active = request.POST.get('is_active') == 'on'
+        
+        # Валідація
+        errors = {}
+        
+        if not username or len(username) < 3:
+            errors['username'] = 'Username must be at least 3 characters'
+        elif username != user.username and User.objects().filter(username=username).first():
+            errors['username'] = 'Username already exists'
+        
+        if not email or '@' not in email:
+            errors['email'] = 'Valid email is required'
+        elif email != user.email and User.objects().filter(email=email).first():
+            errors['email'] = 'Email already exists'
+        
+        # Пароль не обов'язковий при редагуванні
+        if password:
+            if len(password) < 6:
+                errors['password'] = 'Password must be at least 6 characters'
+            elif password != password_confirm:
+                errors['password_confirm'] = 'Passwords do not match'
+        
+        # Адмін може призначати тільки 'user' та 'operator', не 'admin'
+        # Але не може змінити роль існуючого адміна на іншу
+        if user.role == 'admin' and role != 'admin':
+            errors['role'] = 'Cannot change admin role'
+        elif role not in ['user', 'operator']:
+            errors['role'] = 'Admin can only assign "user" or "operator" roles'
+        
+        if errors:
+            return render(request, 'crm/user_form.html', {
+                'action': 'edit',
+                'user': user,
+                'errors': errors,
+                'form': request.POST,
+                'role_choices': [('user', 'User'), ('operator', 'Operator')]
+            })
+        
+        # Оновлюємо користувача
+        try:
+            user.username = username
+            user.email = email
+            user.role = role
+            user.is_active = is_active
+            
+            # Оновлюємо пароль тільки якщо він вказаний
+            if password:
+                user.set_password(password)
+            
+            user.save()
+            
+            messages.success(request, f'User "{username}" updated successfully')
+            return redirect('crm:users_list')
+        except Exception as e:
+            messages.error(request, f'Error updating user: {str(e)}')
+            return render(request, 'crm/user_form.html', {
+                'action': 'edit',
+                'user': user,
+                'errors': {'general': str(e)},
+                'form': request.POST,
+                'role_choices': [('user', 'User'), ('operator', 'Operator')]
+            })
+    
+    return render(request, 'crm/user_form.html', {
+        'action': 'edit',
+        'user': user,
+        'role_choices': [('user', 'User'), ('operator', 'Operator')]
+    })
+
+
+@login_required
+def users_delete(request, pk):
+    """Видалення користувача (тільки для адмінів)"""
+    # Перевірка, що користувач є адміном
+    user_role = getattr(request.user, 'role', 'user') if request.user else 'user'
+    if user_role != 'admin':
+        return HttpResponseForbidden("Access denied. Admin role required.")
+    
+    if request.method == 'POST':
+        user = User.find_by_id(pk)
+        if not user:
+            messages.error(request, 'User not found')
+            return redirect('crm:users_list')
+        
+        # Не можна видалити самого себе
+        if str(user.id) == str(request.user.id):
+            messages.error(request, 'You cannot delete your own account')
+            return redirect('crm:users_list')
+        
+        # Не можна видалити іншого адміна
+        if user.role == 'admin':
+            messages.error(request, 'Cannot delete admin user')
+            return redirect('crm:users_list')
+        
+        try:
+            username = user.username
+            user.delete()
+            messages.success(request, f'User "{username}" deleted successfully')
+        except Exception as e:
+            messages.error(request, f'Error deleting user: {str(e)}')
+    
+    return redirect('crm:users_list')
+
+
 @login_required
 @admin_required
-def users_list(request):
-    users = User.objects().order_by('-created_at').all()
-    return render(request, 'crm/users_list.html', {'users': users})
-
 def analytics(request):
-    return render(request, "analytics.html")
+    from datetime import datetime, timedelta
+    from django.utils import timezone
+    
+    now = timezone.now()
+    current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    # Місячний прибуток (сума всіх продажів за поточний місяць)
+    monthly_sales = Sale.objects().filter(
+        sale_date__gte=current_month_start,
+        status__in=['paid', 'pending']
+    ).all()
+    monthly_revenue = sum(float(sale.total_amount or 0) for sale in monthly_sales)
+    
+    # Кількість продажів за місяць
+    monthly_sales_count = len(monthly_sales)
+    
+    # Нові клієнти за місяць (користувачі з role='user')
+    new_customers = User.objects().filter(
+        created_at__gte=current_month_start,
+        role='user'
+    ).count()
+    
+    # Закритих ремонтів (completed або returned)
+    completed_repairs = Repair.objects().filter(
+        status__in=['completed', 'returned']
+    ).count()
+    
+    context = {
+        'monthly_revenue': f"{monthly_revenue:,.2f}",
+        'monthly_sales_count': monthly_sales_count,
+        'new_customers': new_customers,
+        'completed_repairs': completed_repairs,
+    }
+    
+    return render(request, "crm/analytics.html", context)
 
 
 # ---------- Product Categories ----------

@@ -6,6 +6,7 @@ app_name = 'crm'
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
+    path('analytics/', views.analytics, name='analytics'),
 
     # Suppliers
     path('suppliers/', views.suppliers_list, name='suppliers_list'),
@@ -49,8 +50,11 @@ urlpatterns = [
     path('deliveries/<str:pk>/edit/', views.deliveries_edit, name='deliveries_edit'),
     path('deliveries/<str:pk>/delete/', views.deliveries_delete, name='deliveries_delete'),
 
-    # Users (list)
+    # Users (Admin only)
     path('users/', views.users_list, name='users_list'),
+    path('users/create/', views.users_create, name='users_create'),
+    path('users/<str:pk>/edit/', views.users_edit, name='users_edit'),
+    path('users/<str:pk>/delete/', views.users_delete, name='users_delete'),
     
     # Product Categories
     path('product-categories/', views.product_categories_list, name='product_categories_list'),
@@ -82,4 +86,7 @@ urlpatterns = [
     path('queries/9-contracts-period/', queries_views.query9_contracts_by_period, name='query9_contracts_period'),
     path('queries/9-contracts-count/', queries_views.query9_contracts_count_by_supplier, name='query9_contracts_count'),
     path('queries/10-supplier-contract/', queries_views.query10_supplier_by_contract_number, name='query10_supplier'),
+    
+    # Custom Aggregation Query (Admin Only)
+    path('queries/execute-aggregation/', queries_views.execute_aggregation, name='execute_aggregation'),
 ]

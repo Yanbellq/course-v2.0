@@ -1,8 +1,11 @@
 # apps/api/middleware/jwt_auth.py
 
+import jwt
 from django.http import JsonResponse
+from django.conf import settings
 from rest_framework.exceptions import AuthenticationFailed
 from apps.api.authentication.user_jwt_authentication import MongoJWTAuthentication
+from apps.main.models import User
 
 
 class JWTAuthenticationMiddleware:
@@ -47,7 +50,32 @@ class JWTAuthenticationMiddleware:
         # Якщо це API і НЕ публічний - перевіряємо JWT
         if is_api and not is_public_api:
             try:
+                # Спочатку перевіряємо Authorization header
                 user_auth = self.jwt_auth.authenticate(request)
+                
+                # Якщо немає в header, перевіряємо cookies (для /api/analytics/)
+                if user_auth is None and path.startswith('/api/analytics/'):
+                    token = request.COOKIES.get('access_token')
+                    if token:
+                        try:
+                            payload = jwt.decode(
+                                token,
+                                settings.JWT_SECRET_KEY,
+                                algorithms=[settings.JWT_ALGORITHM]
+                            )
+                            user = User.find_by_id(payload.get('user_id'))
+                            if user and user.is_active:
+                                user_obj = type('User', (), {
+                                    'id': str(user.id),
+                                    'username': user.username,
+                                    'email': user.email,
+                                    'role': user.role,
+                                    'is_active': user.is_active,
+                                    'is_authenticated': True,
+                                })()
+                                user_auth = (user_obj, None)
+                        except Exception:
+                            pass
                 
                 if user_auth is None:
                     return JsonResponse({

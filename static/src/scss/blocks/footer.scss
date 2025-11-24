@@ -27,14 +27,15 @@
 }
 
 .footer-col ul li a {
-    color: rgba(255, 255, 255, 0.7);
+    // color: rgba(255, 255, 255, 0.7);
+    opacity: 0.7;
     text-decoration: none;
     font-size: 14px;
-    transition: color 0.3s;
+    transition: opacity 0.3s;
 }
 
 .footer-col ul li a:hover {
-    color: var(--white);
+    opacity: 1;
 }
 
 .footer-bottom {
@@ -43,11 +44,16 @@
     align-items: center;
     padding-top: 40px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
+    
+    p, a {
+        font-size: 14px;
+        opacity: 0.7;
+        transition: opacity 0.3s;
+    }
 
-.footer-bottom p {
-    font-size: 14px;
-    opacity: 0.7;
+    a:hover {
+        opacity: 1;
+    }
 }
 
 .footer-logo {

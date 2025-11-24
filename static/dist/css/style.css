@@ -2434,14 +2434,14 @@ input[type=checkbox] {
 }
 
 .footer-col ul li a {
-  color: rgba(255, 255, 255, 0.7);
+  opacity: 0.7;
   text-decoration: none;
   font-size: 14px;
-  transition: color 0.3s;
+  transition: opacity 0.3s;
 }
 
 .footer-col ul li a:hover {
-  color: var(--white);
+  opacity: 1;
 }
 
 .footer-bottom {
@@ -2451,10 +2451,13 @@ input[type=checkbox] {
   padding-top: 40px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
-
-.footer-bottom p {
+.footer-bottom p, .footer-bottom a {
   font-size: 14px;
   opacity: 0.7;
+  transition: opacity 0.3s;
+}
+.footer-bottom a:hover {
+  opacity: 1;
 }
 
 .footer-logo {

@@ -10,9 +10,9 @@ class RateLimitMiddleware:
     Middleware для обмеження кількості запитів
     
     Ліміти:
-    - API: 100 запитів/хвилину
-    - Auth endpoints: 10 запитів/хвилину (захист від brute-force)
-    - Admin: необмежено
+    - API: 200 запитів/хвилину
+    - Auth endpoints: 50 запитів/хвилину (захист від brute-force)
+    - Default: 300 запитів/хвилину
     """
     
     def __init__(self, get_response):
@@ -20,9 +20,9 @@ class RateLimitMiddleware:
         
         # Налаштування лімітів
         self.limits = {
-            'api': {'requests': 100, 'period': 60},
-            'auth': {'requests': 10, 'period': 60},
-            'default': {'requests': 200, 'period': 60},
+            'api': {'requests': 200, 'period': 60},
+            'auth': {'requests': 50, 'period': 60},  # Збільшено з 10 до 50
+            'default': {'requests': 300, 'period': 60},
         }
     
     def __call__(self, request):

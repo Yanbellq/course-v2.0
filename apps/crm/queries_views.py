@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from datetime import datetime, timedelta
 from collections import defaultdict
+import json
 
 from apps.crm.models import Supplier, Contract, Supply, Sale, Repair, Employee
 from apps.crm.serializers.contract_serializer import ContractSerializer
@@ -797,3 +798,82 @@ def query10_supplier_by_contract_number(request):
         'products': products_info
     })
 
+
+# ==================== CUSTOM AGGREGATION QUERY (ADMIN ONLY) ====================
+@login_required
+def execute_aggregation(request):
+    """Execute custom MongoDB aggregation pipeline (ADMIN ONLY)"""
+    # Перевірка, що користувач є адміном (не просто оператором)
+    user_role = getattr(request.user, 'role', 'user') if request.user else 'user'
+    if user_role != 'admin':
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("Access denied. Admin role required.")
+    
+    error = None
+    results = None
+    collection_name = None
+    pipeline_str = None
+    
+    if request.method == 'POST':
+        collection_name = request.POST.get('collection', '').strip()
+        pipeline_str = request.POST.get('pipeline', '').strip()
+        
+        if not collection_name:
+            error = 'Please specify collection name'
+        elif not pipeline_str:
+            error = 'Please specify aggregation pipeline'
+        else:
+            # Дозволені колекції
+            ALLOWED_COLLECTIONS = [
+                'suppliers', 'contracts', 'supplies', 'sales', 'repairs',
+                'employees', 'products', 'users', 'product_categories', 'deliveries'
+            ]
+            
+            if collection_name not in ALLOWED_COLLECTIONS:
+                error = f'Collection "{collection_name}" is not allowed. Allowed collections: {", ".join(ALLOWED_COLLECTIONS)}'
+            else:
+                try:
+                    # Парсимо JSON pipeline
+                    pipeline = json.loads(pipeline_str)
+                    
+                    if not isinstance(pipeline, list):
+                        error = 'Pipeline must be a JSON array'
+                    else:
+                        # Отримуємо колекцію та виконуємо aggregation
+                        from core.mongo_connection import get_db
+                        db = get_db()
+                        collection = db[collection_name]
+                        
+                        # Виконуємо aggregation
+                        results_raw = list(collection.aggregate(pipeline))
+                        # Конвертуємо ObjectId в рядки для JSON серіалізації
+                        results = json.loads(json.dumps(results_raw, default=str))
+                        
+                except json.JSONDecodeError as e:
+                    error = f'Invalid JSON format: {str(e)}'
+                except Exception as e:
+                    error = f'Error executing aggregation: {str(e)}'
+    
+    # Дозволені колекції для вибору
+    ALLOWED_COLLECTIONS = [
+        'suppliers', 'contracts', 'supplies', 'sales', 'repairs',
+        'employees', 'products', 'users', 'product_categories', 'deliveries'
+    ]
+    
+    # Форматуємо results для відображення
+    results_json = None
+    if results:
+        try:
+            results_json = json.dumps(results, indent=2, ensure_ascii=False)
+        except:
+            results_json = str(results)
+    
+    return render(request, 'crm/queries/execute_aggregation.html', {
+        'error': error,
+        'results': results,
+        'results_json': results_json,
+        'collection_name': collection_name or '',
+        'pipeline_str': pipeline_str or '',
+        'allowed_collections': ALLOWED_COLLECTIONS,
+        'results_count': len(results) if results else 0
+    })
