@@ -210,6 +210,69 @@ class CustomBuildConfig(orm.Model):
         self.save()
 
 
+class PasswordResetToken(orm.Model):
+    """Модель токену для скидання пароля"""
+    _collection_name = "password_reset_tokens"
+    
+    user_id = orm.ReferenceField(User, required=True)
+    token = orm.StringField(required=True, unique=True)
+    expires_at = orm.DateTimeField(required=True)
+    used = orm.BooleanField(default=False)
+    created_at = orm.DateTimeField(default=datetime.now)
+    
+    @classmethod
+    def create_token(cls, user):
+        """Створити новий токен для користувача"""
+        import secrets
+        from datetime import timedelta
+        
+        # Генеруємо унікальний токен
+        token = secrets.token_urlsafe(32)
+        
+        # Видаляємо старі невикористані токени для цього користувача
+        try:
+            old_tokens = cls.objects(user_id=user.id, used=False).all()
+            for old_token in old_tokens:
+                old_token.delete()
+        except:
+            pass  # Якщо помилка, продовжуємо
+        
+        # Створюємо новий токен (дійсний 1 годину)
+        reset_token = cls(
+            user_id=user.id,
+            token=token,
+            expires_at=datetime.now() + timedelta(hours=1),
+            used=False
+        )
+        reset_token.save()
+        
+        return reset_token
+    
+    @classmethod
+    def validate_token(cls, token):
+        """Перевірити токен та повернути користувача"""
+        try:
+            reset_token = cls.objects(token=token, used=False).first()
+            
+            if not reset_token:
+                return None
+            
+            if datetime.now() > reset_token.expires_at:
+                # Токен прострочений
+                return None
+            
+            # Повертаємо користувача (user_id - це ReferenceField, який повертає User об'єкт)
+            return reset_token.user_id
+        except Exception as e:
+            print(f"Error validating token: {e}")
+            return None
+    
+    def mark_as_used(self):
+        """Позначити токен як використаний"""
+        self.used = True
+        self.save()
+
+
 class Delivery(orm.Model):
     """Модель доставок"""
     _collection_name = "deliveries"

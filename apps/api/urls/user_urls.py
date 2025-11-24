@@ -11,4 +11,6 @@ urlpatterns = [
     path('auth/refresh/', views_auth.refresh_token, name='refresh_token'),
     path('auth/me/', views_auth.get_current_user, name='current_user'),
     path('auth/change-password/', views_auth.change_password, name='change_password'),
+    path('auth/forgot-password/', views_auth.forgot_password, name='forgot_password'),
+    path('auth/reset-password/', views_auth.reset_password, name='reset_password'),
 ]

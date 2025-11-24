@@ -2,49 +2,119 @@ import showNotification from "./toast.js";
 import { env } from "./env.js";
 // ============ AUTH PAGE FUNCTIONALITY ============
 
-// Tab switching
-const authTabs = document.querySelectorAll('.auth-tab');
-const authContainers = document.querySelectorAll('.auth-form-container');
-
-authTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-        const targetTab = tab.dataset.tab;
-        
-        // Remove active class from all tabs and containers
-        authTabs.forEach(t => t.classList.remove('active'));
-        authContainers.forEach(c => c.classList.remove('active'));
-        
-        // Add active class to clicked tab and corresponding container
-        tab.classList.add('active');
-        document.getElementById(targetTab + 'Tab').classList.add('active');
-    });
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', function() {
+    initAuthPage();
 });
 
-// Switch between login and register forms
-const showRegisterBtn = document.getElementById('showRegister');
-const showLoginBtn = document.getElementById('showLogin');
-const loginForm = document.getElementById('loginForm');
-const registerForm = document.getElementById('registerForm');
-
-if (showRegisterBtn) {
-    showRegisterBtn.addEventListener('click', () => {
-        loginForm.classList.remove('active');
-        registerForm.classList.add('active');
-    });
+// Also run immediately if DOM is already loaded (for modules)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAuthPage);
+} else {
+    initAuthPage();
 }
 
-if (showLoginBtn) {
-    showLoginBtn.addEventListener('click', () => {
-        registerForm.classList.remove('active');
-        loginForm.classList.add('active');
+function initAuthPage() {
+    // Tab switching
+    const authTabs = document.querySelectorAll('.auth-tab');
+    const authContainers = document.querySelectorAll('.auth-form-container');
+
+    authTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
+            
+            // Remove active class from all tabs and containers
+            authTabs.forEach(t => t.classList.remove('active'));
+            authContainers.forEach(c => c.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding container
+            tab.classList.add('active');
+            const targetContainer = document.getElementById(targetTab + 'Tab');
+            if (targetContainer) {
+                targetContainer.classList.add('active');
+            }
+        });
     });
-}
 
-// ============ USER LOGIN ============
-const userLoginForm = document.getElementById('userLoginForm');
-const loginSubmitBtn = document.getElementById('login-submit');
+    // Switch between login, register, forgot password, and reset password forms
+    const showRegisterBtn = document.getElementById('showRegister');
+    const showLoginBtn = document.getElementById('showLogin');
+    const showForgotPasswordBtn = document.getElementById('showForgotPassword');
+    const showLoginFromForgotBtn = document.getElementById('showLoginFromForgot');
+    const showLoginFromResetBtn = document.getElementById('showLoginFromReset');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    const resetPasswordForm = document.getElementById('resetPasswordForm');
 
-if (userLoginForm) {
+    // Helper function to hide all forms and show specific one
+    function showForm(formToShow) {
+        [loginForm, registerForm, forgotPasswordForm, resetPasswordForm].forEach(form => {
+            if (form) form.classList.remove('active');
+        });
+        if (formToShow) {
+            formToShow.classList.add('active');
+        }
+    }
+
+    if (showRegisterBtn) {
+        showRegisterBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showForm(registerForm);
+        });
+    }
+
+    if (showLoginBtn) {
+        showLoginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showForm(loginForm);
+        });
+    }
+
+    if (showForgotPasswordBtn) {
+        showForgotPasswordBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Forgot password clicked, showing form');
+            if (forgotPasswordForm) {
+                showForm(forgotPasswordForm);
+            } else {
+                console.error('forgotPasswordForm not found');
+            }
+        });
+    }
+
+    if (showLoginFromForgotBtn) {
+        showLoginFromForgotBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showForm(loginForm);
+        });
+    }
+
+    if (showLoginFromResetBtn) {
+        showLoginFromResetBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showForm(loginForm);
+        });
+    }
+
+    // Check if reset token is in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const resetToken = urlParams.get('token');
+    if (resetToken && resetPasswordForm) {
+        // Set token in hidden input
+        const tokenInput = document.getElementById('reset-token');
+        if (tokenInput) {
+            tokenInput.value = resetToken;
+            showForm(resetPasswordForm);
+        }
+    }
+
+    // ============ USER LOGIN ============
+    const userLoginForm = document.getElementById('userLoginForm');
+    const loginSubmitBtn = document.getElementById('login-submit');
+
+    if (userLoginForm) {
     userLoginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -103,11 +173,11 @@ if (userLoginForm) {
             loginSubmitBtn.innerText = 'Login';
         }
     });
-}
+    }
 
-// ============ USER REGISTRATION ============
-const userRegisterForm = document.getElementById('userRegisterForm');
-const regSubmitBtn = document.getElementById('reg-submit');
+    // ============ USER REGISTRATION ============
+    const userRegisterForm = document.getElementById('userRegisterForm');
+    const regSubmitBtn = document.getElementById('reg-submit');
 
 if (userRegisterForm) {
     userRegisterForm.addEventListener('submit', async (e) => {
@@ -184,11 +254,11 @@ if (userRegisterForm) {
             regSubmitBtn.innerText = 'Create Account';
         }
     });
-}
+    }
 
-// ============ ADMIN LOGIN ============
-const adminLoginForm = document.getElementById('adminLoginForm');
-const adminSubmitBtn = document.getElementById('admin-submit');
+    // ============ ADMIN LOGIN ============
+    const adminLoginForm = document.getElementById('adminLoginForm');
+    const adminSubmitBtn = document.getElementById('admin-submit');
 
 if (adminLoginForm) {
     adminLoginForm.addEventListener('submit', async (e) => {
@@ -245,10 +315,154 @@ if (adminLoginForm) {
             adminSubmitBtn.innerText = 'Admin Login';
         }
     });
-}
+    }
 
-// ============ PASSWORD VISIBILITY TOGGLE ============
-document.querySelectorAll('input[type="password"]').forEach(input => {
+    // ============ FORGOT PASSWORD ============
+    const forgotPasswordFormElement = document.getElementById('forgotPasswordFormElement');
+    const forgotSubmitBtn = document.getElementById('forgot-submit');
+
+if (forgotPasswordFormElement) {
+    forgotPasswordFormElement.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(forgotPasswordFormElement);
+        const emailOrUsername = formData.get('email_or_username');
+        
+        // Validate
+        if (!emailOrUsername) {
+            showNotification('Please enter your email or username', 'error');
+            return;
+        }
+
+        // Disable submit button
+        forgotSubmitBtn.disabled = true;
+        forgotSubmitBtn.innerText = 'Sending...';
+
+        try {
+            const response = await fetch(`/api/user/auth/forgot-password/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    email: emailOrUsername.includes('@') ? emailOrUsername : null,
+                    username: emailOrUsername.includes('@') ? null : emailOrUsername
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw data.error || 'Failed to send reset link. Please try again.';
+            }
+            
+            showNotification(data.message || 'If an account exists, a password reset link has been sent.', 'success');
+            
+            // In development, show token if available
+            if (data.data && data.data.token) {
+                console.log('Reset Token (DEV):', data.data.token);
+                console.log('Reset URL (DEV):', data.data.reset_url);
+            }
+            
+            // Clear form
+            forgotPasswordFormElement.reset();
+            
+            // Optionally redirect to login after a delay
+            setTimeout(() => {
+                showForm(loginForm);
+            }, 2000);
+
+        } catch (error) {
+            showNotification(error, 'error');
+        } finally {
+            forgotSubmitBtn.disabled = false;
+            forgotSubmitBtn.innerText = 'Send Reset Link';
+        }
+    });
+    }
+
+    // ============ RESET PASSWORD ============
+    const resetPasswordFormElement = document.getElementById('resetPasswordFormElement');
+    const resetSubmitBtn = document.getElementById('reset-submit');
+
+if (resetPasswordFormElement) {
+    resetPasswordFormElement.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(resetPasswordFormElement);
+        const token = formData.get('token');
+        const newPassword = formData.get('new_password');
+        const confirmPassword = formData.get('confirm_password');
+        
+        // Validate
+        if (!token) {
+            showNotification('Reset token is missing', 'error');
+            return;
+        }
+        
+        if (!newPassword || !confirmPassword) {
+            showNotification('Please fill in all fields', 'error');
+            return;
+        }
+        
+        if (newPassword.length < 6) {
+            showNotification('Password must be at least 6 characters', 'error');
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            showNotification('Passwords do not match', 'error');
+            return;
+        }
+
+        // Disable submit button
+        resetSubmitBtn.disabled = true;
+        resetSubmitBtn.innerText = 'Resetting...';
+
+        try {
+            const response = await fetch(`/api/user/auth/reset-password/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    token,
+                    new_password: newPassword,
+                    confirm_password: confirmPassword
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw data.error || 'Failed to reset password. Please try again.';
+            }
+            
+            showNotification(data.message || 'Password reset successfully!', 'success');
+            
+            // Clear form
+            resetPasswordFormElement.reset();
+            
+            // Redirect to login after a delay
+            setTimeout(() => {
+                showForm(loginForm);
+                // Remove token from URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }, 1500);
+
+        } catch (error) {
+            showNotification(error, 'error');
+        } finally {
+            resetSubmitBtn.disabled = false;
+            resetSubmitBtn.innerText = 'Reset Password';
+        }
+    });
+    }
+
+    // ============ PASSWORD VISIBILITY TOGGLE ============
+    document.querySelectorAll('input[type="password"]').forEach(input => {
     const wrapper = input.parentElement;
     const toggleBtn = document.createElement('button');
     toggleBtn.type = 'button';
@@ -280,4 +494,5 @@ document.querySelectorAll('input[type="password"]').forEach(input => {
 
         lucide.createIcons();
     });
-});
+    });
+}

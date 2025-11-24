@@ -4,8 +4,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.conf import settings
+from datetime import datetime
 
-from apps.main.models import User
+from apps.main.models import User, PasswordResetToken
 from apps.api.serializers.user_serializers import (
     UserRegistrationSerializer, 
     UserLoginSerializer
@@ -267,3 +271,239 @@ def change_password(request):
             'success': False,
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def send_password_reset_email(user, reset_url):
+    """
+    Відправляє email з інструкціями для відновлення пароля
+    
+    Args:
+        user: Об'єкт користувача
+        reset_url: URL для скидання пароля
+    """
+    subject = 'Відновлення пароля - Electronic Store'
+    
+    # Контекст для шаблону
+    context = {
+        'username': user.username,
+        'reset_url': reset_url,
+        'current_year': datetime.now().year,
+    }
+    
+    # Рендеримо HTML та текстовий варіанти
+    html_message = render_to_string('emails/password_reset.html', context)
+    plain_message = render_to_string('emails/password_reset.txt', context)
+    
+    # Відправляємо email
+    send_mail(
+        subject=subject,
+        message=plain_message,  # Текстова версія (для клієнтів без підтримки HTML)
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email],
+        html_message=html_message,  # HTML версія
+        fail_silently=False,  # Викидає помилку, якщо не вдалось відправити
+    )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def forgot_password(request):
+    """Запит на скидання пароля"""
+    try:
+        email = request.data.get('email')
+        username = request.data.get('username')
+        
+        # Валідація
+        if not email and not username:
+            return Response({
+                'success': False,
+                'error': 'Вкажіть email або username'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Знаходимо користувача
+        user = None
+        if email:
+            try:
+                user = User.objects(email=email).first()
+            except:
+                pass
+        
+        if not user and username:
+            try:
+                user = User.objects(username=username).first()
+            except:
+                pass
+        
+        # Для безпеки завжди повертаємо успішну відповідь (навіть якщо користувача немає)
+        # Це запобігає перевірці існування email/username
+        if not user:
+            return Response({
+                'success': True,
+                'message': 'Якщо користувач з таким email/username існує, на пошту надіслано інструкції для скидання пароля'
+            }, status=status.HTTP_200_OK)
+        
+        # Створюємо токен
+        reset_token = PasswordResetToken.create_token(user)
+        
+        # Формуємо URL для скидання пароля
+        reset_url = f"{request.scheme}://{request.get_host()}/auth/?token={reset_token.token}"
+        
+        # Відправляємо email
+        try:
+            send_password_reset_email(user, reset_url)
+        except Exception as email_error:
+            # Логуємо помилку, але не повідомляємо користувача (безпека)
+            import logging
+            logger = logging.getLogger('api')
+            logger.error(f"Failed to send password reset email to {user.email}: {str(email_error)}")
+            
+            # В development виводимо токен в консоль як fallback
+            if settings.DEBUG:
+                print(f"\n{'='*60}")
+                print(f"Password Reset Token for {user.email}:")
+                print(f"Token: {reset_token.token}")
+                print(f"Reset URL: {reset_url}")
+                print(f"Expires at: {reset_token.expires_at}")
+                print(f"{'='*60}\n")
+        
+        return Response({
+            'success': True,
+            'message': 'Якщо користувач з таким email/username існує, на пошту надіслано інструкції для скидання пароля'
+        }, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def send_password_reset_email(user, reset_url):
+    """
+    Відправляє email з інструкціями для відновлення пароля
+    
+    Args:
+        user: Об'єкт користувача
+        reset_url: URL для скидання пароля
+    """
+    subject = 'Відновлення пароля - Electronic Store'
+    
+    # Контекст для шаблону
+    context = {
+        'username': user.username,
+        'reset_url': reset_url,
+        'current_year': datetime.now().year,
+    }
+    
+    # Рендеримо HTML та текстовий варіанти
+    html_message = render_to_string('emails/password_reset.html', context)
+    plain_message = render_to_string('emails/password_reset.txt', context)
+    
+    # Відправляємо email
+    send_mail(
+        subject=subject,
+        message=plain_message,  # Текстова версія (для клієнтів без підтримки HTML)
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email],
+        html_message=html_message,  # HTML версія
+        fail_silently=False,  # Викидає помилку, якщо не вдалось відправити
+    )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password(request):
+    """Скидання пароля за токеном"""
+    try:
+        token = request.data.get('token')
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
+        
+        # Валідація
+        if not token:
+            return Response({
+                'success': False,
+                'error': 'Токен обов\'язковий'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not new_password:
+            return Response({
+                'success': False,
+                'error': 'Новий пароль обов\'язковий'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if len(new_password) < 6:
+            return Response({
+                'success': False,
+                'error': 'Пароль повинен містити мінімум 6 символів'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if new_password != confirm_password:
+            return Response({
+                'success': False,
+                'error': 'Паролі не співпадають'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Перевіряємо токен
+        user = PasswordResetToken.validate_token(token)
+        
+        if not user:
+            return Response({
+                'success': False,
+                'error': 'Невірний або прострочений токен'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Знаходимо токен для позначення як використаний
+        try:
+            reset_token = PasswordResetToken.objects(token=token, used=False).first()
+            if reset_token:
+                reset_token.mark_as_used()
+        except:
+            pass  # Якщо не вдалось знайти токен, продовжуємо
+        
+        # Змінюємо пароль
+        user.set_password(new_password)
+        user.save()
+        
+        return Response({
+            'success': True,
+            'message': 'Пароль успішно змінено'
+        }, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def send_password_reset_email(user, reset_url):
+    """
+    Відправляє email з інструкціями для відновлення пароля
+    
+    Args:
+        user: Об'єкт користувача
+        reset_url: URL для скидання пароля
+    """
+    subject = 'Відновлення пароля - Electronic Store'
+    
+    # Контекст для шаблону
+    context = {
+        'username': user.username,
+        'reset_url': reset_url,
+        'current_year': datetime.now().year,
+    }
+    
+    # Рендеримо HTML та текстовий варіанти
+    html_message = render_to_string('emails/password_reset.html', context)
+    plain_message = render_to_string('emails/password_reset.txt', context)
+    
+    # Відправляємо email
+    send_mail(
+        subject=subject,
+        message=plain_message,  # Текстова версія (для клієнтів без підтримки HTML)
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email],
+        html_message=html_message,  # HTML версія
+        fail_silently=False,  # Викидає помилку, якщо не вдалось відправити
+    )

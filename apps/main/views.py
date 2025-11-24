@@ -43,6 +43,9 @@ def auth(request):
     # Get next URL from query parameter for redirect after login
     next_url = request.GET.get('next', '/')
     
+    # Get reset password token from query parameter
+    reset_token = request.GET.get('token', None)
+    
     # Get auth message from session (set by middleware)
     auth_message = None
     auth_message_type = None
@@ -54,7 +57,8 @@ def auth(request):
         'categories': categories,
         'next_url': next_url,
         'auth_message': auth_message,
-        'auth_message_type': auth_message_type
+        'auth_message_type': auth_message_type,
+        'reset_token': reset_token
     }
     return render(request, 'user/auth.html', context)
 
