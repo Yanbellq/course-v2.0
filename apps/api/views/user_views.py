@@ -194,3 +194,76 @@ def get_current_user(request):
             'success': False,
             'error': str(e)
         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    """Зміна паролю"""
+    try:
+        user_id = request.user.id
+        user = User.find_by_id(user_id)
+        
+        if not user:
+            return Response({
+                'success': False,
+                'error': 'Користувача не знайдено'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
+        
+        # Валідація
+        if not current_password:
+            return Response({
+                'success': False,
+                'error': 'Поточний пароль обов\'язковий'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not new_password:
+            return Response({
+                'success': False,
+                'error': 'Новий пароль обов\'язковий'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if len(new_password) < 6:
+            return Response({
+                'success': False,
+                'error': 'Новий пароль повинен містити мінімум 6 символів'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if new_password != confirm_password:
+            return Response({
+                'success': False,
+                'error': 'Нові паролі не співпадають'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Перевірка поточного пароля
+        if not user.check_password(current_password):
+            return Response({
+                'success': False,
+                'error': 'Невірний поточний пароль'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Перевірка, що новий пароль відрізняється від поточного
+        if user.check_password(new_password):
+            return Response({
+                'success': False,
+                'error': 'Новий пароль повинен відрізнятися від поточного'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Змінюємо пароль
+        user.set_password(new_password)
+        user.save()
+        
+        return Response({
+            'success': True,
+            'message': 'Пароль успішно змінено'
+        }, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

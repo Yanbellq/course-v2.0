@@ -53,8 +53,8 @@ class JWTAuthenticationMiddleware:
                 # Спочатку перевіряємо Authorization header
                 user_auth = self.jwt_auth.authenticate(request)
                 
-                # Якщо немає в header, перевіряємо cookies (для /api/analytics/)
-                if user_auth is None and path.startswith('/api/analytics/'):
+                # Якщо немає в header, перевіряємо cookies (для /api/analytics/ та /api/order/)
+                if user_auth is None and (path.startswith('/api/analytics/') or path.startswith('/api/order/')):
                     token = request.COOKIES.get('access_token')
                     if token:
                         try:

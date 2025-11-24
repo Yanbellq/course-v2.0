@@ -234,21 +234,118 @@ class ShoppingCart {
         this.saveCart();
         this.updateUI();
     }
+
+    async checkout(paymentMethod = 'card', deliveryAddress = '', notes = '') {
+        // Перевірка авторизації
+        const user = localStorage.getItem('user') || sessionStorage.getItem('user');
+        if (!user) {
+            showNotification('Please login to the system to place an order', 'error');
+            // Перенаправлення на сторінку входу
+            setTimeout(() => {
+                window.location.href = '/auth/?next=' + encodeURIComponent(window.location.pathname);
+            }, 1500);
+            return;
+        }
+
+        if (this.items.length === 0) {
+            showNotification('Your cart is empty!', 'error');
+            return;
+        }
+
+        // Підготовка даних для API
+        const products = this.items.map(item => ({
+            product_id: item.id,
+            quantity: item.quantity,
+            unit_price: item.price
+        }));
+
+        const orderData = {
+            products: products,
+            payment_method: paymentMethod,
+            delivery_address: deliveryAddress,
+            notes: notes
+        };
+
+        // Показуємо індикатор завантаження
+        const checkoutBtn = document.querySelector('.btn--checkout');
+        const originalText = checkoutBtn ? checkoutBtn.textContent : 'Proceed to Checkout';
+        
+        try {
+            if (checkoutBtn) {
+                checkoutBtn.disabled = true;
+                checkoutBtn.textContent = 'Processing...';
+            }
+
+            const response = await fetch('/api/order/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include', // Важливо для cookies з access_token
+                body: JSON.stringify(orderData)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || data.detail || 'Error creating order');
+            }
+
+            if (data.success) {
+                showNotification('Order successfully created!', 'success');
+                
+                // Очищаємо корзину
+                this.clearCart();
+                
+                // Закриваємо корзину
+                this.closeCart();
+                
+                // Опціонально: перенаправлення на сторінку профілю або підтвердження
+                setTimeout(() => {
+                    window.location.href = '/profile/';
+                }, 2000);
+            } else {
+                throw new Error(data.error || 'Error creating order');
+            }
+
+        } catch (error) {
+            console.error('Checkout error:', error);
+            showNotification(error.message || 'Error creating order. Please try again.', 'error');
+        } finally {
+            // Відновлюємо кнопку
+            if (checkoutBtn) {
+                checkoutBtn.disabled = false;
+                checkoutBtn.textContent = originalText;
+            }
+        }
+    }
 }
 
 // Initialize cart
 const cart = new ShoppingCart();
 
 // Checkout button
-document.addEventListener('click', (e) => {
+document.addEventListener('click', async (e) => {
     if (e.target.classList.contains('btn--checkout')) {
-        if (cart.items.length > 0) {
-            alert('Proceeding to checkout...\nTotal: $' + cart.getTotal().toFixed(2));
-            // Here you would redirect to checkout page
-            // window.location.href = 'checkout.html';
-        } else {
-            alert('Your cart is empty!');
+        e.preventDefault();
+        
+        if (cart.items.length === 0) {
+            showNotification('Your cart is empty!', 'error');
+            return;
         }
+
+        // Простий спосіб: використовуємо модальне вікно для введення даних
+        const deliveryAddress = prompt('Enter delivery address (or leave empty):') || '';
+        const paymentMethod = prompt('Select payment method:\n1 - Card\n2 - Cash\n3 - Transfer\n\nEnter number (1-3):', '1');
+        
+        let paymentMethodValue = 'card';
+        if (paymentMethod === '2') {
+            paymentMethodValue = 'cash';
+        } else if (paymentMethod === '3') {
+            paymentMethodValue = 'transfer';
+        }
+
+        await cart.checkout(paymentMethodValue, deliveryAddress);
     }
 });
 //# sourceMappingURL=cart.js.map

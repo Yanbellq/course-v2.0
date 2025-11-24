@@ -9,23 +9,32 @@ from apps.main.models import User
 
 
 class MongoJWTAuthentication(BaseAuthentication):
-    """Власна JWT автентифікація без rest_framework_simplejwt"""
+    """Власна JWT автентифікація без rest_framework_simplejwt
+    Підтримує токени з Authorization header або cookies
+    """
     
     def authenticate(self, request):
-        auth_header = request.headers.get('Authorization')
+        token = None
         
-        if not auth_header:
+        # Спочатку перевіряємо Authorization header
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            try:
+                # Bearer <token>
+                parts = auth_header.split()
+                if len(parts) == 2 and parts[0].lower() == 'bearer':
+                    token = parts[1]
+            except Exception:
+                pass
+        
+        # Якщо немає в header, перевіряємо cookies
+        if not token:
+            token = request.COOKIES.get('access_token')
+        
+        if not token:
             return None
         
         try:
-            # Bearer <token>
-            parts = auth_header.split()
-            
-            if len(parts) != 2 or parts[0].lower() != 'bearer':
-                return None
-            
-            token = parts[1]
-            
             # Декодуємо JWT
             payload = jwt.decode(
                 token, 

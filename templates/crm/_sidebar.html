@@ -1,7 +1,9 @@
 <aside class="crm-sidebar">
     {% comment %} <div class="logo">CRM</div> {% endcomment %}
     <nav>
+        {% if request.user and request.user.role == 'admin' %}
         <a href="{% url 'crm:analytics' %}" class="{% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">Analytics</a>
+        {% endif %}
         <a href="{% url 'crm:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
         <a href="{% url 'crm:suppliers_list' %}" class="{% if request.resolver_match.url_name == 'suppliers_list' %}active{% endif %}">Suppliers</a>
         <a href="{% url 'crm:contracts_list' %}" class="{% if request.resolver_match.url_name == 'contracts_list' %}active{% endif %}">Contracts</a>

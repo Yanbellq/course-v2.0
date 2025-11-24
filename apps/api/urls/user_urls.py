@@ -10,7 +10,5 @@ urlpatterns = [
     path('auth/logout/', views_auth.logout, name='logout'),
     path('auth/refresh/', views_auth.refresh_token, name='refresh_token'),
     path('auth/me/', views_auth.get_current_user, name='current_user'),
-    
-    
-
+    path('auth/change-password/', views_auth.change_password, name='change_password'),
 ]
