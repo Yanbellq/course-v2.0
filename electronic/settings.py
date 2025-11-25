@@ -285,6 +285,10 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER or 'no
 # Допомагає уникнути зависання worker'ів при проблемах з SMTP
 EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
 
+# SendGrid API Key (для fallback, якщо SMTP заблоковано)
+# Отримайте безкоштовний API ключ: https://sendgrid.com/
+SENDGRID_API_KEY = config('SENDGRID_API_KEY', default='')
+
 # Логування налаштувань email (без пароля)
 if not DEBUG:
     import logging

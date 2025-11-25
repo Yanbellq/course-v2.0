@@ -1,6 +1,7 @@
 # apps/api/views/user_views.py
 
 import threading
+import requests
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -316,6 +317,8 @@ def send_password_reset_email(user, reset_url):
     logger.debug(f"Email backend: {settings.EMAIL_BACKEND}")
     
     # Відправляємо email з детальним логуванням помилок
+    # Спочатку пробуємо SMTP, якщо не працює - використовуємо SendGrid API
+    smtp_failed = False
     try:
         result = send_mail(
             subject=subject,
@@ -326,30 +329,71 @@ def send_password_reset_email(user, reset_url):
             fail_silently=False,  # Спочатку не приховуємо помилки, щоб їх побачити
         )
         if result:
-            logger.info(f"Email sent successfully to {user.email}")
+            logger.info(f"Email sent successfully via SMTP to {user.email}")
+            return
         else:
             logger.warning(f"Email sending returned False for {user.email} (check SMTP settings)")
+            smtp_failed = True
     except Exception as e:
         # Логуємо детальну помилку з діагностикою
         error_msg = str(e)
-        logger.error(f"SMTP error when sending email to {user.email}: {error_msg}", exc_info=True)
+        logger.warning(f"SMTP error when sending email to {user.email}: {error_msg}")
         
-        # Діагностика типових помилок Gmail
-        if "authentication failed" in error_msg.lower() or "535" in error_msg or "534" in error_msg:
-            logger.error("=" * 60)
-            logger.error("GMAIL AUTHENTICATION ERROR!")
-            logger.error("Ймовірна причина: використовується звичайний пароль замість App Password")
-            logger.error("Рішення:")
-            logger.error("1. Увімкніть двофакторну аутентифікацію в Gmail")
-            logger.error("2. Створіть App Password: https://myaccount.google.com/apppasswords")
-            logger.error("3. Використовуйте App Password в EMAIL_HOST_PASSWORD")
-            logger.error("=" * 60)
+        # Перевіряємо, чи це помилка мережі (Render.com блокує SMTP)
+        if "network is unreachable" in error_msg.lower() or "101" in error_msg:
+            logger.warning("SMTP blocked by hosting provider (Render.com). Trying SendGrid API...")
+            smtp_failed = True
+        elif "authentication failed" in error_msg.lower() or "535" in error_msg or "534" in error_msg:
+            logger.error("GMAIL AUTHENTICATION ERROR: використовується звичайний пароль замість App Password")
+            smtp_failed = True
         elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
-            logger.error("SMTP TIMEOUT: Перевірте EMAIL_HOST та EMAIL_PORT налаштування")
+            logger.warning("SMTP TIMEOUT: Trying SendGrid API...")
+            smtp_failed = True
         elif "connection" in error_msg.lower() or "refused" in error_msg.lower():
-            logger.error("SMTP CONNECTION ERROR: Перевірте мережеве з'єднання та налаштування")
-        elif "ssl" in error_msg.lower() or "tls" in error_msg.lower():
-            logger.error("SMTP SSL/TLS ERROR: Перевірте EMAIL_USE_TLS та EMAIL_USE_SSL налаштування")
+            logger.warning("SMTP CONNECTION ERROR: Trying SendGrid API...")
+            smtp_failed = True
+        else:
+            smtp_failed = True
+    
+    # Якщо SMTP не працює, пробуємо SendGrid API
+    if smtp_failed:
+        sendgrid_api_key = getattr(settings, 'SENDGRID_API_KEY', None)
+        if sendgrid_api_key:
+            try:
+                logger.info(f"Attempting to send email via SendGrid API to {user.email}")
+                sendgrid_url = "https://api.sendgrid.com/v3/mail/send"
+                headers = {
+                    "Authorization": f"Bearer {sendgrid_api_key}",
+                    "Content-Type": "application/json"
+                }
+                data = {
+                    "personalizations": [{
+                        "to": [{"email": user.email}],
+                        "subject": subject
+                    }],
+                    "from": {"email": settings.DEFAULT_FROM_EMAIL},
+                    "content": [
+                        {
+                            "type": "text/plain",
+                            "value": plain_message
+                        },
+                        {
+                            "type": "text/html",
+                            "value": html_message
+                        }
+                    ]
+                }
+                
+                response = requests.post(sendgrid_url, json=data, headers=headers, timeout=10)
+                if response.status_code == 202:
+                    logger.info(f"Email sent successfully via SendGrid API to {user.email}")
+                else:
+                    logger.error(f"SendGrid API error: {response.status_code} - {response.text}")
+            except Exception as e:
+                logger.error(f"SendGrid API error: {str(e)}", exc_info=True)
+        else:
+            logger.error("SENDGRID_API_KEY not configured. Cannot send email via API.")
+            logger.error("Please set SENDGRID_API_KEY in environment variables or use SMTP.")
 
 
 @api_view(['POST'])
@@ -492,6 +536,8 @@ def send_password_reset_email(user, reset_url):
     logger.debug(f"Email backend: {settings.EMAIL_BACKEND}")
     
     # Відправляємо email з детальним логуванням помилок
+    # Спочатку пробуємо SMTP, якщо не працює - використовуємо SendGrid API
+    smtp_failed = False
     try:
         result = send_mail(
             subject=subject,
@@ -502,30 +548,71 @@ def send_password_reset_email(user, reset_url):
             fail_silently=False,  # Спочатку не приховуємо помилки, щоб їх побачити
         )
         if result:
-            logger.info(f"Email sent successfully to {user.email}")
+            logger.info(f"Email sent successfully via SMTP to {user.email}")
+            return
         else:
             logger.warning(f"Email sending returned False for {user.email} (check SMTP settings)")
+            smtp_failed = True
     except Exception as e:
         # Логуємо детальну помилку з діагностикою
         error_msg = str(e)
-        logger.error(f"SMTP error when sending email to {user.email}: {error_msg}", exc_info=True)
+        logger.warning(f"SMTP error when sending email to {user.email}: {error_msg}")
         
-        # Діагностика типових помилок Gmail
-        if "authentication failed" in error_msg.lower() or "535" in error_msg or "534" in error_msg:
-            logger.error("=" * 60)
-            logger.error("GMAIL AUTHENTICATION ERROR!")
-            logger.error("Ймовірна причина: використовується звичайний пароль замість App Password")
-            logger.error("Рішення:")
-            logger.error("1. Увімкніть двофакторну аутентифікацію в Gmail")
-            logger.error("2. Створіть App Password: https://myaccount.google.com/apppasswords")
-            logger.error("3. Використовуйте App Password в EMAIL_HOST_PASSWORD")
-            logger.error("=" * 60)
+        # Перевіряємо, чи це помилка мережі (Render.com блокує SMTP)
+        if "network is unreachable" in error_msg.lower() or "101" in error_msg:
+            logger.warning("SMTP blocked by hosting provider (Render.com). Trying SendGrid API...")
+            smtp_failed = True
+        elif "authentication failed" in error_msg.lower() or "535" in error_msg or "534" in error_msg:
+            logger.error("GMAIL AUTHENTICATION ERROR: використовується звичайний пароль замість App Password")
+            smtp_failed = True
         elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
-            logger.error("SMTP TIMEOUT: Перевірте EMAIL_HOST та EMAIL_PORT налаштування")
+            logger.warning("SMTP TIMEOUT: Trying SendGrid API...")
+            smtp_failed = True
         elif "connection" in error_msg.lower() or "refused" in error_msg.lower():
-            logger.error("SMTP CONNECTION ERROR: Перевірте мережеве з'єднання та налаштування")
-        elif "ssl" in error_msg.lower() or "tls" in error_msg.lower():
-            logger.error("SMTP SSL/TLS ERROR: Перевірте EMAIL_USE_TLS та EMAIL_USE_SSL налаштування")
+            logger.warning("SMTP CONNECTION ERROR: Trying SendGrid API...")
+            smtp_failed = True
+        else:
+            smtp_failed = True
+    
+    # Якщо SMTP не працює, пробуємо SendGrid API
+    if smtp_failed:
+        sendgrid_api_key = getattr(settings, 'SENDGRID_API_KEY', None)
+        if sendgrid_api_key:
+            try:
+                logger.info(f"Attempting to send email via SendGrid API to {user.email}")
+                sendgrid_url = "https://api.sendgrid.com/v3/mail/send"
+                headers = {
+                    "Authorization": f"Bearer {sendgrid_api_key}",
+                    "Content-Type": "application/json"
+                }
+                data = {
+                    "personalizations": [{
+                        "to": [{"email": user.email}],
+                        "subject": subject
+                    }],
+                    "from": {"email": settings.DEFAULT_FROM_EMAIL},
+                    "content": [
+                        {
+                            "type": "text/plain",
+                            "value": plain_message
+                        },
+                        {
+                            "type": "text/html",
+                            "value": html_message
+                        }
+                    ]
+                }
+                
+                response = requests.post(sendgrid_url, json=data, headers=headers, timeout=10)
+                if response.status_code == 202:
+                    logger.info(f"Email sent successfully via SendGrid API to {user.email}")
+                else:
+                    logger.error(f"SendGrid API error: {response.status_code} - {response.text}")
+            except Exception as e:
+                logger.error(f"SendGrid API error: {str(e)}", exc_info=True)
+        else:
+            logger.error("SENDGRID_API_KEY not configured. Cannot send email via API.")
+            logger.error("Please set SENDGRID_API_KEY in environment variables or use SMTP.")
 
 
 @api_view(['POST'])
@@ -637,6 +724,8 @@ def send_password_reset_email(user, reset_url):
     logger.debug(f"Email backend: {settings.EMAIL_BACKEND}")
     
     # Відправляємо email з детальним логуванням помилок
+    # Спочатку пробуємо SMTP, якщо не працює - використовуємо SendGrid API
+    smtp_failed = False
     try:
         result = send_mail(
             subject=subject,
@@ -647,27 +736,68 @@ def send_password_reset_email(user, reset_url):
             fail_silently=False,  # Спочатку не приховуємо помилки, щоб їх побачити
         )
         if result:
-            logger.info(f"Email sent successfully to {user.email}")
+            logger.info(f"Email sent successfully via SMTP to {user.email}")
+            return
         else:
             logger.warning(f"Email sending returned False for {user.email} (check SMTP settings)")
+            smtp_failed = True
     except Exception as e:
         # Логуємо детальну помилку з діагностикою
         error_msg = str(e)
-        logger.error(f"SMTP error when sending email to {user.email}: {error_msg}", exc_info=True)
+        logger.warning(f"SMTP error when sending email to {user.email}: {error_msg}")
         
-        # Діагностика типових помилок Gmail
-        if "authentication failed" in error_msg.lower() or "535" in error_msg or "534" in error_msg:
-            logger.error("=" * 60)
-            logger.error("GMAIL AUTHENTICATION ERROR!")
-            logger.error("Ймовірна причина: використовується звичайний пароль замість App Password")
-            logger.error("Рішення:")
-            logger.error("1. Увімкніть двофакторну аутентифікацію в Gmail")
-            logger.error("2. Створіть App Password: https://myaccount.google.com/apppasswords")
-            logger.error("3. Використовуйте App Password в EMAIL_HOST_PASSWORD")
-            logger.error("=" * 60)
+        # Перевіряємо, чи це помилка мережі (Render.com блокує SMTP)
+        if "network is unreachable" in error_msg.lower() or "101" in error_msg:
+            logger.warning("SMTP blocked by hosting provider (Render.com). Trying SendGrid API...")
+            smtp_failed = True
+        elif "authentication failed" in error_msg.lower() or "535" in error_msg or "534" in error_msg:
+            logger.error("GMAIL AUTHENTICATION ERROR: використовується звичайний пароль замість App Password")
+            smtp_failed = True
         elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
-            logger.error("SMTP TIMEOUT: Перевірте EMAIL_HOST та EMAIL_PORT налаштування")
+            logger.warning("SMTP TIMEOUT: Trying SendGrid API...")
+            smtp_failed = True
         elif "connection" in error_msg.lower() or "refused" in error_msg.lower():
-            logger.error("SMTP CONNECTION ERROR: Перевірте мережеве з'єднання та налаштування")
-        elif "ssl" in error_msg.lower() or "tls" in error_msg.lower():
-            logger.error("SMTP SSL/TLS ERROR: Перевірте EMAIL_USE_TLS та EMAIL_USE_SSL налаштування")
+            logger.warning("SMTP CONNECTION ERROR: Trying SendGrid API...")
+            smtp_failed = True
+        else:
+            smtp_failed = True
+    
+    # Якщо SMTP не працює, пробуємо SendGrid API
+    if smtp_failed:
+        sendgrid_api_key = getattr(settings, 'SENDGRID_API_KEY', None)
+        if sendgrid_api_key:
+            try:
+                logger.info(f"Attempting to send email via SendGrid API to {user.email}")
+                sendgrid_url = "https://api.sendgrid.com/v3/mail/send"
+                headers = {
+                    "Authorization": f"Bearer {sendgrid_api_key}",
+                    "Content-Type": "application/json"
+                }
+                data = {
+                    "personalizations": [{
+                        "to": [{"email": user.email}],
+                        "subject": subject
+                    }],
+                    "from": {"email": settings.DEFAULT_FROM_EMAIL},
+                    "content": [
+                        {
+                            "type": "text/plain",
+                            "value": plain_message
+                        },
+                        {
+                            "type": "text/html",
+                            "value": html_message
+                        }
+                    ]
+                }
+                
+                response = requests.post(sendgrid_url, json=data, headers=headers, timeout=10)
+                if response.status_code == 202:
+                    logger.info(f"Email sent successfully via SendGrid API to {user.email}")
+                else:
+                    logger.error(f"SendGrid API error: {response.status_code} - {response.text}")
+            except Exception as e:
+                logger.error(f"SendGrid API error: {str(e)}", exc_info=True)
+        else:
+            logger.error("SENDGRID_API_KEY not configured. Cannot send email via API.")
+            logger.error("Please set SENDGRID_API_KEY in environment variables or use SMTP.")
