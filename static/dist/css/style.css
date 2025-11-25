@@ -3964,6 +3964,7 @@ input[type=checkbox] {
   padding: 24px;
   border-radius: 12px;
   border: 1px solid var(--gray-light);
+  font-size: 14px;
 }
 .help-upgrade p {
   margin: 0 0 16px 0;
