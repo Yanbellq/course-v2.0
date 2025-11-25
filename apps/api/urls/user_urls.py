@@ -13,4 +13,8 @@ urlpatterns = [
     path('auth/change-password/', views_auth.change_password, name='change_password'),
     path('auth/forgot-password/', views_auth.forgot_password, name='forgot_password'),
     path('auth/reset-password/', views_auth.reset_password, name='reset_password'),
+    
+    # Валідація унікальності
+    path('check-email/', views_auth.check_email_unique, name='check_email_unique'),
+    path('check-username/', views_auth.check_username_unique, name='check_username_unique'),
 ]

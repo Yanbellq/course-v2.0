@@ -107,21 +107,6 @@ accordionHeaders.forEach(header => {
     });
 });
 
-// ============ NEWSLETTER ============
-const newsletterForm = document.getElementById('newsletterForm');
-
-if (newsletterForm) {
-    newsletterForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = newsletterForm.querySelector('input').value;
-
-        if (email) {
-            alert(`Thank you for subscribing with: ${email}`);
-            newsletterForm.reset();
-        }
-    });
-}
-
 // ============ SMOOTH SCROLL ============
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {

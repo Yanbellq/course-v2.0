@@ -338,11 +338,11 @@
     <section class="newsletter">
         <div class="container">
             <div class="newsletter-content">
-                {% comment %} <h3>Stay in the Loop Head With</h3>
+                <h3>Stay in the Loop Head With</h3>
                 <form class="newsletter-form" id="newsletterForm">
                     <input type="email" placeholder="Enter your email" required>
                     <button type="submit" class="btn btn--subscribe">Subscribe Now</button>
-                </form> {% endcomment %}
+                </form>
             </div>
         </div>
     </section>
@@ -376,4 +376,5 @@
             });
         });
     </script>
+    <script type="module" src="{% static 'js/user/newsletter.js' %}"></script>
 {% endblock extra_js %}

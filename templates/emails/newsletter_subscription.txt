@@ -1,0 +1,19 @@
+Welcome to Our Newsletter - Electronic Store
+
+Thank you for subscribing to our newsletter!
+
+We're excited to have you on board. You'll now receive:
+- Latest product releases and updates
+- Exclusive deals and promotions
+- Tech tips and industry news
+- Special offers just for subscribers
+
+Stay tuned for amazing content delivered straight to your inbox!
+
+🎉 Welcome aboard!
+We're thrilled to have you as part of our community. Get ready for the latest in electronics!
+
+---
+This is an automatic email, please do not reply.
+© {{ current_year }} Electronic. All rights reserved.
+

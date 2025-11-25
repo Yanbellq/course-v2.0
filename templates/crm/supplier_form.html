@@ -16,40 +16,236 @@
 
             <div class="form-row">
                 <label>Name *</label>
-                <input name="name" value="{{ supplier.name }}" required>
+                <input name="name" id="name" value="{% if form.name %}{{ form.name }}{% elif supplier %}{{ supplier.name }}{% endif %}" required>
+                {% if errors.name %}
+                    <p class="field-error">{{ errors.name|join:", " }}</p>
+                {% endif %}
             </div>
 
             <div class="form-row">
                 <label>Contact person *</label>
-                <input name="contact_person" value="{{ supplier.contact_person }}" required>
+                <input name="contact_person" id="contact_person" value="{% if form.contact_person %}{{ form.contact_person }}{% elif supplier %}{{ supplier.contact_person }}{% endif %}" required>
+                {% if errors.contact_person %}
+                    <p class="field-error">{{ errors.contact_person|join:", " }}</p>
+                {% endif %}
             </div>
 
             <div class="form-group">
                 <div class="form-row">
                     <label>Email *</label>
-                    <input name="email" type="email" value="{{ supplier.email }}" required>
+                    <input name="email" id="email" type="email" value="{% if form.email %}{{ form.email }}{% elif supplier %}{{ supplier.email }}{% endif %}" required>
+                    {% if errors.email %}
+                        <p class="field-error">{{ errors.email|join:", " }}</p>
+                    {% endif %}
                 </div>
     
                 <div class="form-row">
                     <label>Phone *</label>
-                    <input name="phone" value="{{ supplier.phone }}" required>
+                    <input name="phone" id="phone" value="{% if form.phone %}{{ form.phone }}{% elif supplier %}{{ supplier.phone }}{% endif %}" required>
+                    {% if errors.phone %}
+                        <p class="field-error">{{ errors.phone|join:", " }}</p>
+                    {% endif %}
                 </div>
             </div>
 
             <div class="form-row">
                 <label>Address</label>
-                <input name="address" value="{{ supplier.address|default:'' }}">
+                <input name="address" id="address" value="{% if form.address %}{{ form.address }}{% elif supplier %}{{ supplier.address|default:'' }}{% endif %}">
+                {% if errors.address %}
+                    <p class="field-error">{{ errors.address|join:", " }}</p>
+                {% endif %}
             </div>
             
             <div class="form-row">
                 <label>Description</label>
-                <textarea name="description">{{ supplier.description|default:'' }}</textarea>
+                <textarea name="description" id="description">{% if form.description %}{{ form.description }}{% elif supplier %}{{ supplier.description|default:'' }}{% endif %}</textarea>
+                {% if errors.description %}
+                    <p class="field-error">{{ errors.description|join:", " }}</p>
+                {% endif %}
             </div>
 
             <div class="form-actions">
                 <a class="btn btn--secondary" href="{% url 'crm:suppliers_list' %}">Back</a>
-                <button class="btn btn--primary" type="submit">Save</button>
+                <button class="btn btn--primary" type="submit" id="submitBtn">Save</button>
             </div>
         </form>
     </section>
 {% endblock %}
+
+{% block crm__extra_js %}
+    <script type="module">
+        import { 
+            showFieldError, 
+            clearFieldError, 
+            validateEmail, 
+            formatPhoneNumber,
+            validatePhone,
+            debounce
+        } from '/static/js/crm/form-validation.js';
+        
+        const form = document.querySelector('form');
+        const emailField = document.getElementById('email');
+        const phoneField = document.getElementById('phone');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        const isEdit = {% if supplier %}true{% else %}false{% endif %};
+        const currentEmail = {% if supplier %}'{{ supplier.email }}'{% else %}null{% endif %};
+        const currentPhone = {% if supplier %}'{{ supplier.phone }}'{% else %}null{% endif %};
+        const supplierId = {% if supplier %}'{{ supplier.id }}'{% else %}null{% endif %};
+        
+        // Форматуємо початкове значення телефону, якщо воно є
+        if (phoneField.value && !phoneField.value.includes('(')) {
+            phoneField.value = formatPhoneNumber(phoneField.value);
+        }
+        
+        // Маска для телефону
+        phoneField.addEventListener('input', (e) => {
+            const cursorPosition = e.target.selectionStart;
+            const oldValue = e.target.value;
+            const formatted = formatPhoneNumber(e.target.value);
+            e.target.value = formatted;
+            
+            // Відновлюємо позицію курсора
+            const diff = formatted.length - oldValue.length;
+            e.target.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
+            
+            clearFieldError(phoneField);
+        });
+        
+        // Валідація email
+        const validateEmailField = debounce(async () => {
+            const email = emailField.value.trim();
+            clearFieldError(emailField);
+            
+            if (!email) {
+                return;
+            }
+            
+            if (!validateEmail(email)) {
+                showFieldError(emailField, 'Please enter a valid email address');
+                return;
+            }
+            
+            // Перевірка унікальності через бекенд
+            if (email !== currentEmail) {
+                try {
+                    const response = await fetch('/api/suppliers/check-email/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value,
+                        },
+                        body: JSON.stringify({ 
+                            email,
+                            supplier_id: supplierId
+                        }),
+                    });
+                    
+                    const data = await response.json();
+                    if (!data.unique) {
+                        showFieldError(emailField, 'Email already exists');
+                    }
+                } catch (error) {
+                    console.error('Error checking email:', error);
+                }
+            }
+        }, 500);
+        
+        emailField.addEventListener('blur', validateEmailField);
+        emailField.addEventListener('input', () => {
+            clearFieldError(emailField);
+        });
+        
+        // Валідація телефону
+        const validatePhoneField = debounce(async () => {
+            const phone = phoneField.value.trim();
+            clearFieldError(phoneField);
+            
+            if (!phone) {
+                return;
+            }
+            
+            const validation = validatePhone(phone);
+            if (!validation.valid) {
+                showFieldError(phoneField, validation.message);
+                return;
+            }
+            
+            // Перевірка унікальності через бекенд
+            const phoneNumbers = phone.replace(/\D/g, '');
+            const currentPhoneNumbers = currentPhone ? currentPhone.replace(/\D/g, '') : null;
+            
+            if (phoneNumbers !== currentPhoneNumbers) {
+                try {
+                    const response = await fetch('/api/suppliers/check-phone/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value,
+                        },
+                        body: JSON.stringify({ 
+                            phone: phoneNumbers,
+                            supplier_id: supplierId
+                        }),
+                    });
+                    
+                    const data = await response.json();
+                    if (!data.unique) {
+                        showFieldError(phoneField, 'Phone number already exists');
+                    }
+                } catch (error) {
+                    console.error('Error checking phone:', error);
+                }
+            }
+        }, 500);
+        
+        phoneField.addEventListener('blur', validatePhoneField);
+        
+        // Валідація при відправці форми
+        form.addEventListener('submit', function(e) {
+            let hasErrors = false;
+            
+            // Перевірка email
+            const email = emailField.value.trim();
+            if (!email) {
+                showFieldError(emailField, 'Email is required');
+                hasErrors = true;
+            } else if (!validateEmail(email)) {
+                showFieldError(emailField, 'Please enter a valid email address');
+                hasErrors = true;
+            }
+            
+            // Перевірка телефону
+            const phone = phoneField.value.trim();
+            if (!phone) {
+                showFieldError(phoneField, 'Phone number is required');
+                hasErrors = true;
+            } else {
+                const validation = validatePhone(phone);
+                if (!validation.valid) {
+                    showFieldError(phoneField, validation.message);
+                    hasErrors = true;
+                }
+            }
+            
+            if (hasErrors) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // Форматуємо телефон перед відправкою (зберігаємо тільки цифри)
+            const phoneNumbers = phone.replace(/\D/g, '');
+            if (phoneNumbers.startsWith('380')) {
+                phoneField.value = '+' + phoneNumbers;
+            } else if (phoneNumbers.startsWith('0')) {
+                phoneField.value = '+380' + phoneNumbers.substring(1);
+            } else {
+                phoneField.value = '+380' + phoneNumbers;
+            }
+            
+            // Блокуємо кнопку під час відправки
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+        });
+    </script>
+{% endblock crm__extra_js %}

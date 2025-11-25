@@ -662,23 +662,84 @@ def employees_create(request):
     emp = Employee()
 
     if request.method == 'POST':
+        full_name = request.POST.get('full_name', '').strip()
+        position = request.POST.get('position', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        salary = request.POST.get('salary', '').strip()
+        is_active = request.POST.get('is_active') == 'on'
+        
+        # Валідація
+        errors = {}
+        
+        if not full_name or len(full_name) < 2:
+            errors['full_name'] = 'Full name must be at least 2 characters'
+        
+        if not position:
+            errors['position'] = 'Position is required'
+        
+        if email:
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            import re
+            if not re.match(email_pattern, email):
+                errors['email'] = 'Please enter a valid email address'
+            else:
+                # Перевірка унікальності email
+                existing_email = Employee.objects().filter(email=email).first()
+                if existing_email:
+                    errors['email'] = 'Employee with this email already exists'
+        
+        if phone:
+            # Перевірка унікальності phone
+            existing_phone = Employee.objects().filter(phone=phone).first()
+            if existing_phone:
+                errors['phone'] = 'Employee with this phone number already exists'
+        
+        if salary:
+            try:
+                salary_float = float(salary)
+                if salary_float < 0:
+                    errors['salary'] = 'Salary cannot be negative'
+            except ValueError:
+                errors['salary'] = 'Salary must be a valid number'
+        
+        if errors:
+            return render(request, 'crm/employee_form.html', {
+                'action': 'create',
+                'employee': emp,
+                'errors': errors,
+                'form': request.POST
+            })
+        
         data = {
-            'full_name': request.POST.get('full_name'),
-            'position': request.POST.get('position'),
-            'email': request.POST.get('email'),
-            'phone': request.POST.get('phone'),
+            'full_name': full_name,
+            'position': position,
+            'email': email or None,
+            'phone': phone or None,
             'hire_date': datetime.now(),
-            'salary': float(request.POST.get('salary') or 0),
-            'is_active': request.POST.get('is_active') == 'on',
+            'salary': float(salary) if salary else None,
+            'is_active': is_active,
             'created_at': datetime.now(),
             'updated_at': datetime.now()
         }
-        Employee.create(**data)
-        messages.success(request, 'Працівник доданий')
-        return redirect('crm:employees_list')
+        
+        try:
+            Employee.create(**data)
+            messages.success(request, 'Employee created successfully')
+            return redirect('crm:employees_list')
+        except Exception as e:
+            messages.error(request, f'Error creating employee: {str(e)}')
+            return render(request, 'crm/employee_form.html', {
+                'action': 'create',
+                'employee': emp,
+                'errors': {'general': str(e)},
+                'form': request.POST
+            })
+    
     return render(request, 'crm/employee_form.html', {
         'action': 'create',
-        'employee': emp
+        'employee': emp,
+        'errors': {}
     })
 
 @login_required
@@ -697,26 +758,75 @@ def employees_edit(request, pk):
             except ValueError:
                 pass
         
-        emp.full_name = request.POST.get('full_name', '').strip()
-        emp.position = request.POST.get('position')
-        emp.email = request.POST.get('email', '').strip() or None
-        emp.phone = request.POST.get('phone', '').strip() or None
-        salary = request.POST.get('salary')
-        emp.salary = float(salary) if salary else None
-        emp.is_active = request.POST.get('is_active') == 'on'
-        emp.updated_at = datetime.now()
+        full_name = request.POST.get('full_name', '').strip()
+        position = request.POST.get('position', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        salary = request.POST.get('salary', '').strip()
+        is_active = request.POST.get('is_active') == 'on'
         
-        if not emp.full_name or not emp.position:
-            messages.error(request, 'Full name and position are required')
+        # Валідація
+        errors = {}
+        
+        if not full_name or len(full_name) < 2:
+            errors['full_name'] = 'Full name must be at least 2 characters'
+        
+        if not position:
+            errors['position'] = 'Position is required'
+        
+        if email:
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            import re
+            if not re.match(email_pattern, email):
+                errors['email'] = 'Please enter a valid email address'
+            else:
+                # Перевірка унікальності email (ігноруємо поточного працівника)
+                existing_email = Employee.objects().filter(email=email).first()
+                if existing_email and str(existing_email.id) != str(pk):
+                    errors['email'] = 'Employee with this email already exists'
+        
+        if phone:
+            # Перевірка унікальності phone (ігноруємо поточного працівника)
+            existing_phone = Employee.objects().filter(phone=phone).first()
+            if existing_phone and str(existing_phone.id) != str(pk):
+                errors['phone'] = 'Employee with this phone number already exists'
+        
+        if salary:
+            try:
+                salary_float = float(salary)
+                if salary_float < 0:
+                    errors['salary'] = 'Salary cannot be negative'
+            except ValueError:
+                errors['salary'] = 'Salary must be a valid number'
+        
+        if errors:
             return render(request, 'crm/employee_form.html', {
                 'action': 'edit',
                 'employee': emp,
+                'errors': errors,
                 'form': request.POST
             })
         
-        emp.save()
-        messages.success(request, 'Employee updated successfully')
-        return redirect('crm:employees_list')
+        emp.full_name = full_name
+        emp.position = position
+        emp.email = email or None
+        emp.phone = phone or None
+        emp.salary = float(salary) if salary else None
+        emp.is_active = is_active
+        emp.updated_at = datetime.now()
+        
+        try:
+            emp.save()
+            messages.success(request, 'Employee updated successfully')
+            return redirect('crm:employees_list')
+        except Exception as e:
+            messages.error(request, f'Error updating employee: {str(e)}')
+            return render(request, 'crm/employee_form.html', {
+                'action': 'edit',
+                'employee': emp,
+                'errors': {'general': str(e)},
+                'form': request.POST
+            })
     
     return render(request, 'crm/employee_form.html', {
         'action': 'edit',
@@ -2124,17 +2234,26 @@ def product_categories_create(request):
                 'categories': categories
             })
         
-        # Check if category with same name or slug exists
-        existing_name = ProductCategory.objects().filter(name=name).first()
-        existing_slug = ProductCategory.objects().filter(slug=slug).first()
+        # Валідація унікальності
+        errors = {}
         
-        if existing_name or existing_slug:
-            messages.error(request, 'Category with this name or slug already exists')
-            categories = ProductCategory.objects().all()
+        existing_name = ProductCategory.objects().filter(name=name).first()
+        if existing_name:
+            errors['name'] = 'Category with this name already exists'
+        
+        existing_slug = ProductCategory.objects().filter(slug=slug).first()
+        if existing_slug:
+            errors['slug'] = 'Category with this slug already exists'
+        
+        existing_image_url = ProductCategory.objects().filter(image_url=image_url).first()
+        if existing_image_url:
+            errors['image_url'] = 'Category with this image URL already exists'
+        
+        if errors:
             return render(request, 'crm/product_category_form.html', {
                 'action': 'create',
                 'form': request.POST,
-                'categories': categories
+                'errors': errors
             })
         
         category = ProductCategory.create(
@@ -2173,24 +2292,27 @@ def product_categories_edit(request, pk):
                 'form': request.POST
             })
         
-        # Check if another category with same name or slug exists
+        # Валідація унікальності
+        errors = {}
+        
         existing_name = ProductCategory.objects().filter(name=name).first()
-        existing_slug = ProductCategory.objects().filter(slug=slug).first()
-        
         if existing_name and str(existing_name.id) != str(pk):
-            messages.error(request, 'Category with this name already exists')
-            return render(request, 'crm/product_category_form.html', {
-                'action': 'edit',
-                'category': category,
-                'form': request.POST
-            })
+            errors['name'] = 'Category with this name already exists'
         
+        existing_slug = ProductCategory.objects().filter(slug=slug).first()
         if existing_slug and str(existing_slug.id) != str(pk):
-            messages.error(request, 'Category with this slug already exists')
+            errors['slug'] = 'Category with this slug already exists'
+        
+        existing_image_url = ProductCategory.objects().filter(image_url=image_url).first()
+        if existing_image_url and str(existing_image_url.id) != str(pk):
+            errors['image_url'] = 'Category with this image URL already exists'
+        
+        if errors:
             return render(request, 'crm/product_category_form.html', {
                 'action': 'edit',
                 'category': category,
-                'form': request.POST
+                'form': request.POST,
+                'errors': errors
             })
         
         category.name = name
@@ -2269,6 +2391,27 @@ def products_create(request):
                 'PRODUCT_TYPE_CHOICES': Product.PRODUCT_TYPE_CHOICES
             })
         
+        # Валідація унікальності
+        errors = {}
+        
+        existing_name = Product.objects().filter(name=name).first()
+        if existing_name:
+            errors['name'] = 'Product with this name already exists'
+        
+        existing_image_url = Product.objects().filter(image_url=image_url).first()
+        if existing_image_url:
+            errors['image_url'] = 'Product with this image URL already exists'
+        
+        if errors:
+            categories = ProductCategory.objects().all()
+            return render(request, 'crm/product_form.html', {
+                'action': 'create',
+                'categories': categories,
+                'form': request.POST,
+                'errors': errors,
+                'PRODUCT_TYPE_CHOICES': Product.PRODUCT_TYPE_CHOICES
+            })
+        
         # Process specifications
         spec_names = request.POST.getlist('spec_name[]')
         spec_slugs = request.POST.getlist('spec_slug[]')
@@ -2283,23 +2426,34 @@ def products_create(request):
                     'value': spec_value.strip()
                 })
         
-        product = Product.create(
-            name=name,
-            description=description,
-            category=category,
-            product_type=product_type,
-            manufacturer=manufacturer,
-            price=price,
-            quantity_in_stock=quantity_in_stock,
-            warranty_months=warranty_months,
-            image_url=image_url,
-            specifications=specifications,
-            created_at=datetime.now(),
-            updated_at=datetime.now()
-        )
-        
-        messages.success(request, 'Product created successfully')
-        return redirect('crm:products_list')
+        try:
+            product = Product.create(
+                name=name,
+                description=description,
+                category=category,
+                product_type=product_type,
+                manufacturer=manufacturer,
+                price=price,
+                quantity_in_stock=quantity_in_stock,
+                warranty_months=warranty_months,
+                image_url=image_url,
+                specifications=specifications,
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+            
+            messages.success(request, 'Product created successfully')
+            return redirect('crm:products_list')
+        except Exception as e:
+            messages.error(request, f'Error creating product: {str(e)}')
+            categories = ProductCategory.objects().all()
+            return render(request, 'crm/product_form.html', {
+                'action': 'create',
+                'categories': categories,
+                'form': request.POST,
+                'errors': {'general': str(e)},
+                'PRODUCT_TYPE_CHOICES': Product.PRODUCT_TYPE_CHOICES
+            })
     
     categories = ProductCategory.objects().all()
     return render(request, 'crm/product_form.html', {
@@ -2350,6 +2504,28 @@ def products_edit(request, pk):
                 'product': product,
                 'categories': categories,
                 'form': request.POST,
+                'PRODUCT_TYPE_CHOICES': Product.PRODUCT_TYPE_CHOICES
+            })
+        
+        # Валідація унікальності
+        errors = {}
+        
+        existing_name = Product.objects().filter(name=name).first()
+        if existing_name and str(existing_name.id) != str(pk):
+            errors['name'] = 'Product with this name already exists'
+        
+        existing_image_url = Product.objects().filter(image_url=image_url).first()
+        if existing_image_url and str(existing_image_url.id) != str(pk):
+            errors['image_url'] = 'Product with this image URL already exists'
+        
+        if errors:
+            categories = ProductCategory.objects().all()
+            return render(request, 'crm/product_form.html', {
+                'action': 'edit',
+                'product': product,
+                'categories': categories,
+                'form': request.POST,
+                'errors': errors,
                 'PRODUCT_TYPE_CHOICES': Product.PRODUCT_TYPE_CHOICES
             })
         

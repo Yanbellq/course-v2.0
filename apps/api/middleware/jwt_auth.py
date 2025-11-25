@@ -26,9 +26,21 @@ class JWTAuthenticationMiddleware:
             '/api/user/auth/register/',
             '/api/user/auth/login/',
             '/api/user/auth/refresh/',
+            '/api/user/check-email/',
+            '/api/user/check-username/',
             '/api/categories',
             '/api/products',
             '/api/search',
+            '/api/newsletter/subscribe/',
+            '/api/suppliers/check-email/',
+            '/api/suppliers/check-phone/',
+            '/api/categories/check-name/',
+            '/api/categories/check-slug/',
+            '/api/categories/check-image-url/',
+            '/api/products/check-name/',
+            '/api/products/check-image-url/',
+            '/api/employees/check-email/',
+            '/api/employees/check-phone/',
             '/api/docs/',  # API документація
         ]
         

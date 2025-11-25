@@ -17,31 +17,250 @@
         <div class="form-row">
             <label for="name">Name *</label>
             <input type="text" name="name" id="name" value="{% if category %}{{ category.name }}{% elif form.name %}{{ form.name }}{% endif %}" required>
+            {% if errors.name %}
+                <p class="field-error">{{ errors.name }}</p>
+            {% endif %}
         </div>
 
         <div class="form-row">
             <label for="slug">Slug *</label>
             <input type="text" name="slug" id="slug" value="{% if category %}{{ category.slug }}{% elif form.slug %}{{ form.slug }}{% endif %}" required>
-            <p>URL-friendly identifier (e.g., "processors", "monitors")</small>
+            <p>URL-friendly identifier (e.g., "processors", "monitors")</p>
+            {% if errors.slug %}
+                <p class="field-error">{{ errors.slug }}</p>
+            {% endif %}
         </div>
         
         <div class="form-row">
             <label for="image_url">Image URL *</label>
             <input type="url" name="image_url" id="image_url" value="{% if category %}{{ category.image_url }}{% elif form.image_url %}{{ form.image_url }}{% endif %}" required>
-            <p>URL to category image</small>
+            <p>URL to category image</p>
+            {% if errors.image_url %}
+                <p class="field-error">{{ errors.image_url }}</p>
+            {% endif %}
         </div>
 
         <div class="form-row">
             <label for="description">Description</label>
             <textarea name="description" id="description" rows="3">{% if category %}{{ category.description|default:"" }}{% elif form.description %}{{ form.description }}{% endif %}</textarea>
+            {% if errors.description %}
+                <p class="field-error">{{ errors.description }}</p>
+            {% endif %}
         </div>
 
         <!-- Buttons -->
         <div class="form-actions">
             <a class="btn btn--secondary" href="{% url 'crm:product_categories_list' %}">Back</a>
-            <button class="btn btn--primary" type="submit">Save</button>
+            <button class="btn btn--primary" type="submit" id="submitBtn">Save</button>
         </div>
     </form>
-</div>
+</section>
 {% endblock %}
+
+{% block crm__extra_js %}
+    <script type="module">
+        import { 
+            showFieldError, 
+            clearFieldError, 
+            debounce
+        } from '/static/js/crm/form-validation.js';
+        
+        const form = document.querySelector('form');
+        const nameField = document.getElementById('name');
+        const slugField = document.getElementById('slug');
+        const imageUrlField = document.getElementById('image_url');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        const isEdit = {% if category %}true{% else %}false{% endif %};
+        const currentName = {% if category %}'{{ category.name }}'{% else %}null{% endif %};
+        const currentSlug = {% if category %}'{{ category.slug }}'{% else %}null{% endif %};
+        const currentImageUrl = {% if category %}'{{ category.image_url }}'{% else %}null{% endif %};
+        const categoryId = {% if category %}'{{ category.id }}'{% else %}null{% endif %};
+        
+        // Валідація name
+        const validateNameField = debounce(async () => {
+            const name = nameField.value.trim();
+            clearFieldError(nameField);
+            
+            if (!name) {
+                return;
+            }
+            
+            // Перевірка унікальності через бекенд
+            if (name !== currentName) {
+                try {
+                    const response = await fetch('/api/categories/check-name/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value,
+                        },
+                        body: JSON.stringify({ 
+                            name,
+                            category_id: categoryId
+                        }),
+                    });
+                    
+                    const data = await response.json();
+                    if (!data.unique) {
+                        showFieldError(nameField, data.message || 'Name already exists');
+                    }
+                } catch (error) {
+                    console.error('Error checking name:', error);
+                }
+            }
+        }, 500);
+        
+        nameField.addEventListener('blur', validateNameField);
+        nameField.addEventListener('input', () => {
+            clearFieldError(nameField);
+        });
+        
+        // Валідація slug
+        const validateSlugField = debounce(async () => {
+            const slug = slugField.value.trim().toLowerCase();
+            clearFieldError(slugField);
+            
+            if (!slug) {
+                return;
+            }
+            
+            // Перевірка формату slug (тільки маленькі літери, цифри, дефіси та підкреслення)
+            const slugPattern = /^[a-z0-9_-]+$/;
+            if (!slugPattern.test(slug)) {
+                showFieldError(slugField, 'Slug can only contain lowercase letters, numbers, hyphens, and underscores');
+                return;
+            }
+            
+            // Перевірка унікальності через бекенд
+            if (slug !== currentSlug) {
+                try {
+                    const response = await fetch('/api/categories/check-slug/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value,
+                        },
+                        body: JSON.stringify({ 
+                            slug,
+                            category_id: categoryId
+                        }),
+                    });
+                    
+                    const data = await response.json();
+                    if (!data.unique) {
+                        showFieldError(slugField, data.message || 'Slug already exists');
+                    }
+                } catch (error) {
+                    console.error('Error checking slug:', error);
+                }
+            }
+        }, 500);
+        
+        slugField.addEventListener('blur', validateSlugField);
+        slugField.addEventListener('input', (e) => {
+            // Автоматично перетворюємо на lowercase
+            e.target.value = e.target.value.toLowerCase();
+            clearFieldError(slugField);
+        });
+        
+        // Валідація image_url
+        const validateImageUrlField = debounce(async () => {
+            const imageUrl = imageUrlField.value.trim();
+            clearFieldError(imageUrlField);
+            
+            if (!imageUrl) {
+                return;
+            }
+            
+            // Перевірка формату URL
+            try {
+                new URL(imageUrl);
+            } catch (e) {
+                showFieldError(imageUrlField, 'Please enter a valid URL');
+                return;
+            }
+            
+            // Перевірка унікальності через бекенд
+            if (imageUrl !== currentImageUrl) {
+                try {
+                    const response = await fetch('/api/categories/check-image-url/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value,
+                        },
+                        body: JSON.stringify({ 
+                            image_url: imageUrl,
+                            category_id: categoryId
+                        }),
+                    });
+                    
+                    const data = await response.json();
+                    if (!data.unique) {
+                        showFieldError(imageUrlField, data.message || 'Image URL already exists');
+                    }
+                } catch (error) {
+                    console.error('Error checking image URL:', error);
+                }
+            }
+        }, 500);
+        
+        imageUrlField.addEventListener('blur', validateImageUrlField);
+        imageUrlField.addEventListener('input', () => {
+            clearFieldError(imageUrlField);
+        });
+        
+        // Валідація при відправці форми
+        form.addEventListener('submit', function(e) {
+            let hasErrors = false;
+            
+            // Перевірка name
+            const name = nameField.value.trim();
+            if (!name) {
+                showFieldError(nameField, 'Name is required');
+                hasErrors = true;
+            }
+            
+            // Перевірка slug
+            const slug = slugField.value.trim().toLowerCase();
+            if (!slug) {
+                showFieldError(slugField, 'Slug is required');
+                hasErrors = true;
+            } else {
+                const slugPattern = /^[a-z0-9_-]+$/;
+                if (!slugPattern.test(slug)) {
+                    showFieldError(slugField, 'Slug can only contain lowercase letters, numbers, hyphens, and underscores');
+                    hasErrors = true;
+                }
+            }
+            
+            // Перевірка image_url
+            const imageUrl = imageUrlField.value.trim();
+            if (!imageUrl) {
+                showFieldError(imageUrlField, 'Image URL is required');
+                hasErrors = true;
+            } else {
+                try {
+                    new URL(imageUrl);
+                } catch (e) {
+                    showFieldError(imageUrlField, 'Please enter a valid URL');
+                    hasErrors = true;
+                }
+            }
+            
+            if (hasErrors) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // Оновлюємо slug на lowercase перед відправкою
+            slugField.value = slug;
+            
+            // Блокуємо кнопку під час відправки
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+        });
+    </script>
+{% endblock crm__extra_js %}
 

@@ -3619,6 +3619,45 @@ input[type=checkbox] {
   color: #333;
 }
 
+.form-row input:invalid,
+.form-row input.error,
+.form-row textarea:invalid,
+.form-row textarea.error,
+.form-row select:invalid,
+.form-row select.error {
+  border-color: #dc3545 !important;
+}
+
+.form-row input:valid:not(:-moz-placeholder):not([value=""]), .form-row textarea:valid:not(:-moz-placeholder) {
+  border-color: #28a745;
+}
+
+.form-row input:valid:not(:placeholder-shown):not([value=""]),
+.form-row textarea:valid:not(:placeholder-shown) {
+  border-color: #28a745;
+}
+
+.field-error {
+  color: #dc3545;
+  font-size: 1.2rem;
+  margin-top: 5px;
+  margin-bottom: 0;
+  display: block;
+}
+
+.form-row input:invalid,
+.form-row input.error {
+  border-color: #dc3545;
+}
+
+.form-row input:valid:not(:-moz-placeholder) {
+  border-color: #28a745;
+}
+
+.form-row input:valid:not(:placeholder-shown) {
+  border-color: #28a745;
+}
+
 .social-auth {
   display: flex;
   gap: 15px;

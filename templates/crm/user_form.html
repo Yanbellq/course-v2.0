@@ -18,7 +18,7 @@
                 <label for="username">Username *</label>
                 <input type="text" name="username" id="username" value="{% if form.username %}{{ form.username }}{% elif form %}{{ form.username|default:'' }}{% elif user %}{{ user.username }}{% endif %}" required minlength="3">
                 {% if errors.username %}
-                    <p>{{ errors.username }}</p>
+                    <p class="field-error">{{ errors.username }}</p>
                 {% endif %}
             </div>
             
@@ -26,7 +26,7 @@
                 <label for="email">Email *</label>
                 <input type="email" name="email" id="email" value="{% if form.email %}{{ form.email }}{% elif form %}{{ form.email|default:'' }}{% elif user %}{{ user.email }}{% endif %}" required>
                 {% if errors.email %}
-                    <p>{{ errors.email }}</p>
+                    <p class="field-error">{{ errors.email }}</p>
                 {% endif %}
             </div>
             
@@ -34,7 +34,7 @@
                 <label for="password">Password {% if action == 'edit' %}<span style="color: var(--muted); font-weight: normal;">(leave blank to keep current)</span>{% else %}<span style="color: #c33;">*</span>{% endif %}</label>
                 <input type="password" name="password" id="password" {% if action == 'create' %}required{% endif %} minlength="6">
                 {% if errors.password %}
-                    <p>{{ errors.password }}</p>
+                    <p class="field-error">{{ errors.password }}</p>
                 {% endif %}
             </div>
             
@@ -42,7 +42,7 @@
                 <label for="password_confirm">Confirm Password {% if action == 'edit' %}<span style="color: var(--muted); font-weight: normal;">(required if changing password)</span>{% else %}<span style="color: #c33;">*</span>{% endif %}</label>
                 <input type="password" name="password_confirm" id="password_confirm" {% if action == 'create' %}required{% endif %} minlength="6">
                 {% if errors.password_confirm %}
-                    <p>{{ errors.password_confirm }}</p>
+                    <p class="field-error">{{ errors.password_confirm }}</p>
                 {% endif %}
             </div>
             
@@ -59,7 +59,7 @@
                         {% endfor %}
                     </select>
                     {% if errors.role %}
-                        <p>{{ errors.role }}</p>
+                        <p class="field-error">{{ errors.role }}</p>
                     {% endif %}
                     <p>Note: Admin can only assign "user" or "operator" roles, not "admin".</p>
                 {% endif %}
@@ -82,31 +82,215 @@
 {% endblock %}
 
 {% block crm__extra_js %}
-    <script>
-        document.getElementById('userForm').addEventListener('submit', function(e) {
-            const submitBtn = document.getElementById('submitBtn');
-            const password = document.getElementById('password').value;
-            const passwordConfirm = document.getElementById('password_confirm').value;
+    <script type="module">
+        import { 
+            showFieldError, 
+            clearFieldError, 
+            validateEmail, 
+            validatePassword, 
+            validatePasswordMatch, 
+            validateUsername,
+            debounce,
+            checkEmailUnique,
+            checkUsernameUnique
+        } from '/static/js/crm/form-validation.js';
+        
+        const form = document.getElementById('userForm');
+        const usernameField = document.getElementById('username');
+        const emailField = document.getElementById('email');
+        const passwordField = document.getElementById('password');
+        const passwordConfirmField = document.getElementById('password_confirm');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        
+        const isEdit = {% if action == 'edit' %}true{% else %}false{% endif %};
+        const currentUsername = {% if user %}'{{ user.username }}'{% else %}null{% endif %};
+        const currentEmail = {% if user %}'{{ user.email }}'{% else %}null{% endif %};
+        
+        // Валідація username
+        const validateUsernameField = debounce(async () => {
+            const username = usernameField.value.trim();
+            clearFieldError(usernameField);
             
-            // Валідація паролів на клієнті
-            {% if action == 'create' %}
-                if (!password || password.length < 6) {
-                    e.preventDefault();
-                    alert('Password must be at least 6 characters');
+            if (!username) {
+                return;
+            }
+            
+            const validation = validateUsername(username);
+            if (!validation.valid) {
+                showFieldError(usernameField, validation.message);
+                return;
+            }
+            
+            // Перевірка унікальності через бекенд
+            if (username !== currentUsername) {
+                try {
+                    const response = await fetch('/api/user/check-username/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value,
+                        },
+                        body: JSON.stringify({ username }),
+                    });
+                    
+                    const data = await response.json();
+                    if (!data.unique) {
+                        showFieldError(usernameField, 'Username already exists');
+                    }
+                } catch (error) {
+                    console.error('Error checking username:', error);
+                }
+            }
+        }, 500);
+        
+        usernameField.addEventListener('blur', validateUsernameField);
+        usernameField.addEventListener('input', () => {
+            clearFieldError(usernameField);
+        });
+        
+        // Валідація email
+        const validateEmailField = debounce(async () => {
+            const email = emailField.value.trim();
+            clearFieldError(emailField);
+            
+            if (!email) {
+                return;
+            }
+            
+            if (!validateEmail(email)) {
+                showFieldError(emailField, 'Please enter a valid email address');
+                return;
+            }
+            
+            // Перевірка унікальності через бекенд
+            if (email !== currentEmail) {
+                try {
+                    const response = await fetch('/api/user/check-email/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value,
+                        },
+                        body: JSON.stringify({ email }),
+                    });
+                    
+                    const data = await response.json();
+                    if (!data.unique) {
+                        showFieldError(emailField, 'Email already exists');
+                    }
+                } catch (error) {
+                    console.error('Error checking email:', error);
+                }
+            }
+        }, 500);
+        
+        emailField.addEventListener('blur', validateEmailField);
+        emailField.addEventListener('input', () => {
+            clearFieldError(emailField);
+        });
+        
+        // Валідація пароля
+        const validatePasswordField = () => {
+            const password = passwordField.value;
+            clearFieldError(passwordField);
+            
+            if (!password && !isEdit) {
+                showFieldError(passwordField, 'Password is required');
+                return false;
+            }
+            
+            if (password) {
+                const validation = validatePassword(password);
+                if (!validation.valid) {
+                    showFieldError(passwordField, validation.message);
                     return false;
                 }
-            {% else %}
-                // При редагуванні пароль не обов'язковий, але якщо введено - перевіряємо
-                if (password && password.length < 6) {
-                    e.preventDefault();
-                    alert('Password must be at least 6 characters');
+            }
+            
+            return true;
+        };
+        
+        passwordField.addEventListener('blur', validatePasswordField);
+        passwordField.addEventListener('input', () => {
+            clearFieldError(passwordField);
+            if (passwordConfirmField.value) {
+                validatePasswordConfirmField();
+            }
+        });
+        
+        // Валідація підтвердження пароля
+        const validatePasswordConfirmField = () => {
+            const password = passwordField.value;
+            const passwordConfirm = passwordConfirmField.value;
+            clearFieldError(passwordConfirmField);
+            
+            if (!passwordConfirm && (!isEdit || password)) {
+                showFieldError(passwordConfirmField, 'Please confirm your password');
+                return false;
+            }
+            
+            if (password && passwordConfirm) {
+                const validation = validatePasswordMatch(password, passwordConfirm);
+                if (!validation.valid) {
+                    showFieldError(passwordConfirmField, validation.message);
                     return false;
                 }
-            {% endif %}
+            }
             
-            if (password && password !== passwordConfirm) {
+            return true;
+        };
+        
+        passwordConfirmField.addEventListener('blur', validatePasswordConfirmField);
+        passwordConfirmField.addEventListener('input', () => {
+            clearFieldError(passwordConfirmField);
+            if (passwordField.value) {
+                validatePasswordConfirmField();
+            }
+        });
+        
+        // Валідація при відправці форми
+        form.addEventListener('submit', function(e) {
+            let hasErrors = false;
+            
+            // Перевірка username
+            const username = usernameField.value.trim();
+            if (!username) {
+                showFieldError(usernameField, 'Username is required');
+                hasErrors = true;
+            } else {
+                const validation = validateUsername(username);
+                if (!validation.valid) {
+                    showFieldError(usernameField, validation.message);
+                    hasErrors = true;
+                }
+            }
+            
+            // Перевірка email
+            const email = emailField.value.trim();
+            if (!email) {
+                showFieldError(emailField, 'Email is required');
+                hasErrors = true;
+            } else if (!validateEmail(email)) {
+                showFieldError(emailField, 'Please enter a valid email address');
+                hasErrors = true;
+            }
+            
+            // Перевірка пароля
+            const password = passwordField.value;
+            if (!isEdit && !password) {
+                showFieldError(passwordField, 'Password is required');
+                hasErrors = true;
+            } else if (password && !validatePasswordField()) {
+                hasErrors = true;
+            }
+            
+            // Перевірка підтвердження пароля
+            if (password && !validatePasswordConfirmField()) {
+                hasErrors = true;
+            }
+            
+            if (hasErrors) {
                 e.preventDefault();
-                alert('Passwords do not match');
                 return false;
             }
             
@@ -114,5 +298,7 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Processing...';
         });
+        })();
     </script>
+    
 {% endblock crm__extra_js %}

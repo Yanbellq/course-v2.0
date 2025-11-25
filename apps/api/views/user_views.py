@@ -276,6 +276,48 @@ def change_password(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+def check_email_unique(request):
+    """Перевірка унікальності email"""
+    email = request.data.get('email', '').strip().lower()
+    
+    if not email:
+        return Response({
+            'unique': False,
+            'message': 'Email is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Перевіряємо чи існує користувач з таким email
+    existing_user = User.objects().filter(email=email).first()
+    
+    return Response({
+        'unique': existing_user is None,
+        'message': 'Email already exists' if existing_user else 'Email is available'
+    })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def check_username_unique(request):
+    """Перевірка унікальності username"""
+    username = request.data.get('username', '').strip()
+    
+    if not username:
+        return Response({
+            'unique': False,
+            'message': 'Username is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Перевіряємо чи існує користувач з таким username
+    existing_user = User.objects().filter(username=username).first()
+    
+    return Response({
+        'unique': existing_user is None,
+        'message': 'Username already exists' if existing_user else 'Username is available'
+    })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def forgot_password(request):
     """Запит на скидання пароля"""
     import logging
@@ -526,3 +568,45 @@ def reset_password(request):
             'success': False,
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def check_email_unique(request):
+    """Перевірка унікальності email"""
+    email = request.data.get('email', '').strip().lower()
+    
+    if not email:
+        return Response({
+            'unique': False,
+            'message': 'Email is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Перевіряємо чи існує користувач з таким email
+    existing_user = User.objects().filter(email=email).first()
+    
+    return Response({
+        'unique': existing_user is None,
+        'message': 'Email already exists' if existing_user else 'Email is available'
+    })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def check_username_unique(request):
+    """Перевірка унікальності username"""
+    username = request.data.get('username', '').strip()
+    
+    if not username:
+        return Response({
+            'unique': False,
+            'message': 'Username is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Перевіряємо чи існує користувач з таким username
+    existing_user = User.objects().filter(username=username).first()
+    
+    return Response({
+        'unique': existing_user is None,
+        'message': 'Username already exists' if existing_user else 'Username is available'
+    })

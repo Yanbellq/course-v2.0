@@ -19,4 +19,24 @@ urlpatterns = [
     path('products/<str:pk>/delete/', mv.delete_product, name='delete_product'),
 
     path('search/', mv.search_products, name='search_products'),
+    
+    # Newsletter
+    path('newsletter/subscribe/', mv.newsletter_subscribe, name='newsletter_subscribe'),
+    
+    # Supplier Validation
+    path('suppliers/check-email/', mv.check_supplier_email_unique, name='check_supplier_email_unique'),
+    path('suppliers/check-phone/', mv.check_supplier_phone_unique, name='check_supplier_phone_unique'),
+    
+    # Product Category Validation
+    path('categories/check-name/', mv.check_category_name_unique, name='check_category_name_unique'),
+    path('categories/check-slug/', mv.check_category_slug_unique, name='check_category_slug_unique'),
+    path('categories/check-image-url/', mv.check_category_image_url_unique, name='check_category_image_url_unique'),
+    
+    # Product Validation
+    path('products/check-name/', mv.check_product_name_unique, name='check_product_name_unique'),
+    path('products/check-image-url/', mv.check_product_image_url_unique, name='check_product_image_url_unique'),
+    
+    # Employee Validation
+    path('employees/check-email/', mv.check_employee_email_unique, name='check_employee_email_unique'),
+    path('employees/check-phone/', mv.check_employee_phone_unique, name='check_employee_phone_unique'),
 ]

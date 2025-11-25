@@ -12,6 +12,34 @@ class SupplierSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
 
+    def validate_email(self, value):
+        """Перевірка унікальності email"""
+        if not value:
+            return value
+        
+        # Отримуємо instance для редагування (якщо є)
+        instance = self.instance
+        
+        # Перевіряємо чи існує інший supplier з таким email
+        existing = Supplier.objects().filter(email=value).first()
+        if existing and (not instance or str(existing.id) != str(instance.id)):
+            raise serializers.ValidationError("Supplier with this email already exists.")
+        return value
+
+    def validate_phone(self, value):
+        """Перевірка унікальності phone"""
+        if not value:
+            return value
+        
+        # Отримуємо instance для редагування (якщо є)
+        instance = self.instance
+        
+        # Перевіряємо чи існує інший supplier з таким phone
+        existing = Supplier.objects().filter(phone=value).first()
+        if existing and (not instance or str(existing.id) != str(instance.id)):
+            raise serializers.ValidationError("Supplier with this phone number already exists.")
+        return value
+
     def create(self, validated_data):
         return Supplier.create(**validated_data)
 
