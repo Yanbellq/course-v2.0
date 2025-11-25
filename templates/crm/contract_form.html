@@ -10,10 +10,6 @@
 {% endblock crm__page_header %}
 
 {% block crm__content %}
-    {% if errors %}
-        <pre>{{ errors }}</pre>
-    {% endif %}
-
     <section class="panel">
         <form method="POST" id="contractForm">
             {% csrf_token %}

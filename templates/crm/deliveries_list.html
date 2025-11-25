@@ -54,29 +54,6 @@
                         N/A
                     {% endif %}
                 </td>
-                {% comment %} <td>
-                    {% if delivery.products %}
-                        <button onclick="toggleProducts('products_{{ forloop.counter }}')" class="btn btn--actions-primary">{{ delivery.products|length }} item(s)</button>
-                    {% else %}
-                        0
-                    {% endif %}
-                    {% if delivery.sale and delivery.sale.custom_build_service and delivery.sale.custom_build_service.purchased %}
-                        <br><button onclick="toggleCustomBuild('custom_build_{{ forloop.counter }}')" class="btn btn--actions-primary" style="margin-top: 5px;">
-                            Custom PC
-                            {% if delivery.sale.custom_build_service.data %}
-                                ({{ delivery.sale.custom_build_service.data.name|default:"Custom Build" }})
-                            {% endif %}
-                        </button>
-                    {% endif %}
-                    {% if delivery.sale and delivery.sale.software_service and delivery.sale.software_service.purchased %}
-                        <br><button onclick="toggleSoftwareService('software_service_{{ forloop.counter }}')" class="btn btn--actions-primary" style="margin-top: 5px;">
-                            OS Setup
-                            {% if delivery.sale.software_service.data %}
-                                ({{ delivery.sale.software_service.data.status|default:"Scheduled" }})
-                            {% endif %}
-                        </button>
-                    {% endif %}
-                </td> {% endcomment %}
                 <td>
                     {% if delivery.products %}
                         <button onclick="toggleProducts('products_{{ forloop.counter }}')" class="btn btn--actions-primary">{{ delivery.products|length }} item(s)</button>
@@ -119,7 +96,7 @@
                     <a href="{% url 'crm:deliveries_edit' delivery.id %}" class="btn btn--actions-primary">Edit</a>
                 </td>
                 <td>
-                    <form method="POST" action="{% url 'crm:deliveries_delete' delivery.id %}" onsubmit="return confirm('Delete this delivery?');" style="display: inline;">
+                    <form method="POST" class="delete-item" action="{% url 'crm:deliveries_delete' delivery.id %}" onsubmit="return confirm('Delete delivery?');">
                         {% csrf_token %}
                         <button type="submit" class="btn btn--actions-secondary">Delete</button>
                     </form>
@@ -243,7 +220,7 @@
     </table>
 {% endblock %}
 
-{% block extra_js %}
+{% block crm__extra_js %}
     <script>
         function toggleProducts(id) {
             const row = document.getElementById(id);
@@ -258,4 +235,4 @@
             row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
         }
     </script>
-{% endblock extra_js %}
+{% endblock crm__extra_js %}

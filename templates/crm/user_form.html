@@ -14,14 +14,6 @@
         <form method="POST" id="userForm">
             {% csrf_token %}
             
-            {% if errors %}
-                {% if errors.general %}
-                    <div style="padding: 1rem; background: #fee; border: 1px solid #fcc; border-radius: 8px; color: #c33; margin-bottom: 1.5rem;">
-                        <strong>Error:</strong> {{ errors.general }}
-                    </div>
-                {% endif %}
-            {% endif %}
-            
             <div class="form-row">
                 <label for="username">Username *</label>
                 <input type="text" name="username" id="username" value="{% if form.username %}{{ form.username }}{% elif form %}{{ form.username|default:'' }}{% elif user %}{{ user.username }}{% endif %}" required minlength="3">
@@ -123,4 +115,4 @@
             submitBtn.textContent = 'Processing...';
         });
     </script>
-{% endblock %}
+{% endblock crm__extra_js %}

@@ -22,23 +22,23 @@
         </thead>
         <tbody>
             {% for s in suppliers %}
-            <tr>
-                <td>{{ s.name }}</td>
-                <td>{{ s.contact_person }}</td>
-                <td>{{ s.phone }}</td>
-                <td>{{ s.email }}</td>
-                <td>
-                    <a href="{% url 'crm:suppliers_edit' s.id %}" class="btn btn--actions-primary">Edit</a>
-                </td>
-                <td>
-                    <form method="POST" class="delete-item" action="{% url 'crm:suppliers_delete' s.id %}" onsubmit="return confirm('Delete supplier?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn--actions-secondary">Delete</button>
-                    </form>
-                </td>
-            </tr>
+                <tr>
+                    <td>{{ s.name }}</td>
+                    <td>{{ s.contact_person }}</td>
+                    <td>{{ s.phone }}</td>
+                    <td>{{ s.email }}</td>
+                    <td>
+                        <a href="{% url 'crm:suppliers_edit' s.id %}" class="btn btn--actions-primary">Edit</a>
+                    </td>
+                    <td>
+                        <form method="POST" class="delete-item" action="{% url 'crm:suppliers_delete' s.id %}" onsubmit="return confirm('Delete supplier?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn--actions-secondary">Delete</button>
+                        </form>
+                    </td>
+                </tr>
             {% empty %}
-            <tr><td colspan="5" class="empty">No data available</td></tr>
+                <tr><td colspan="5" class="empty">No data available</td></tr>
             {% endfor %}
         </tbody>
     </table>

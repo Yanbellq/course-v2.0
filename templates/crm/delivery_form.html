@@ -74,27 +74,14 @@
                                 {% for item in delivery_products %}
                                 <tr class="product-row">
                                     <td>
-                                        {% comment %} <select name="product_id[]" required style="width: 100%; padding: 4px 8px;">
-                                            <option value="">Select product</option>
-                                            {% for p in products %}
-                                                <option value="{{ p.id }}"
-                                                    {% if item.product_id|stringformat:"s" == p.id|stringformat:"s" %}selected{% endif %}>
-                                                    {{ p.name }}
-                                                </option>
-                                            {% endfor %}
-                                        </select> {% endcomment %}
                                         {{ item.product.name }}
                                     </td>
 
                                     <td>
-                                        {% comment %} <input type="number" name="quantity[]" min="1" class="quantity-input"
-                                            value="{{ item.quantity }}" required style="width: 100%; padding: 4px 8px;"> {% endcomment %}
                                         {{ item.quantity }}
                                     </td>
 
                                     <td>
-                                        {% comment %} <input type="number" name="unit_price[]" step="0.01" min="0" class="unit-price-input"
-                                            value="{{ item.unit_price }}" required style="width: 100%; padding: 4px 8px;"> {% endcomment %}
                                         {{ item.unit_price }}
                                     </td>
 
@@ -209,28 +196,6 @@
                 <textarea name="notes" id="notes" rows="3">{% if delivery %}{{ delivery.notes|default:"" }}{% endif %}</textarea>
             </div>
 
-            {% if errors %}
-                <div class="messages">
-                    {% for field, error_list in errors.items %}
-                        {% for error in error_list %}
-                            <div class="alert alert-error">
-                                <strong>{{ field }}:</strong> {{ error }}
-                            </div>
-                        {% endfor %}
-                    {% endfor %}
-                </div>
-            {% endif %}
-
-            {% if messages %}
-                <div class="messages">
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-
             <!-- Buttons -->
             <div class="form-actions">
                 <a class="btn btn--secondary" href="{% url 'crm:deliveries_list' %}">Back</a>
@@ -240,7 +205,7 @@
     </section>
 {% endblock %}
 
-{% block extra_js %}
+{% block crm__extra_js %}
     <script>
         // Products data with prices
         const productsData = {
@@ -455,4 +420,4 @@
             {% endif %}
         });
     </script>
-{% endblock %}
+{% endblock crm__extra_js %}

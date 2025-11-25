@@ -29,15 +29,6 @@
             {% for repair in repairs %}
             <tr>
                 <td>{{ repair.id|truncatechars:8 }}</td>
-                {% comment %} <td>
-                    {% if repair.user %}
-                        {% with user=sale.user %}
-                            {{ user.username|default:"N/A" }}
-                        {% endwith %}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td> {% endcomment %}
                 <td>
                     {% if repair.user %}
                         {% with user=repair.user %}
@@ -121,11 +112,11 @@
     </table>
 {% endblock %}
 
-{% block extra_js %}
+{% block crm__extra_js %}
     <script>
         function toggleProducts(id) {
             const row = document.getElementById(id);
             row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
         }
     </script>
-{% endblock extra_js %}
+{% endblock crm__extra_js %}

@@ -5,7 +5,6 @@
   "description": "Electronic - PCStore Management System",
   "scripts": {
     "dev": "gulp",
-    "dev:all": "concurrently \"gulp\" \"tsc --watch\"",
     "build": "gulp build",
     "build:prod": "./build.sh",
     "watch": "gulp watch",
@@ -38,9 +37,7 @@
   },
   "dependencies": {
     "chart.js": "^4.4.0",
-    "concurrently": "^9.2.1",
-    "lucide": "^0.548.0",
-    "typescript": "^5.9.3"
+    "lucide": "^0.548.0"
   },
   "browserslist": [
     "last 2 versions",

@@ -97,10 +97,6 @@
                             {% for category in categories %}
                                 <li><a href="{% url 'main:categories' %}?category={{ category.slug }}">{{ category.name }}</a></li>
                             {% endfor %}
-                            {% comment %} <li><a href="{% url 'main:categories' %}?category=peripheral">Headphones</a></li>
-                            <li><a href="{% url 'main:categories' %}?category=smartphone">Mobile Phones</a></li>
-                            <li><a href="{% url 'main:categories' %}?category=laptop">Laptops</a></li>
-                            <li><a href="{% url 'main:categories' %}?category=smartwatch">Smart Watches</a></li> {% endcomment %}
                         {% endif %}
                     </ul>
                 </div>

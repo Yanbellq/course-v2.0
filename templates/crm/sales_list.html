@@ -50,7 +50,6 @@
                 <td>
                     {% if sale.products %}
                         <button onclick="toggleProducts('products_{{ forloop.counter }}')" class="btn btn--actions-primary">{{ sale.products|length }} item(s)</button>
-                        {% comment %} {{ sale.products|length }} item(s) {% endcomment %}
                     {% else %}
                         0
                     {% endif %}
@@ -90,7 +89,7 @@
                     <a href="{% url 'crm:sales_edit' sale.id %}" class="btn btn--actions-primary">Edit</a>
                 </td>
                 <td>
-                    <form method="POST" action="{% url 'crm:sales_delete' sale.id %}" onsubmit="return confirm('Delete this sale?');" style="display: inline;">
+                    <form method="POST" class="delete-item" action="{% url 'crm:sales_delete' sale.id %}" onsubmit="return confirm('Delete sale?');">
                         {% csrf_token %}
                         <button type="submit" class="btn btn--actions-secondary">Delete</button>
                     </form>
@@ -208,7 +207,7 @@
     </table>
 {% endblock %}
 
-{% block extra_js %}
+{% block crm__extra_js %}
     <script>
         function toggleProducts(id) {
             const row = document.getElementById(id);
@@ -223,4 +222,4 @@
             row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
         }
     </script>
-{% endblock extra_js %}
+{% endblock crm__extra_js %}

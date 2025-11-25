@@ -89,6 +89,45 @@ def dashboard(request):
     }
     return render(request, 'crm/dashboard.html', context)
 
+@login_required
+@admin_required
+def analytics(request):
+    from datetime import datetime, timedelta
+    from django.utils import timezone
+    
+    now = timezone.now()
+    current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    # Місячний прибуток (сума всіх продажів за поточний місяць)
+    monthly_sales = Sale.objects().filter(
+        sale_date__gte=current_month_start,
+        status__in=['paid', 'pending']
+    ).all()
+    monthly_revenue = sum(float(sale.total_amount or 0) for sale in monthly_sales)
+    
+    # Кількість продажів за місяць
+    monthly_sales_count = len(monthly_sales)
+    
+    # Нові клієнти за місяць (користувачі з role='user')
+    new_customers = User.objects().filter(
+        created_at__gte=current_month_start,
+        role='user'
+    ).count()
+    
+    # Закритих ремонтів (completed або returned)
+    completed_repairs = Repair.objects().filter(
+        status__in=['completed', 'returned']
+    ).count()
+    
+    context = {
+        'monthly_revenue': f"{monthly_revenue:,.2f}",
+        'monthly_sales_count': monthly_sales_count,
+        'new_customers': new_customers,
+        'completed_repairs': completed_repairs,
+    }
+    
+    return render(request, "crm/analytics.html", context)
+
 
 # ---------- Suppliers ----------
 @login_required
@@ -2033,78 +2072,32 @@ def users_edit(request, pk):
 
 
 @login_required
+@api_view(['POST'])
 def users_delete(request, pk):
     """Видалення користувача (тільки для адмінів)"""
     # Перевірка, що користувач є адміном
     user_role = getattr(request.user, 'role', 'user') if request.user else 'user'
     if user_role != 'admin':
-        return HttpResponseForbidden("Access denied. Admin role required.")
-    
-    if request.method == 'POST':
-        user = User.find_by_id(pk)
-        if not user:
-            messages.error(request, 'User not found')
-            return redirect('crm:users_list')
-        
-        # Не можна видалити самого себе
-        if str(user.id) == str(request.user.id):
-            messages.error(request, 'You cannot delete your own account')
-            return redirect('crm:users_list')
-        
-        # Не можна видалити іншого адміна
-        if user.role == 'admin':
-            messages.error(request, 'Cannot delete admin user')
-            return redirect('crm:users_list')
-        
-        try:
-            username = user.username
-            user.delete()
-            messages.success(request, f'User "{username}" deleted successfully')
-        except Exception as e:
-            messages.error(request, f'Error deleting user: {str(e)}')
-    
-    return redirect('crm:users_list')
+        return Response({"success": False, "message": "Access denied. Admin role required."}, status=403)
 
-
-@login_required
-@admin_required
-def analytics(request):
-    from datetime import datetime, timedelta
-    from django.utils import timezone
+    user = User.find_by_id(pk)
+    if not user:
+        return Response({"success": False, "message": "User not found"}, status=404)
     
-    now = timezone.now()
-    current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    # Не можна видалити самого себе
+    if str(user.id) == str(request.user.id):
+        return Response({"success": False, "message": "You cannot delete your own account"}, status=400)
     
-    # Місячний прибуток (сума всіх продажів за поточний місяць)
-    monthly_sales = Sale.objects().filter(
-        sale_date__gte=current_month_start,
-        status__in=['paid', 'pending']
-    ).all()
-    monthly_revenue = sum(float(sale.total_amount or 0) for sale in monthly_sales)
+    # Не можна видалити іншого адміна
+    if user.role == 'admin':
+        return Response({"success": False, "message": "Cannot delete admin user"}, status=400)
     
-    # Кількість продажів за місяць
-    monthly_sales_count = len(monthly_sales)
-    
-    # Нові клієнти за місяць (користувачі з role='user')
-    new_customers = User.objects().filter(
-        created_at__gte=current_month_start,
-        role='user'
-    ).count()
-    
-    # Закритих ремонтів (completed або returned)
-    completed_repairs = Repair.objects().filter(
-        status__in=['completed', 'returned']
-    ).count()
-    
-    context = {
-        'monthly_revenue': f"{monthly_revenue:,.2f}",
-        'monthly_sales_count': monthly_sales_count,
-        'new_customers': new_customers,
-        'completed_repairs': completed_repairs,
-    }
-    
-    return render(request, "crm/analytics.html", context)
-
+    try:
+        username = user.username
+        user.delete()
+        return Response({"success": True, "message": f'User "{username}" deleted successfully'})
+    except Exception as e:
+        return Response({"success": False, "message": f'Error deleting user: {str(e)}'}, status=500)
 
 # ---------- Product Categories ----------
 @login_required
@@ -2217,14 +2210,14 @@ def product_categories_edit(request, pk):
 
 @login_required
 @admin_required
+@api_view(['POST'])
 def product_categories_delete(request, pk):
-    if request.method == 'POST':
-        category = ProductCategory.find_by_id(pk)
-        if category:
-            category.delete()
-            messages.success(request, 'Product category deleted successfully')
-        return redirect('crm:product_categories_list')
-    return HttpResponseForbidden()
+    category = ProductCategory.find_by_id(pk)
+    if not category:
+        return Response({"success": False, "message": "Product category not found"}, status=404)
+    
+    category.delete()
+    return Response({"success": True, "message": "Product category deleted successfully"})
 
 
 # ---------- Products ----------
@@ -2418,11 +2411,11 @@ def products_edit(request, pk):
 
 @login_required
 @admin_required
+@api_view(['POST'])
 def products_delete(request, pk):
-    if request.method == 'POST':
-        product = Product.find_by_id(pk)
-        if product:
-            product.delete()
-            messages.success(request, 'Product deleted successfully')
-        return redirect('crm:products_list')
-    return HttpResponseForbidden()
+    product = Product.find_by_id(pk)
+    if not product:
+        return Response({"success": False, "message": "Product not found"}, status=404)
+    
+    product.delete()
+    return Response({"success": True, "message": "Product deleted successfully"})
