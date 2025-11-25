@@ -315,20 +315,41 @@ def send_password_reset_email(user, reset_url):
     logger.debug(f"Email host: {settings.EMAIL_HOST}:{settings.EMAIL_PORT}")
     logger.debug(f"Email backend: {settings.EMAIL_BACKEND}")
     
-    # Відправляємо email
+    # Відправляємо email з детальним логуванням помилок
     try:
-        send_mail(
+        result = send_mail(
             subject=subject,
             message=plain_message,  # Текстова версія (для клієнтів без підтримки HTML)
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
             html_message=html_message,  # HTML версія
-            fail_silently=True,  # Не викидає помилку, щоб не крашити worker
+            fail_silently=False,  # Спочатку не приховуємо помилки, щоб їх побачити
         )
-        logger.info(f"Email sent successfully to {user.email}")
+        if result:
+            logger.info(f"Email sent successfully to {user.email}")
+        else:
+            logger.warning(f"Email sending returned False for {user.email} (check SMTP settings)")
     except Exception as e:
-        # Логуємо помилку, але не викидаємо її, щоб не крашити worker
-        logger.error(f"SMTP error when sending email to {user.email}: {str(e)}", exc_info=True)
+        # Логуємо детальну помилку з діагностикою
+        error_msg = str(e)
+        logger.error(f"SMTP error when sending email to {user.email}: {error_msg}", exc_info=True)
+        
+        # Діагностика типових помилок Gmail
+        if "authentication failed" in error_msg.lower() or "535" in error_msg or "534" in error_msg:
+            logger.error("=" * 60)
+            logger.error("GMAIL AUTHENTICATION ERROR!")
+            logger.error("Ймовірна причина: використовується звичайний пароль замість App Password")
+            logger.error("Рішення:")
+            logger.error("1. Увімкніть двофакторну аутентифікацію в Gmail")
+            logger.error("2. Створіть App Password: https://myaccount.google.com/apppasswords")
+            logger.error("3. Використовуйте App Password в EMAIL_HOST_PASSWORD")
+            logger.error("=" * 60)
+        elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
+            logger.error("SMTP TIMEOUT: Перевірте EMAIL_HOST та EMAIL_PORT налаштування")
+        elif "connection" in error_msg.lower() or "refused" in error_msg.lower():
+            logger.error("SMTP CONNECTION ERROR: Перевірте мережеве з'єднання та налаштування")
+        elif "ssl" in error_msg.lower() or "tls" in error_msg.lower():
+            logger.error("SMTP SSL/TLS ERROR: Перевірте EMAIL_USE_TLS та EMAIL_USE_SSL налаштування")
 
 
 @api_view(['POST'])
@@ -470,20 +491,41 @@ def send_password_reset_email(user, reset_url):
     logger.debug(f"Email host: {settings.EMAIL_HOST}:{settings.EMAIL_PORT}")
     logger.debug(f"Email backend: {settings.EMAIL_BACKEND}")
     
-    # Відправляємо email
+    # Відправляємо email з детальним логуванням помилок
     try:
-        send_mail(
+        result = send_mail(
             subject=subject,
             message=plain_message,  # Текстова версія (для клієнтів без підтримки HTML)
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
             html_message=html_message,  # HTML версія
-            fail_silently=True,  # Не викидає помилку, щоб не крашити worker
+            fail_silently=False,  # Спочатку не приховуємо помилки, щоб їх побачити
         )
-        logger.info(f"Email sent successfully to {user.email}")
+        if result:
+            logger.info(f"Email sent successfully to {user.email}")
+        else:
+            logger.warning(f"Email sending returned False for {user.email} (check SMTP settings)")
     except Exception as e:
-        # Логуємо помилку, але не викидаємо її, щоб не крашити worker
-        logger.error(f"SMTP error when sending email to {user.email}: {str(e)}", exc_info=True)
+        # Логуємо детальну помилку з діагностикою
+        error_msg = str(e)
+        logger.error(f"SMTP error when sending email to {user.email}: {error_msg}", exc_info=True)
+        
+        # Діагностика типових помилок Gmail
+        if "authentication failed" in error_msg.lower() or "535" in error_msg or "534" in error_msg:
+            logger.error("=" * 60)
+            logger.error("GMAIL AUTHENTICATION ERROR!")
+            logger.error("Ймовірна причина: використовується звичайний пароль замість App Password")
+            logger.error("Рішення:")
+            logger.error("1. Увімкніть двофакторну аутентифікацію в Gmail")
+            logger.error("2. Створіть App Password: https://myaccount.google.com/apppasswords")
+            logger.error("3. Використовуйте App Password в EMAIL_HOST_PASSWORD")
+            logger.error("=" * 60)
+        elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
+            logger.error("SMTP TIMEOUT: Перевірте EMAIL_HOST та EMAIL_PORT налаштування")
+        elif "connection" in error_msg.lower() or "refused" in error_msg.lower():
+            logger.error("SMTP CONNECTION ERROR: Перевірте мережеве з'єднання та налаштування")
+        elif "ssl" in error_msg.lower() or "tls" in error_msg.lower():
+            logger.error("SMTP SSL/TLS ERROR: Перевірте EMAIL_USE_TLS та EMAIL_USE_SSL налаштування")
 
 
 @api_view(['POST'])
@@ -594,17 +636,38 @@ def send_password_reset_email(user, reset_url):
     logger.debug(f"Email host: {settings.EMAIL_HOST}:{settings.EMAIL_PORT}")
     logger.debug(f"Email backend: {settings.EMAIL_BACKEND}")
     
-    # Відправляємо email
+    # Відправляємо email з детальним логуванням помилок
     try:
-        send_mail(
+        result = send_mail(
             subject=subject,
             message=plain_message,  # Текстова версія (для клієнтів без підтримки HTML)
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
             html_message=html_message,  # HTML версія
-            fail_silently=True,  # Не викидає помилку, щоб не крашити worker
+            fail_silently=False,  # Спочатку не приховуємо помилки, щоб їх побачити
         )
-        logger.info(f"Email sent successfully to {user.email}")
+        if result:
+            logger.info(f"Email sent successfully to {user.email}")
+        else:
+            logger.warning(f"Email sending returned False for {user.email} (check SMTP settings)")
     except Exception as e:
-        # Логуємо помилку, але не викидаємо її, щоб не крашити worker
-        logger.error(f"SMTP error when sending email to {user.email}: {str(e)}", exc_info=True)
+        # Логуємо детальну помилку з діагностикою
+        error_msg = str(e)
+        logger.error(f"SMTP error when sending email to {user.email}: {error_msg}", exc_info=True)
+        
+        # Діагностика типових помилок Gmail
+        if "authentication failed" in error_msg.lower() or "535" in error_msg or "534" in error_msg:
+            logger.error("=" * 60)
+            logger.error("GMAIL AUTHENTICATION ERROR!")
+            logger.error("Ймовірна причина: використовується звичайний пароль замість App Password")
+            logger.error("Рішення:")
+            logger.error("1. Увімкніть двофакторну аутентифікацію в Gmail")
+            logger.error("2. Створіть App Password: https://myaccount.google.com/apppasswords")
+            logger.error("3. Використовуйте App Password в EMAIL_HOST_PASSWORD")
+            logger.error("=" * 60)
+        elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
+            logger.error("SMTP TIMEOUT: Перевірте EMAIL_HOST та EMAIL_PORT налаштування")
+        elif "connection" in error_msg.lower() or "refused" in error_msg.lower():
+            logger.error("SMTP CONNECTION ERROR: Перевірте мережеве з'єднання та налаштування")
+        elif "ssl" in error_msg.lower() or "tls" in error_msg.lower():
+            logger.error("SMTP SSL/TLS ERROR: Перевірте EMAIL_USE_TLS та EMAIL_USE_SSL налаштування")
