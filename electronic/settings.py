@@ -279,7 +279,16 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER or 'noreply@electronic.com')
+
+# Логування налаштувань email (без пароля)
+if not DEBUG:
+    import logging
+    logger = logging.getLogger('api')
+    logger.info(f"Email configuration: HOST={EMAIL_HOST}, PORT={EMAIL_PORT}, USER={EMAIL_HOST_USER}, FROM={DEFAULT_FROM_EMAIL}")
+    logger.info(f"Email backend: {EMAIL_BACKEND}")
+    if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
+        logger.warning("⚠️ EMAIL налаштування не заповнені! Email не будуть відправлятися.")
 
 # Альтернативні варіанти для різних провайдерів:
 # 

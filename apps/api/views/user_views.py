@@ -281,6 +281,17 @@ def send_password_reset_email(user, reset_url):
         user: Об'єкт користувача
         reset_url: URL для скидання пароля
     """
+    import logging
+    logger = logging.getLogger('api')
+    
+    # Перевірка налаштувань
+    if not settings.EMAIL_HOST_USER:
+        raise ValueError("EMAIL_HOST_USER не налаштовано в settings")
+    if not settings.EMAIL_HOST_PASSWORD:
+        raise ValueError("EMAIL_HOST_PASSWORD не налаштовано в settings")
+    if not settings.DEFAULT_FROM_EMAIL:
+        raise ValueError("DEFAULT_FROM_EMAIL не налаштовано в settings")
+    
     subject = 'Відновлення пароля - Electronic Store'
     
     # Контекст для шаблону
@@ -291,18 +302,32 @@ def send_password_reset_email(user, reset_url):
     }
     
     # Рендеримо HTML та текстовий варіанти
-    html_message = render_to_string('emails/password_reset.html', context)
-    plain_message = render_to_string('emails/password_reset.txt', context)
+    try:
+        html_message = render_to_string('emails/password_reset.html', context)
+        plain_message = render_to_string('emails/password_reset.txt', context)
+    except Exception as e:
+        logger.error(f"Failed to render email templates: {str(e)}")
+        raise
+    
+    # Логуємо деталі перед відправкою
+    logger.info(f"Sending email from {settings.DEFAULT_FROM_EMAIL} to {user.email}")
+    logger.debug(f"Email host: {settings.EMAIL_HOST}:{settings.EMAIL_PORT}")
+    logger.debug(f"Email backend: {settings.EMAIL_BACKEND}")
     
     # Відправляємо email
-    send_mail(
-        subject=subject,
-        message=plain_message,  # Текстова версія (для клієнтів без підтримки HTML)
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        html_message=html_message,  # HTML версія
-        fail_silently=False,  # Викидає помилку, якщо не вдалось відправити
-    )
+    try:
+        send_mail(
+            subject=subject,
+            message=plain_message,  # Текстова версія (для клієнтів без підтримки HTML)
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            html_message=html_message,  # HTML версія
+            fail_silently=False,  # Викидає помилку, якщо не вдалось відправити
+        )
+        logger.info(f"Email sent successfully to {user.email}")
+    except Exception as e:
+        logger.error(f"SMTP error when sending email to {user.email}: {str(e)}", exc_info=True)
+        raise
 
 
 @api_view(['POST'])
@@ -350,16 +375,37 @@ def forgot_password(request):
         
         # Відправляємо email
         try:
-            send_password_reset_email(user, reset_url)
+            import logging
+            logger = logging.getLogger('api')
+            
+            # Перевіряємо налаштування email перед відправкою
+            if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+                logger.warning(f"Email settings not configured. EMAIL_HOST_USER: {bool(settings.EMAIL_HOST_USER)}, EMAIL_HOST_PASSWORD: {bool(settings.EMAIL_HOST_PASSWORD)}")
+                logger.warning(f"Email backend: {settings.EMAIL_BACKEND}")
+                
+                # В development виводимо токен в консоль як fallback
+                if settings.DEBUG:
+                    print(f"\n{'='*60}")
+                    print(f"⚠️ EMAIL НЕ НАЛАШТОВАНО!")
+                    print(f"Password Reset Token for {user.email}:")
+                    print(f"Token: {reset_token.token}")
+                    print(f"Reset URL: {reset_url}")
+                    print(f"Expires at: {reset_token.expires_at}")
+                    print(f"{'='*60}\n")
+            else:
+                logger.info(f"Attempting to send password reset email to {user.email}")
+                send_password_reset_email(user, reset_url)
+                logger.info(f"Password reset email sent successfully to {user.email}")
         except Exception as email_error:
             # Логуємо помилку, але не повідомляємо користувача (безпека)
             import logging
             logger = logging.getLogger('api')
-            logger.error(f"Failed to send password reset email to {user.email}: {str(email_error)}")
+            logger.error(f"Failed to send password reset email to {user.email}: {str(email_error)}", exc_info=True)
             
             # В development виводимо токен в консоль як fallback
             if settings.DEBUG:
                 print(f"\n{'='*60}")
+                print(f"❌ ПОМИЛКА ВІДПРАВКИ EMAIL: {str(email_error)}")
                 print(f"Password Reset Token for {user.email}:")
                 print(f"Token: {reset_token.token}")
                 print(f"Reset URL: {reset_url}")
@@ -386,6 +432,17 @@ def send_password_reset_email(user, reset_url):
         user: Об'єкт користувача
         reset_url: URL для скидання пароля
     """
+    import logging
+    logger = logging.getLogger('api')
+    
+    # Перевірка налаштувань
+    if not settings.EMAIL_HOST_USER:
+        raise ValueError("EMAIL_HOST_USER не налаштовано в settings")
+    if not settings.EMAIL_HOST_PASSWORD:
+        raise ValueError("EMAIL_HOST_PASSWORD не налаштовано в settings")
+    if not settings.DEFAULT_FROM_EMAIL:
+        raise ValueError("DEFAULT_FROM_EMAIL не налаштовано в settings")
+    
     subject = 'Відновлення пароля - Electronic Store'
     
     # Контекст для шаблону
@@ -396,18 +453,32 @@ def send_password_reset_email(user, reset_url):
     }
     
     # Рендеримо HTML та текстовий варіанти
-    html_message = render_to_string('emails/password_reset.html', context)
-    plain_message = render_to_string('emails/password_reset.txt', context)
+    try:
+        html_message = render_to_string('emails/password_reset.html', context)
+        plain_message = render_to_string('emails/password_reset.txt', context)
+    except Exception as e:
+        logger.error(f"Failed to render email templates: {str(e)}")
+        raise
+    
+    # Логуємо деталі перед відправкою
+    logger.info(f"Sending email from {settings.DEFAULT_FROM_EMAIL} to {user.email}")
+    logger.debug(f"Email host: {settings.EMAIL_HOST}:{settings.EMAIL_PORT}")
+    logger.debug(f"Email backend: {settings.EMAIL_BACKEND}")
     
     # Відправляємо email
-    send_mail(
-        subject=subject,
-        message=plain_message,  # Текстова версія (для клієнтів без підтримки HTML)
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        html_message=html_message,  # HTML версія
-        fail_silently=False,  # Викидає помилку, якщо не вдалось відправити
-    )
+    try:
+        send_mail(
+            subject=subject,
+            message=plain_message,  # Текстова версія (для клієнтів без підтримки HTML)
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            html_message=html_message,  # HTML версія
+            fail_silently=False,  # Викидає помилку, якщо не вдалось відправити
+        )
+        logger.info(f"Email sent successfully to {user.email}")
+    except Exception as e:
+        logger.error(f"SMTP error when sending email to {user.email}: {str(e)}", exc_info=True)
+        raise
 
 
 @api_view(['POST'])
@@ -485,6 +556,17 @@ def send_password_reset_email(user, reset_url):
         user: Об'єкт користувача
         reset_url: URL для скидання пароля
     """
+    import logging
+    logger = logging.getLogger('api')
+    
+    # Перевірка налаштувань
+    if not settings.EMAIL_HOST_USER:
+        raise ValueError("EMAIL_HOST_USER не налаштовано в settings")
+    if not settings.EMAIL_HOST_PASSWORD:
+        raise ValueError("EMAIL_HOST_PASSWORD не налаштовано в settings")
+    if not settings.DEFAULT_FROM_EMAIL:
+        raise ValueError("DEFAULT_FROM_EMAIL не налаштовано в settings")
+    
     subject = 'Відновлення пароля - Electronic Store'
     
     # Контекст для шаблону
@@ -495,15 +577,29 @@ def send_password_reset_email(user, reset_url):
     }
     
     # Рендеримо HTML та текстовий варіанти
-    html_message = render_to_string('emails/password_reset.html', context)
-    plain_message = render_to_string('emails/password_reset.txt', context)
+    try:
+        html_message = render_to_string('emails/password_reset.html', context)
+        plain_message = render_to_string('emails/password_reset.txt', context)
+    except Exception as e:
+        logger.error(f"Failed to render email templates: {str(e)}")
+        raise
+    
+    # Логуємо деталі перед відправкою
+    logger.info(f"Sending email from {settings.DEFAULT_FROM_EMAIL} to {user.email}")
+    logger.debug(f"Email host: {settings.EMAIL_HOST}:{settings.EMAIL_PORT}")
+    logger.debug(f"Email backend: {settings.EMAIL_BACKEND}")
     
     # Відправляємо email
-    send_mail(
-        subject=subject,
-        message=plain_message,  # Текстова версія (для клієнтів без підтримки HTML)
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        html_message=html_message,  # HTML версія
-        fail_silently=False,  # Викидає помилку, якщо не вдалось відправити
-    )
+    try:
+        send_mail(
+            subject=subject,
+            message=plain_message,  # Текстова версія (для клієнтів без підтримки HTML)
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            html_message=html_message,  # HTML версія
+            fail_silently=False,  # Викидає помилку, якщо не вдалось відправити
+        )
+        logger.info(f"Email sent successfully to {user.email}")
+    except Exception as e:
+        logger.error(f"SMTP error when sending email to {user.email}: {str(e)}", exc_info=True)
+        raise
