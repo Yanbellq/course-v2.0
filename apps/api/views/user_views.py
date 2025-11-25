@@ -1,5 +1,6 @@
 # apps/api/views/user_views.py
 
+import threading
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -322,12 +323,12 @@ def send_password_reset_email(user, reset_url):
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
             html_message=html_message,  # HTML версія
-            fail_silently=False,  # Викидає помилку, якщо не вдалось відправити
+            fail_silently=True,  # Не викидає помилку, щоб не крашити worker
         )
         logger.info(f"Email sent successfully to {user.email}")
     except Exception as e:
+        # Логуємо помилку, але не викидаємо її, щоб не крашити worker
         logger.error(f"SMTP error when sending email to {user.email}: {str(e)}", exc_info=True)
-        raise
 
 
 @api_view(['POST'])
@@ -402,8 +403,14 @@ def forgot_password(request):
                 logger.warning(f"Reset URL: {reset_url}")
             else:
                 logger.info(f"[OK] Email settings OK. Attempting to send password reset email to {user.email}")
-                send_password_reset_email(user, reset_url)
-                logger.info(f"[OK] Password reset email sent successfully to {user.email}")
+                # Відправляємо email в окремому потоці, щоб не блокувати worker
+                email_thread = threading.Thread(
+                    target=send_password_reset_email,
+                    args=(user, reset_url),
+                    daemon=True
+                )
+                email_thread.start()
+                logger.info(f"[OK] Email sending thread started for {user.email}")
         except Exception as email_error:
             # Логуємо помилку, але не повідомляємо користувача (безпека)
             logger.error(f"[ERROR] Failed to send password reset email to {user.email}: {str(email_error)}", exc_info=True)
@@ -471,12 +478,12 @@ def send_password_reset_email(user, reset_url):
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
             html_message=html_message,  # HTML версія
-            fail_silently=False,  # Викидає помилку, якщо не вдалось відправити
+            fail_silently=True,  # Не викидає помилку, щоб не крашити worker
         )
         logger.info(f"Email sent successfully to {user.email}")
     except Exception as e:
+        # Логуємо помилку, але не викидаємо її, щоб не крашити worker
         logger.error(f"SMTP error when sending email to {user.email}: {str(e)}", exc_info=True)
-        raise
 
 
 @api_view(['POST'])
@@ -595,9 +602,9 @@ def send_password_reset_email(user, reset_url):
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
             html_message=html_message,  # HTML версія
-            fail_silently=False,  # Викидає помилку, якщо не вдалось відправити
+            fail_silently=True,  # Не викидає помилку, щоб не крашити worker
         )
         logger.info(f"Email sent successfully to {user.email}")
     except Exception as e:
+        # Логуємо помилку, але не викидаємо її, щоб не крашити worker
         logger.error(f"SMTP error when sending email to {user.email}: {str(e)}", exc_info=True)
-        raise

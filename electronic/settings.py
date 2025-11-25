@@ -281,6 +281,10 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER or 'noreply@electronic.com')
 
+# Таймаут для SMTP з'єднання (в секундах)
+# Допомагає уникнути зависання worker'ів при проблемах з SMTP
+EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
+
 # Логування налаштувань email (без пароля)
 if not DEBUG:
     import logging
