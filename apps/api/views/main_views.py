@@ -348,8 +348,11 @@ def newsletter_subscribe(request):
 @permission_classes([AllowAny])
 def check_supplier_email_unique(request):
     """Перевірка унікальності email постачальника"""
-    email = request.data.get('email', '').strip().lower()
-    supplier_id = request.data.get('supplier_id', '').strip()
+    email = request.data.get('email') or ''
+    supplier_id = request.data.get('supplier_id') or ''
+    
+    email = email.strip().lower() if email else ''
+    supplier_id = supplier_id.strip() if supplier_id else ''
     
     if not email:
         return Response({
@@ -377,8 +380,11 @@ def check_supplier_email_unique(request):
 @permission_classes([AllowAny])
 def check_supplier_phone_unique(request):
     """Перевірка унікальності phone постачальника"""
-    phone = request.data.get('phone', '').strip()
-    supplier_id = request.data.get('supplier_id', '').strip()
+    phone = request.data.get('phone') or ''
+    supplier_id = request.data.get('supplier_id') or ''
+    
+    phone = phone.strip() if phone else ''
+    supplier_id = supplier_id.strip() if supplier_id else ''
     
     if not phone:
         return Response({
@@ -408,8 +414,11 @@ def check_supplier_phone_unique(request):
 @permission_classes([AllowAny])
 def check_category_name_unique(request):
     """Перевірка унікальності name категорії"""
-    name = request.data.get('name', '').strip()
-    category_id = request.data.get('category_id', '').strip()
+    name = request.data.get('name') or ''
+    category_id = request.data.get('category_id') or ''
+    
+    name = name.strip() if name else ''
+    category_id = category_id.strip() if category_id else ''
     
     if not name:
         return Response({
@@ -435,8 +444,11 @@ def check_category_name_unique(request):
 @permission_classes([AllowAny])
 def check_category_slug_unique(request):
     """Перевірка унікальності slug категорії"""
-    slug = request.data.get('slug', '').strip()
-    category_id = request.data.get('category_id', '').strip()
+    slug = request.data.get('slug') or ''
+    category_id = request.data.get('category_id') or ''
+    
+    slug = slug.strip() if slug else ''
+    category_id = category_id.strip() if category_id else ''
     
     if not slug:
         return Response({
@@ -462,8 +474,11 @@ def check_category_slug_unique(request):
 @permission_classes([AllowAny])
 def check_category_image_url_unique(request):
     """Перевірка унікальності image_url категорії"""
-    image_url = request.data.get('image_url', '').strip()
-    category_id = request.data.get('category_id', '').strip()
+    image_url = request.data.get('image_url') or ''
+    category_id = request.data.get('category_id') or ''
+    
+    image_url = image_url.strip() if image_url else ''
+    category_id = category_id.strip() if category_id else ''
     
     if not image_url:
         return Response({
@@ -491,8 +506,11 @@ def check_category_image_url_unique(request):
 @permission_classes([AllowAny])
 def check_product_name_unique(request):
     """Перевірка унікальності name продукту"""
-    name = request.data.get('name', '').strip()
-    product_id = request.data.get('product_id', '').strip()
+    name = request.data.get('name') or ''
+    product_id = request.data.get('product_id') or ''
+    
+    name = name.strip() if name else ''
+    product_id = product_id.strip() if product_id else ''
     
     if not name:
         return Response({
@@ -518,8 +536,11 @@ def check_product_name_unique(request):
 @permission_classes([AllowAny])
 def check_product_image_url_unique(request):
     """Перевірка унікальності image_url продукту"""
-    image_url = request.data.get('image_url', '').strip()
-    product_id = request.data.get('product_id', '').strip()
+    image_url = request.data.get('image_url') or ''
+    product_id = request.data.get('product_id') or ''
+    
+    image_url = image_url.strip() if image_url else ''
+    product_id = product_id.strip() if product_id else ''
     
     if not image_url:
         return Response({
@@ -547,8 +568,11 @@ def check_product_image_url_unique(request):
 @permission_classes([AllowAny])
 def check_employee_email_unique(request):
     """Перевірка унікальності email працівника"""
-    email = request.data.get('email', '').strip().lower()
-    employee_id = request.data.get('employee_id', '').strip()
+    email = request.data.get('email') or ''
+    employee_id = request.data.get('employee_id') or ''
+    
+    email = email.strip().lower() if email else ''
+    employee_id = employee_id.strip() if employee_id else ''
     
     if not email:
         return Response({
@@ -574,8 +598,11 @@ def check_employee_email_unique(request):
 @permission_classes([AllowAny])
 def check_employee_phone_unique(request):
     """Перевірка унікальності phone працівника"""
-    phone = request.data.get('phone', '').strip()
-    employee_id = request.data.get('employee_id', '').strip()
+    phone = request.data.get('phone') or ''
+    employee_id = request.data.get('employee_id') or ''
+    
+    phone = phone.strip() if phone else ''
+    employee_id = employee_id.strip() if employee_id else ''
     
     if not phone:
         return Response({
