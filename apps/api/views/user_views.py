@@ -1,7 +1,6 @@
 # apps/api/views/user_views.py
 
 import threading
-import requests
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -224,39 +223,39 @@ def change_password(request):
         if not current_password:
             return Response({
                 'success': False,
-                'error': 'Поточний пароль обов\'язковий'
+                'error': 'Current password is required'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         if not new_password:
             return Response({
                 'success': False,
-                'error': 'Новий пароль обов\'язковий'
+                'error': 'New password is required'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         if len(new_password) < 6:
             return Response({
                 'success': False,
-                'error': 'Новий пароль повинен містити мінімум 6 символів'
+                'error': 'New password must be at least 6 characters long'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         if new_password != confirm_password:
             return Response({
                 'success': False,
-                'error': 'Нові паролі не співпадають'
+                'error': 'New passwords do not match'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Перевірка поточного пароля
         if not user.check_password(current_password):
             return Response({
                 'success': False,
-                'error': 'Невірний поточний пароль'
+                'error': 'Invalid current password'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Перевірка, що новий пароль відрізняється від поточного
         if user.check_password(new_password):
             return Response({
                 'success': False,
-                'error': 'Новий пароль повинен відрізнятися від поточного'
+                'error': 'New password must be different from the current one'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Змінюємо пароль
@@ -265,7 +264,7 @@ def change_password(request):
         
         return Response({
             'success': True,
-            'message': 'Пароль успішно змінено'
+            'message': 'Password changed successfully'
         }, status=status.HTTP_200_OK)
     
     except Exception as e:
@@ -273,127 +272,6 @@ def change_password(request):
             'success': False,
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-def send_password_reset_email(user, reset_url):
-    """
-    Відправляє email з інструкціями для відновлення пароля
-    
-    Args:
-        user: Об'єкт користувача
-        reset_url: URL для скидання пароля
-    """
-    import logging
-    logger = logging.getLogger('api')
-    
-    # Перевірка налаштувань
-    if not settings.EMAIL_HOST_USER:
-        raise ValueError("EMAIL_HOST_USER не налаштовано в settings")
-    if not settings.EMAIL_HOST_PASSWORD:
-        raise ValueError("EMAIL_HOST_PASSWORD не налаштовано в settings")
-    if not settings.DEFAULT_FROM_EMAIL:
-        raise ValueError("DEFAULT_FROM_EMAIL не налаштовано в settings")
-    
-    subject = 'Відновлення пароля - Electronic Store'
-    
-    # Контекст для шаблону
-    context = {
-        'username': user.username,
-        'reset_url': reset_url,
-        'current_year': datetime.now().year,
-    }
-    
-    # Рендеримо HTML та текстовий варіанти
-    try:
-        html_message = render_to_string('emails/password_reset.html', context)
-        plain_message = render_to_string('emails/password_reset.txt', context)
-    except Exception as e:
-        logger.error(f"Failed to render email templates: {str(e)}")
-        raise
-    
-    # Логуємо деталі перед відправкою
-    logger.info(f"Sending email from {settings.DEFAULT_FROM_EMAIL} to {user.email}")
-    logger.debug(f"Email host: {settings.EMAIL_HOST}:{settings.EMAIL_PORT}")
-    logger.debug(f"Email backend: {settings.EMAIL_BACKEND}")
-    
-    # Відправляємо email з детальним логуванням помилок
-    # Спочатку пробуємо SMTP, якщо не працює - використовуємо SendGrid API
-    smtp_failed = False
-    try:
-        result = send_mail(
-            subject=subject,
-            message=plain_message,  # Текстова версія (для клієнтів без підтримки HTML)
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            html_message=html_message,  # HTML версія
-            fail_silently=False,  # Спочатку не приховуємо помилки, щоб їх побачити
-        )
-        if result:
-            logger.info(f"Email sent successfully via SMTP to {user.email}")
-            return
-        else:
-            logger.warning(f"Email sending returned False for {user.email} (check SMTP settings)")
-            smtp_failed = True
-    except Exception as e:
-        # Логуємо детальну помилку з діагностикою
-        error_msg = str(e)
-        logger.warning(f"SMTP error when sending email to {user.email}: {error_msg}")
-        
-        # Перевіряємо, чи це помилка мережі (Render.com блокує SMTP)
-        if "network is unreachable" in error_msg.lower() or "101" in error_msg:
-            logger.warning("SMTP blocked by hosting provider (Render.com). Trying SendGrid API...")
-            smtp_failed = True
-        elif "authentication failed" in error_msg.lower() or "535" in error_msg or "534" in error_msg:
-            logger.error("GMAIL AUTHENTICATION ERROR: використовується звичайний пароль замість App Password")
-            smtp_failed = True
-        elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
-            logger.warning("SMTP TIMEOUT: Trying SendGrid API...")
-            smtp_failed = True
-        elif "connection" in error_msg.lower() or "refused" in error_msg.lower():
-            logger.warning("SMTP CONNECTION ERROR: Trying SendGrid API...")
-            smtp_failed = True
-        else:
-            smtp_failed = True
-    
-    # Якщо SMTP не працює, пробуємо SendGrid API
-    if smtp_failed:
-        sendgrid_api_key = getattr(settings, 'SENDGRID_API_KEY', None)
-        if sendgrid_api_key:
-            try:
-                logger.info(f"Attempting to send email via SendGrid API to {user.email}")
-                sendgrid_url = "https://api.sendgrid.com/v3/mail/send"
-                headers = {
-                    "Authorization": f"Bearer {sendgrid_api_key}",
-                    "Content-Type": "application/json"
-                }
-                data = {
-                    "personalizations": [{
-                        "to": [{"email": user.email}],
-                        "subject": subject
-                    }],
-                    "from": {"email": settings.DEFAULT_FROM_EMAIL},
-                    "content": [
-                        {
-                            "type": "text/plain",
-                            "value": plain_message
-                        },
-                        {
-                            "type": "text/html",
-                            "value": html_message
-                        }
-                    ]
-                }
-                
-                response = requests.post(sendgrid_url, json=data, headers=headers, timeout=10)
-                if response.status_code == 202:
-                    logger.info(f"Email sent successfully via SendGrid API to {user.email}")
-                else:
-                    logger.error(f"SendGrid API error: {response.status_code} - {response.text}")
-            except Exception as e:
-                logger.error(f"SendGrid API error: {str(e)}", exc_info=True)
-        else:
-            logger.error("SENDGRID_API_KEY not configured. Cannot send email via API.")
-            logger.error("Please set SENDGRID_API_KEY in environment variables or use SMTP.")
 
 
 @api_view(['POST'])
@@ -414,7 +292,7 @@ def forgot_password(request):
             logger.warning("Forgot password: no email or username provided")
             return Response({
                 'success': False,
-                'error': 'Вкажіть email або username'
+                'error': 'Specify email or username'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Знаходимо користувача
@@ -441,7 +319,7 @@ def forgot_password(request):
             logger.info("User not found, returning success message (security)")
             return Response({
                 'success': True,
-                'message': 'Якщо користувач з таким email/username існує, на пошту надіслано інструкції для скидання пароля'
+                'message': 'If a user with this email/username exists, an email with instructions for resetting the password has been sent'
             }, status=status.HTTP_200_OK)
         
         logger.info(f"User found: {user.username} ({user.email}), creating reset token")
@@ -459,7 +337,7 @@ def forgot_password(request):
         try:
             # Перевіряємо налаштування email перед відправкою
             if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
-                logger.warning(f"WARNING: EMAIL НЕ НАЛАШТОВАНО! EMAIL_HOST_USER: {bool(settings.EMAIL_HOST_USER)}, EMAIL_HOST_PASSWORD: {bool(settings.EMAIL_HOST_PASSWORD)}")
+                logger.warning(f"WARNING: EMAIL NOT SET! EMAIL_HOST_USER: {bool(settings.EMAIL_HOST_USER)}, EMAIL_HOST_PASSWORD: {bool(settings.EMAIL_HOST_PASSWORD)}")
                 logger.warning(f"Email backend: {settings.EMAIL_BACKEND}")
                 logger.warning(f"EMAIL_HOST: {settings.EMAIL_HOST}, EMAIL_PORT: {settings.EMAIL_PORT}")
                 
@@ -467,7 +345,7 @@ def forgot_password(request):
                 logger.warning(f"Password Reset Token for {user.email}: {reset_token.token}")
                 logger.warning(f"Reset URL: {reset_url}")
             else:
-                logger.info(f"[OK] Email settings OK. Attempting to send password reset email to {user.email}")
+                logger.info(f"[OK] Email settings OK. Attempting to send password reset email to {user.email}.")
                 # Відправляємо email в окремому потоці, щоб не блокувати worker
                 email_thread = threading.Thread(
                     target=send_password_reset_email,
@@ -484,7 +362,7 @@ def forgot_password(request):
         
         return Response({
             'success': True,
-            'message': 'Якщо користувач з таким email/username існує, на пошту надіслано інструкції для скидання пароля'
+            'message': 'If a user with this email/username exists, an email with instructions for resetting the password has been sent'
         }, status=status.HTTP_200_OK)
     
     except Exception as e:
@@ -507,13 +385,13 @@ def send_password_reset_email(user, reset_url):
     
     # Перевірка налаштувань
     if not settings.EMAIL_HOST_USER:
-        raise ValueError("EMAIL_HOST_USER не налаштовано в settings")
+        raise ValueError("EMAIL_HOST_USER not set in settings")
     if not settings.EMAIL_HOST_PASSWORD:
-        raise ValueError("EMAIL_HOST_PASSWORD не налаштовано в settings")
+        raise ValueError("EMAIL_HOST_PASSWORD not set in settings")
     if not settings.DEFAULT_FROM_EMAIL:
-        raise ValueError("DEFAULT_FROM_EMAIL не налаштовано в settings")
+        raise ValueError("DEFAULT_FROM_EMAIL not set in settings")
     
-    subject = 'Відновлення пароля - Electronic Store'
+    subject = 'Password Reset - Electronic Store'
     
     # Контекст для шаблону
     context = {
@@ -531,13 +409,11 @@ def send_password_reset_email(user, reset_url):
         raise
     
     # Логуємо деталі перед відправкою
-    logger.info(f"Sending email from {settings.DEFAULT_FROM_EMAIL} to {user.email}")
+    logger.info(f"Sending email via Gmail SMTP from {settings.DEFAULT_FROM_EMAIL} to {user.email}")
     logger.debug(f"Email host: {settings.EMAIL_HOST}:{settings.EMAIL_PORT}")
     logger.debug(f"Email backend: {settings.EMAIL_BACKEND}")
     
-    # Відправляємо email з детальним логуванням помилок
-    # Спочатку пробуємо SMTP, якщо не працює - використовуємо SendGrid API
-    smtp_failed = False
+    # Відправляємо email через Gmail SMTP
     try:
         result = send_mail(
             subject=subject,
@@ -545,74 +421,44 @@ def send_password_reset_email(user, reset_url):
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
             html_message=html_message,  # HTML версія
-            fail_silently=False,  # Спочатку не приховуємо помилки, щоб їх побачити
+            fail_silently=False,  # Не приховуємо помилки, щоб їх побачити
         )
         if result:
-            logger.info(f"Email sent successfully via SMTP to {user.email}")
-            return
+            logger.info(f"Email sent successfully via Gmail SMTP to {user.email}")
         else:
-            logger.warning(f"Email sending returned False for {user.email} (check SMTP settings)")
-            smtp_failed = True
+            logger.error(f"Email sending returned False for {user.email} (check Gmail SMTP settings)")
+            raise Exception("Email sending returned False")
     except Exception as e:
         # Логуємо детальну помилку з діагностикою
         error_msg = str(e)
-        logger.warning(f"SMTP error when sending email to {user.email}: {error_msg}")
+        logger.error(f"Gmail SMTP error when sending email to {user.email}: {error_msg}")
         
-        # Перевіряємо, чи це помилка мережі (Render.com блокує SMTP)
-        if "network is unreachable" in error_msg.lower() or "101" in error_msg:
-            logger.warning("SMTP blocked by hosting provider (Render.com). Trying SendGrid API...")
-            smtp_failed = True
-        elif "authentication failed" in error_msg.lower() or "535" in error_msg or "534" in error_msg:
-            logger.error("GMAIL AUTHENTICATION ERROR: використовується звичайний пароль замість App Password")
-            smtp_failed = True
+        # Детальна діагностика помилок
+        if "authentication failed" in error_msg.lower() or "535" in error_msg or "534" in error_msg:
+            logger.error("=" * 60)
+            logger.error("GMAIL AUTHENTICATION ERROR!")
+            logger.error("Використовується звичайний пароль замість App Password")
+            logger.error("Рішення:")
+            logger.error("1. Увійдіть в Google Account: https://myaccount.google.com/")
+            logger.error("2. Перейдіть: Security → 2-Step Verification")
+            logger.error("3. В кінці сторінки знайдіть 'App passwords'")
+            logger.error("4. Створіть новий App Password для 'Mail'")
+            logger.error("5. Використовуйте цей App Password в EMAIL_HOST_PASSWORD")
+            logger.error("=" * 60)
+        elif "network is unreachable" in error_msg.lower() or "101" in error_msg:
+            logger.error("GMAIL SMTP NETWORK ERROR: Network is unreachable")
+            logger.error("Перевірте інтернет-з'єднання та налаштування мережі")
         elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
-            logger.warning("SMTP TIMEOUT: Trying SendGrid API...")
-            smtp_failed = True
+            logger.error("GMAIL SMTP TIMEOUT: Connection timeout")
+            logger.error("Перевірте EMAIL_TIMEOUT налаштування та інтернет-з'єднання")
         elif "connection" in error_msg.lower() or "refused" in error_msg.lower():
-            logger.warning("SMTP CONNECTION ERROR: Trying SendGrid API...")
-            smtp_failed = True
+            logger.error("GMAIL SMTP CONNECTION ERROR: Connection refused")
+            logger.error("Перевірте EMAIL_HOST та EMAIL_PORT налаштування")
         else:
-            smtp_failed = True
-    
-    # Якщо SMTP не працює, пробуємо SendGrid API
-    if smtp_failed:
-        sendgrid_api_key = getattr(settings, 'SENDGRID_API_KEY', None)
-        if sendgrid_api_key:
-            try:
-                logger.info(f"Attempting to send email via SendGrid API to {user.email}")
-                sendgrid_url = "https://api.sendgrid.com/v3/mail/send"
-                headers = {
-                    "Authorization": f"Bearer {sendgrid_api_key}",
-                    "Content-Type": "application/json"
-                }
-                data = {
-                    "personalizations": [{
-                        "to": [{"email": user.email}],
-                        "subject": subject
-                    }],
-                    "from": {"email": settings.DEFAULT_FROM_EMAIL},
-                    "content": [
-                        {
-                            "type": "text/plain",
-                            "value": plain_message
-                        },
-                        {
-                            "type": "text/html",
-                            "value": html_message
-                        }
-                    ]
-                }
-                
-                response = requests.post(sendgrid_url, json=data, headers=headers, timeout=10)
-                if response.status_code == 202:
-                    logger.info(f"Email sent successfully via SendGrid API to {user.email}")
-                else:
-                    logger.error(f"SendGrid API error: {response.status_code} - {response.text}")
-            except Exception as e:
-                logger.error(f"SendGrid API error: {str(e)}", exc_info=True)
-        else:
-            logger.error("SENDGRID_API_KEY not configured. Cannot send email via API.")
-            logger.error("Please set SENDGRID_API_KEY in environment variables or use SMTP.")
+            logger.error(f"GMAIL SMTP ERROR: {error_msg}")
+        
+        # Прокидаємо помилку далі
+        raise
 
 
 @api_view(['POST'])
@@ -628,25 +474,25 @@ def reset_password(request):
         if not token:
             return Response({
                 'success': False,
-                'error': 'Токен обов\'язковий'
+                'error': 'Token is required'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         if not new_password:
             return Response({
                 'success': False,
-                'error': 'Новий пароль обов\'язковий'
+                'error': 'New password is required'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         if len(new_password) < 6:
             return Response({
                 'success': False,
-                'error': 'Пароль повинен містити мінімум 6 символів'
+                'error': 'New password must be at least 6 characters long'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         if new_password != confirm_password:
             return Response({
                 'success': False,
-                'error': 'Паролі не співпадають'
+                'error': 'New passwords do not match'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Перевіряємо токен
@@ -655,12 +501,12 @@ def reset_password(request):
         if not user:
             return Response({
                 'success': False,
-                'error': 'Невірний або прострочений токен'
+                'error': 'Invalid or expired token'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Знаходимо токен для позначення як використаний
         try:
-            reset_token = PasswordResetToken.objects(token=token, used=False).first()
+            reset_token = PasswordResetToken.objects().filter(token=token, used=False).first()
             if reset_token:
                 reset_token.mark_as_used()
         except:
@@ -672,7 +518,7 @@ def reset_password(request):
         
         return Response({
             'success': True,
-            'message': 'Пароль успішно змінено'
+            'message': 'Password changed successfully'
         }, status=status.HTTP_200_OK)
     
     except Exception as e:
@@ -680,124 +526,3 @@ def reset_password(request):
             'success': False,
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-def send_password_reset_email(user, reset_url):
-    """
-    Відправляє email з інструкціями для відновлення пароля
-    
-    Args:
-        user: Об'єкт користувача
-        reset_url: URL для скидання пароля
-    """
-    import logging
-    logger = logging.getLogger('api')
-    
-    # Перевірка налаштувань
-    if not settings.EMAIL_HOST_USER:
-        raise ValueError("EMAIL_HOST_USER не налаштовано в settings")
-    if not settings.EMAIL_HOST_PASSWORD:
-        raise ValueError("EMAIL_HOST_PASSWORD не налаштовано в settings")
-    if not settings.DEFAULT_FROM_EMAIL:
-        raise ValueError("DEFAULT_FROM_EMAIL не налаштовано в settings")
-    
-    subject = 'Відновлення пароля - Electronic Store'
-    
-    # Контекст для шаблону
-    context = {
-        'username': user.username,
-        'reset_url': reset_url,
-        'current_year': datetime.now().year,
-    }
-    
-    # Рендеримо HTML та текстовий варіанти
-    try:
-        html_message = render_to_string('emails/password_reset.html', context)
-        plain_message = render_to_string('emails/password_reset.txt', context)
-    except Exception as e:
-        logger.error(f"Failed to render email templates: {str(e)}")
-        raise
-    
-    # Логуємо деталі перед відправкою
-    logger.info(f"Sending email from {settings.DEFAULT_FROM_EMAIL} to {user.email}")
-    logger.debug(f"Email host: {settings.EMAIL_HOST}:{settings.EMAIL_PORT}")
-    logger.debug(f"Email backend: {settings.EMAIL_BACKEND}")
-    
-    # Відправляємо email з детальним логуванням помилок
-    # Спочатку пробуємо SMTP, якщо не працює - використовуємо SendGrid API
-    smtp_failed = False
-    try:
-        result = send_mail(
-            subject=subject,
-            message=plain_message,  # Текстова версія (для клієнтів без підтримки HTML)
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            html_message=html_message,  # HTML версія
-            fail_silently=False,  # Спочатку не приховуємо помилки, щоб їх побачити
-        )
-        if result:
-            logger.info(f"Email sent successfully via SMTP to {user.email}")
-            return
-        else:
-            logger.warning(f"Email sending returned False for {user.email} (check SMTP settings)")
-            smtp_failed = True
-    except Exception as e:
-        # Логуємо детальну помилку з діагностикою
-        error_msg = str(e)
-        logger.warning(f"SMTP error when sending email to {user.email}: {error_msg}")
-        
-        # Перевіряємо, чи це помилка мережі (Render.com блокує SMTP)
-        if "network is unreachable" in error_msg.lower() or "101" in error_msg:
-            logger.warning("SMTP blocked by hosting provider (Render.com). Trying SendGrid API...")
-            smtp_failed = True
-        elif "authentication failed" in error_msg.lower() or "535" in error_msg or "534" in error_msg:
-            logger.error("GMAIL AUTHENTICATION ERROR: використовується звичайний пароль замість App Password")
-            smtp_failed = True
-        elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
-            logger.warning("SMTP TIMEOUT: Trying SendGrid API...")
-            smtp_failed = True
-        elif "connection" in error_msg.lower() or "refused" in error_msg.lower():
-            logger.warning("SMTP CONNECTION ERROR: Trying SendGrid API...")
-            smtp_failed = True
-        else:
-            smtp_failed = True
-    
-    # Якщо SMTP не працює, пробуємо SendGrid API
-    if smtp_failed:
-        sendgrid_api_key = getattr(settings, 'SENDGRID_API_KEY', None)
-        if sendgrid_api_key:
-            try:
-                logger.info(f"Attempting to send email via SendGrid API to {user.email}")
-                sendgrid_url = "https://api.sendgrid.com/v3/mail/send"
-                headers = {
-                    "Authorization": f"Bearer {sendgrid_api_key}",
-                    "Content-Type": "application/json"
-                }
-                data = {
-                    "personalizations": [{
-                        "to": [{"email": user.email}],
-                        "subject": subject
-                    }],
-                    "from": {"email": settings.DEFAULT_FROM_EMAIL},
-                    "content": [
-                        {
-                            "type": "text/plain",
-                            "value": plain_message
-                        },
-                        {
-                            "type": "text/html",
-                            "value": html_message
-                        }
-                    ]
-                }
-                
-                response = requests.post(sendgrid_url, json=data, headers=headers, timeout=10)
-                if response.status_code == 202:
-                    logger.info(f"Email sent successfully via SendGrid API to {user.email}")
-                else:
-                    logger.error(f"SendGrid API error: {response.status_code} - {response.text}")
-            except Exception as e:
-                logger.error(f"SendGrid API error: {str(e)}", exc_info=True)
-        else:
-            logger.error("SENDGRID_API_KEY not configured. Cannot send email via API.")
-            logger.error("Please set SENDGRID_API_KEY in environment variables or use SMTP.")

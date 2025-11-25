@@ -2,19 +2,35 @@ import showNotification from "./toast.js";
 import { env } from "./env.js";
 // ============ AUTH PAGE FUNCTIONALITY ============
 
+// Прапорець для запобігання повторної ініціалізації
+let authPageInitialized = false;
+
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
-    initAuthPage();
+    if (!authPageInitialized) {
+        initAuthPage();
+    }
 });
 
 // Also run immediately if DOM is already loaded (for modules)
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAuthPage);
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!authPageInitialized) {
+            initAuthPage();
+        }
+    });
 } else {
-    initAuthPage();
+    if (!authPageInitialized) {
+        initAuthPage();
+    }
 }
 
 function initAuthPage() {
+    // Запобігаємо повторній ініціалізації
+    if (authPageInitialized) {
+        return;
+    }
+    authPageInitialized = true;
     // Tab switching
     const authTabs = document.querySelectorAll('.auth-tab');
     const authContainers = document.querySelectorAll('.auth-form-container');
@@ -320,10 +336,19 @@ if (adminLoginForm) {
     // ============ FORGOT PASSWORD ============
     const forgotPasswordFormElement = document.getElementById('forgotPasswordFormElement');
     const forgotSubmitBtn = document.getElementById('forgot-submit');
+    
+    // Прапорець для запобігання подвійної відправки
+    let isForgotPasswordSubmitting = false;
 
 if (forgotPasswordFormElement) {
     forgotPasswordFormElement.addEventListener('submit', async (e) => {
         e.preventDefault();
+        e.stopPropagation(); // Запобігаємо подвійній обробці
+        
+        // Перевірка, чи форма вже відправляється
+        if (isForgotPasswordSubmitting) {
+            return;
+        }
         
         const formData = new FormData(forgotPasswordFormElement);
         const emailOrUsername = formData.get('email_or_username');
@@ -334,7 +359,8 @@ if (forgotPasswordFormElement) {
             return;
         }
 
-        // Disable submit button
+        // Встановлюємо прапорець та блокуємо кнопку
+        isForgotPasswordSubmitting = true;
         forgotSubmitBtn.disabled = true;
         forgotSubmitBtn.innerText = 'Sending...';
 
@@ -376,6 +402,8 @@ if (forgotPasswordFormElement) {
         } catch (error) {
             showNotification(error, 'error');
         } finally {
+            // Скидаємо прапорець та розблоковуємо кнопку
+            isForgotPasswordSubmitting = false;
             forgotSubmitBtn.disabled = false;
             forgotSubmitBtn.innerText = 'Send Reset Link';
         }

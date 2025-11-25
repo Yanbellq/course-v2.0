@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+# build.sh
 set -o errexit
 
 echo "📦 Installing Python dependencies..."

@@ -231,7 +231,7 @@ class PasswordResetToken(orm.Model):
         
         # Видаляємо старі невикористані токени для цього користувача
         try:
-            old_tokens = cls.objects(user_id=user.id, used=False).all()
+            old_tokens = cls.objects().filter(user_id=user.id, used=False).all()
             for old_token in old_tokens:
                 old_token.delete()
         except:
@@ -252,7 +252,7 @@ class PasswordResetToken(orm.Model):
     def validate_token(cls, token):
         """Перевірити токен та повернути користувача"""
         try:
-            reset_token = cls.objects(token=token, used=False).first()
+            reset_token = cls.objects().filter(token=token, used=False).first()
             
             if not reset_token:
                 return None
@@ -261,10 +261,21 @@ class PasswordResetToken(orm.Model):
                 # Токен прострочений
                 return None
             
-            # Повертаємо користувача (user_id - це ReferenceField, який повертає User об'єкт)
-            return reset_token.user_id
+            # Отримуємо user_id (це може бути ObjectId або рядок)
+            user_id = reset_token.user_id
+            if not user_id:
+                return None
+            
+            # Конвертуємо в рядок, якщо потрібно
+            user_id_str = str(user_id) if user_id else None
+            
+            # Знаходимо користувача за ID
+            user = User.find_by_id(user_id_str)
+            return user
         except Exception as e:
-            print(f"Error validating token: {e}")
+            import logging
+            logger = logging.getLogger('api')
+            logger.error(f"Error validating token: {e}")
             return None
     
     def mark_as_used(self):

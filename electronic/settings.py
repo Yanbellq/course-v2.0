@@ -253,26 +253,19 @@ WHITENOISE_AUTOREFRESH = DEBUG
 WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['map', 'json']
 
 # ============ EMAIL CONFIGURATION ============
-# Email backend налаштування
-# Для development використовуйте console backend (виводить в консоль)
-# Для production використовуйте SMTP backend
-
-if DEBUG:
-    # Development: виводить email в консоль
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-else:
-    # Production: використовує SMTP
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
-# SMTP налаштування (для production)
+# Email backend налаштування - завжди використовуємо Gmail SMTP
 # Додайте ці змінні в ваш .env файл:
-# EMAIL_HOST=smtp.gmail.com (або інший SMTP сервер)
+# EMAIL_HOST=smtp.gmail.com
 # EMAIL_PORT=587
 # EMAIL_USE_TLS=True
 # EMAIL_HOST_USER=your-email@gmail.com
-# EMAIL_HOST_PASSWORD=your-app-password
+# EMAIL_HOST_PASSWORD=your-app-password (App Password з Google Account)
 # DEFAULT_FROM_EMAIL=your-email@gmail.com
 
+# Завжди використовуємо SMTP backend для Gmail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# Gmail SMTP налаштування
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
@@ -282,43 +275,18 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER or 'noreply@electronic.com')
 
 # Таймаут для SMTP з'єднання (в секундах)
-# Допомагає уникнути зависання worker'ів при проблемах з SMTP
 EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
 
-# SendGrid API Key (для fallback, якщо SMTP заблоковано)
-# Отримайте безкоштовний API ключ: https://sendgrid.com/
-SENDGRID_API_KEY = config('SENDGRID_API_KEY', default='')
-
 # Логування налаштувань email (без пароля)
-if not DEBUG:
-    import logging
-    logger = logging.getLogger('api')
-    logger.info(f"Email configuration: HOST={EMAIL_HOST}, PORT={EMAIL_PORT}, USER={EMAIL_HOST_USER}, FROM={DEFAULT_FROM_EMAIL}")
-    logger.info(f"Email backend: {EMAIL_BACKEND}")
-    if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
-        logger.warning("⚠️ EMAIL налаштування не заповнені! Email не будуть відправлятися.")
-
-# Альтернативні варіанти для різних провайдерів:
-# 
-# Gmail:
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# Потрібно створити "App Password" в налаштуваннях Google Account
-#
-# Outlook/Hotmail:
-# EMAIL_HOST = 'smtp-mail.outlook.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-#
-# SendGrid (рекомендовано для production):
-# EMAIL_HOST = 'smtp.sendgrid.net'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'apikey'
-# EMAIL_HOST_PASSWORD = 'your-sendgrid-api-key'
-#
-# Mailgun:
-# EMAIL_HOST = 'smtp.mailgun.org'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
+import logging
+logger = logging.getLogger('api')
+logger.info(f"Email configuration: HOST={EMAIL_HOST}, PORT={EMAIL_PORT}, USE_TLS={EMAIL_USE_TLS}, USER={EMAIL_HOST_USER}, FROM={DEFAULT_FROM_EMAIL}")
+logger.info(f"Email backend: {EMAIL_BACKEND}")
+if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
+    logger.warning("WARNING: EMAIL налаштування не заповнені! Email не будуть відправлятися.")
+    logger.warning("Для Gmail потрібно створити App Password:")
+    logger.warning("1. Увійдіть в Google Account: https://myaccount.google.com/")
+    logger.warning("2. Перейдіть: Security → 2-Step Verification")
+    logger.warning("3. В кінці сторінки знайдіть 'App passwords'")
+    logger.warning("4. Створіть новий App Password для 'Mail'")
+    logger.warning("5. Використовуйте цей App Password в EMAIL_HOST_PASSWORD")

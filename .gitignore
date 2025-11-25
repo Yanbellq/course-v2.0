@@ -9,3 +9,6 @@ logs/*.log
 *.pdf
 тема.txt
 методичка_текст.txt
+Spacefile
+main.py
+staticfiles/
