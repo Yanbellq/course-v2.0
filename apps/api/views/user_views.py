@@ -334,12 +334,18 @@ def send_password_reset_email(user, reset_url):
 @permission_classes([AllowAny])
 def forgot_password(request):
     """Запит на скидання пароля"""
+    import logging
+    logger = logging.getLogger('api')
+    
     try:
         email = request.data.get('email')
         username = request.data.get('username')
         
+        logger.info(f"Forgot password request received. Email: {email}, Username: {username}")
+        
         # Валідація
         if not email and not username:
+            logger.warning("Forgot password: no email or username provided")
             return Response({
                 'success': False,
                 'error': 'Вкажіть email або username'
@@ -349,23 +355,30 @@ def forgot_password(request):
         user = None
         if email:
             try:
-                user = User.objects(email=email).first()
-            except:
+                user = User.objects().filter(email=email).first()
+                logger.info(f"User lookup by email {email}: {'found' if user else 'not found'}")
+            except Exception as e:
+                logger.error(f"Error looking up user by email: {str(e)}")
                 pass
         
         if not user and username:
             try:
-                user = User.objects(username=username).first()
-            except:
+                user = User.objects().filter(username=username).first()
+                logger.info(f"User lookup by username {username}: {'found' if user else 'not found'}")
+            except Exception as e:
+                logger.error(f"Error looking up user by username: {str(e)}")
                 pass
         
         # Для безпеки завжди повертаємо успішну відповідь (навіть якщо користувача немає)
         # Це запобігає перевірці існування email/username
         if not user:
+            logger.info("User not found, returning success message (security)")
             return Response({
                 'success': True,
                 'message': 'Якщо користувач з таким email/username існує, на пошту надіслано інструкції для скидання пароля'
             }, status=status.HTTP_200_OK)
+        
+        logger.info(f"User found: {user.username} ({user.email}), creating reset token")
         
         # Створюємо токен
         reset_token = PasswordResetToken.create_token(user)
@@ -373,44 +386,29 @@ def forgot_password(request):
         # Формуємо URL для скидання пароля
         reset_url = f"{request.scheme}://{request.get_host()}/auth/?token={reset_token.token}"
         
+        logger.info(f"Reset token created. URL: {reset_url}")
+        logger.info(f"Email settings check: USER={bool(settings.EMAIL_HOST_USER)}, PASSWORD={bool(settings.EMAIL_HOST_PASSWORD)}, BACKEND={settings.EMAIL_BACKEND}")
+        
         # Відправляємо email
         try:
-            import logging
-            logger = logging.getLogger('api')
-            
             # Перевіряємо налаштування email перед відправкою
             if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
-                logger.warning(f"Email settings not configured. EMAIL_HOST_USER: {bool(settings.EMAIL_HOST_USER)}, EMAIL_HOST_PASSWORD: {bool(settings.EMAIL_HOST_PASSWORD)}")
+                logger.warning(f"WARNING: EMAIL НЕ НАЛАШТОВАНО! EMAIL_HOST_USER: {bool(settings.EMAIL_HOST_USER)}, EMAIL_HOST_PASSWORD: {bool(settings.EMAIL_HOST_PASSWORD)}")
                 logger.warning(f"Email backend: {settings.EMAIL_BACKEND}")
+                logger.warning(f"EMAIL_HOST: {settings.EMAIL_HOST}, EMAIL_PORT: {settings.EMAIL_PORT}")
                 
-                # В development виводимо токен в консоль як fallback
-                if settings.DEBUG:
-                    print(f"\n{'='*60}")
-                    print(f"⚠️ EMAIL НЕ НАЛАШТОВАНО!")
-                    print(f"Password Reset Token for {user.email}:")
-                    print(f"Token: {reset_token.token}")
-                    print(f"Reset URL: {reset_url}")
-                    print(f"Expires at: {reset_token.expires_at}")
-                    print(f"{'='*60}\n")
+                # Виводимо токен в консоль як fallback (і в production теж)
+                logger.warning(f"Password Reset Token for {user.email}: {reset_token.token}")
+                logger.warning(f"Reset URL: {reset_url}")
             else:
-                logger.info(f"Attempting to send password reset email to {user.email}")
+                logger.info(f"[OK] Email settings OK. Attempting to send password reset email to {user.email}")
                 send_password_reset_email(user, reset_url)
-                logger.info(f"Password reset email sent successfully to {user.email}")
+                logger.info(f"[OK] Password reset email sent successfully to {user.email}")
         except Exception as email_error:
             # Логуємо помилку, але не повідомляємо користувача (безпека)
-            import logging
-            logger = logging.getLogger('api')
-            logger.error(f"Failed to send password reset email to {user.email}: {str(email_error)}", exc_info=True)
-            
-            # В development виводимо токен в консоль як fallback
-            if settings.DEBUG:
-                print(f"\n{'='*60}")
-                print(f"❌ ПОМИЛКА ВІДПРАВКИ EMAIL: {str(email_error)}")
-                print(f"Password Reset Token for {user.email}:")
-                print(f"Token: {reset_token.token}")
-                print(f"Reset URL: {reset_url}")
-                print(f"Expires at: {reset_token.expires_at}")
-                print(f"{'='*60}\n")
+            logger.error(f"[ERROR] Failed to send password reset email to {user.email}: {str(email_error)}", exc_info=True)
+            logger.warning(f"Password Reset Token (fallback): {reset_token.token}")
+            logger.warning(f"Reset URL (fallback): {reset_url}")
         
         return Response({
             'success': True,

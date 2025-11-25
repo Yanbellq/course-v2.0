@@ -1,6 +1,25 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block header_actions %}
+    <div class="nav-icons" id="navIcons">
+        <button class="icon-btn search-toggle" id="searchToggle" aria-label="Search">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2" />
+                <path d="M13 13L17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+        </button>
+        <button class="icon-btn" id="adminLogoutBtn" aria-label="Logout" title="Вийти">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M7 2H3C2.44772 2 2 2.44772 2 3V17C2 17.5523 2.44772 18 3 18H7"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M13 14L18 10M18 10L13 6M18 10H7" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </button>
+    </div>
+{% endblock header_actions %}
+
 {% block content %}
     <div class="crm-root">
         {% include 'crm/_sidebar.html' %}
