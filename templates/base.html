@@ -14,7 +14,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 
-<body>
+<body data-user-role="{% if request.user and request.user.role %}{{ request.user.role }}{% else %}guest{% endif %}">
     <!-- Header -->
     <header class="header">
         <div class="container">
@@ -192,6 +192,7 @@
         <script type="module" src="{% static 'js/user/main.js' %}"></script>
         <script type="module" src="{% static 'js/user/slider.js' %}"></script>
         <script type="module" src="{% static 'js/user/cart.js' %}"></script>
+        <script type="module" src="{% static 'js/utility/help.js' %}"></script>
     {% endblock base_js %}
 
     <script src="https://unpkg.com/lucide@latest"></script>

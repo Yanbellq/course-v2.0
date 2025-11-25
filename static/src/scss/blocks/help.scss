@@ -1,0 +1,346 @@
+// Модальне вікно допомоги
+.help-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9998;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+
+    &.active {
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+.help-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    &.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.help-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #76777e 0%, #000000 100%);
+    color: white;
+
+    .help-title {
+        font-size: 26px;
+        font-weight: 800;
+        margin: 0;
+        color: white;
+    }
+
+    .help-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 8px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: white;
+        transition: background 0.2s ease;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+}
+
+.help-modal-body {
+    padding: 32px;
+    overflow-y: auto;
+    flex: 1;
+
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+
+        &:hover {
+            background: #555;
+        }
+    }
+}
+
+.help-role-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    border-left: 4px solid var(--black);
+    font-size: 14px;
+
+    .help-role-label {
+        font-weight: 600;
+        color: #6b7280;
+    }
+
+    .help-role-value {
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+        &.help-role-guest {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        &.help-role-user {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        &.help-role-operator {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        &.help-role-admin {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    }
+}
+
+.help-section {
+    margin-bottom: 32px;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+
+    p {
+        font-size: 14px;
+    }
+}
+
+.help-section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &::before {
+        content: '';
+        width: 4px;
+        height: 24px;
+        background: var(--black);
+        border-radius: 2px;
+    }
+}
+
+.help-list {
+    font-size: 14px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+        padding: 12px 0;
+        padding-left: 32px;
+        position: relative;
+        line-height: 1.6;
+        color: #374151;
+
+        &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 16px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--black);
+        }
+    }
+
+    &.help-list-restricted {
+        li {
+            color: #6b7280;
+
+            &::before {
+                background: #ef4444;
+            }
+        }
+    }
+}
+
+.help-upgrade {
+    background: linear-gradient(135deg, var(--gray-light) 0%, var(--color-gray-200) 100%);
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid var(--gray-light);
+
+    p {
+        margin: 0 0 16px 0;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    ol {
+        margin: 16px 0;
+        padding-left: 24px;
+        color: var(--text-primary);
+
+        li {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        ul {
+            margin-top: 8px;
+            padding-left: 20px;
+            list-style: disc;
+
+            li {
+                margin-bottom: 8px;
+            }
+        }
+    }
+
+    ul {
+        margin: 16px 0;
+        padding-left: 24px;
+        color: var(--text-primary);
+        list-style: disc;
+
+        li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+    }
+}
+
+.help-action {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.help-btn {
+    display: inline-block;
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+}
+
+.help-modal-footer {
+    padding: 20px 32px;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+    text-align: center;
+}
+
+.help-hint {
+    margin: 0;
+    font-size: 14px;
+    color: #6b7280;
+
+    kbd {
+        display: inline-block;
+        padding: 4px 8px;
+        background: #e5e7eb;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+        font-weight: 600;
+        color: #374151;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+}
+
+// Адаптивність
+@media (max-width: 768px) {
+    .help-modal {
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    .help-modal-header {
+        padding: 20px;
+
+        .help-title {
+            font-size: 20px;
+        }
+    }
+
+    .help-modal-body {
+        padding: 24px 20px;
+    }
+
+    .help-modal-footer {
+        padding: 16px 20px;
+    }
+
+    .help-section-title {
+        font-size: 18px;
+    }
+
+    .help-upgrade {
+        padding: 20px;
+    }
+}
+
