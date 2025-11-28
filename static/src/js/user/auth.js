@@ -1,5 +1,4 @@
 import showNotification from "./toast.js";
-import { env } from "./env.js";
 // ============ AUTH PAGE FUNCTIONALITY ============
 
 // Прапорець для запобігання повторної ініціалізації

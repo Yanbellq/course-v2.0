@@ -1,6 +1,7 @@
 # apps/api/authentication/user_jwt_authentication.py
 
 import jwt
+import logging
 from datetime import datetime, timedelta
 from django.conf import settings
 from rest_framework.authentication import BaseAuthentication
@@ -49,9 +50,15 @@ class MongoJWTAuthentication(BaseAuthentication):
             
             # Знаходимо користувача
             user = User.find_by_id(user_id)
-            
+
+            # Якщо користувача немає або він неактивний — НЕ піднімаємо помилку тут,
+            # щоб публічні ендпоїнти (напр. register) могли працювати навіть коли
+            # клієнт присилає застарілий токен у cookie. Повернемо None — це означає
+            # для DRF: "немає аутентифікації" і дозволить AllowAny працювати.
             if not user or not user.is_active:
-                raise AuthenticationFailed('User not found or inactive')
+                logger = logging.getLogger('api')
+                logger.info(f"JWT token references missing/inactive user: {user_id}")
+                return None
             
             # Повертаємо кастомний об'єкт користувача
             user_obj = type('User', (), {

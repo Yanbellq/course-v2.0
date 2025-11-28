@@ -69,19 +69,6 @@ INSTALLED_APPS = [
     'apps.api',
 ]
 
-# MIDDLEWARE = [
-#     'django.middleware.security.SecurityMiddleware',
-#     'whitenoise.middleware.WhiteNoiseMiddleware',
-#     'corsheaders.middleware.CorsMiddleware',
-#     'django.contrib.sessions.middleware.SessionMiddleware',
-#     'django.middleware.common.CommonMiddleware',
-#     'django.middleware.csrf.CsrfViewMiddleware',
-#     'django.contrib.messages.middleware.MessageMiddleware',
-#     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-#     'apps.api.middleware.AuthenticationMiddleware',
-# ]
-
-# ✅ MIDDLEWARE В ПРАВИЛЬНОМУ ПОРЯДКУ
 MIDDLEWARE = [
     # 1. CORS - ПЕРШИЙ!
     'corsheaders.middleware.CorsMiddleware',
@@ -95,40 +82,35 @@ MIDDLEWARE = [
     # 4. Sessions (для Django templates)
     'django.contrib.sessions.middleware.SessionMiddleware',
 
-    # 🟩 ДОДАЙ ОЦЕ (перед Django messages)
+    # 5. JWT автентифікація (для API)
     'apps.api.middleware.jwt_web.JWTWebAuthenticationMiddleware',
     
-    # 5. Common
+    # 6. Common
     'django.middleware.common.CommonMiddleware',
     
-    # 6. CSRF (для Django forms)
+    # 7. CSRF (для Django forms)
     'django.middleware.csrf.CsrfViewMiddleware',
     
-    # 7. Messages (для Django templates)
+    # 8. Messages (для Django templates)
     'django.contrib.messages.middleware.MessageMiddleware',
     
-    # 8. Clickjacking protection
+    # 9. Clickjacking protection
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     
-    # ===== ВЛАСНІ MIDDLEWARE =====
-    
-    # 9. Security перевірки (SQL injection, XSS)
+    # 10. Security перевірки (SQL injection, XSS)
     'apps.api.middleware.security.SecurityMiddleware',
     
-    # 10. Rate limiting (захист від DDoS)
+    # 11. Rate limiting (захист від DDoS)
     'apps.api.middleware.rate_limit.RateLimitMiddleware',
     
-    # 11. JWT автентифікація (для API)
+    # 12. JWT автентифікація (для API)
     'apps.api.middleware.jwt_auth.JWTAuthenticationMiddleware',
     
-    # 12. Role-based access (перевірка ролей)
+    # 13. Role-based access (перевірка ролей)
     'apps.api.middleware.role_based.RoleBasedAccessMiddleware',
     
-    # 13. Request logging (завжди останній!)
+    # 14. Request logging (завжди останній!)
     'apps.api.middleware.request_logging.RequestLoggingMiddleware',
-    
-    # 14. IP Whitelist (опціонально, для admin)
-    # 'apps.api.middleware.ip_whitelist.IPWhitelistMiddleware',
 ]
 
 # REST Framework
@@ -215,7 +197,6 @@ LOGGING = {
 # IP Whitelist (опціонально)
 IP_WHITELIST = [
     '127.0.0.1',
-    # Додайте ваші trusted IP
 ]
 
 # Templates
@@ -252,17 +233,6 @@ WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = DEBUG
 WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['map', 'json']
 
-# ============ EMAIL CONFIGURATION ============
-# Email backend налаштування - завжди використовуємо Gmail SMTP
-# Додайте ці змінні в ваш .env файл:
-# EMAIL_HOST=smtp.gmail.com
-# EMAIL_PORT=587
-# EMAIL_USE_TLS=True
-# EMAIL_HOST_USER=your-email@gmail.com
-# EMAIL_HOST_PASSWORD=your-app-password (App Password з Google Account)
-# DEFAULT_FROM_EMAIL=your-email@gmail.com
-
-# Завжди використовуємо SMTP backend для Gmail
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # Gmail SMTP налаштування

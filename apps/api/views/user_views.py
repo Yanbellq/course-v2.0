@@ -47,33 +47,6 @@ def register(request):
     }, status=status.HTTP_400_BAD_REQUEST)
 
 
-# @api_view(['POST'])
-# @permission_classes([AllowAny])
-# def login(request):
-#     """Вхід"""
-#     serializer = UserLoginSerializer(data=request.data)
-    
-#     if serializer.is_valid():
-#         user = serializer.validated_data['user']
-#         user.update_last_login()
-        
-#         tokens = get_tokens_for_user(user)
-        
-#         return Response({
-#             'success': True,
-#             'message': 'Успішний вхід',
-#             'data': {
-#                 'user': user.to_dict(),
-#                 'tokens': tokens
-#             }
-#         }, status=status.HTTP_200_OK)
-    
-#     return Response({
-#         'success': False,
-#         'errors': serializer.errors
-#     }, status=status.HTTP_400_BAD_REQUEST)
-
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login(request):
@@ -94,7 +67,6 @@ def login(request):
             }
         }, status=status.HTTP_200_OK)
 
-        # 🟩 ВАЖЛИВО: Ставимо access-token у cookie
         from django.conf import settings
         # Використовуємо secure=True для HTTPS (production на Render)
         is_secure = not settings.DEBUG

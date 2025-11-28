@@ -8,8 +8,13 @@ trash/
 logs/*.log
 *.pdf
 *.md
+*.docx
+*.pptx
+*.mp4
+*.mkv
 тема.txt
 методичка_текст.txt
 Spacefile
 main.py
 staticfiles/
+push/

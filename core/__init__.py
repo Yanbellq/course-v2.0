@@ -1,7 +1,5 @@
 from core.mongo_connection import get_db
 
-# core/__init__.py
-
 # Ініціалізація підключення при запуску
 try:
     db = get_db()
